@@ -1,0 +1,24 @@
+.DS_Store
+.worktrees/
+
+# .NET
+bin/
+obj/
+*.user
+
+# Secrets / environment-specific config
+**/appsettings.Development.json
+.env
+
+# Runtime data (SQLite DB — contains real PII: names, RUTs, licencia data)
+**/data/*
+!**/data/*.example.csv
+!**/data/README.md
+*.db
+
+# OpenSpec local workset
+openspec/.workset/
+publish/
+publish-pendrive/
+imagenes/
+.atl/

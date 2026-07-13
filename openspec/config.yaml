@@ -1,0 +1,69 @@
+schema: spec-driven
+
+context: |
+  Tech stack: .NET 10 (net10.0), C#, ASP.NET Core, Razor Pages, SQLite
+  Architecture: mirrors outlook-comuna-router (Domain / Application / Presentation layers);
+    reference project path: C:\Users\raul.salazar\Desktop\PROYECTOS RAUL\outlook-comuna-router
+  Visual/style reference: outlook-comuna-router\src\OutlookComunaRouter\Dashboard\ and
+    outlook-comuna-router\src\OutlookComunaRouter\wwwroot\css\dashboard.css
+  Testing: xUnit 2.9.3 + Microsoft.NET.Test.Sdk 17.14.1 + coverlet.collector 6.0.4, TDD (strict)
+  Database: SQLite via Microsoft.Data.Sqlite 10.0.9 + SQLitePCLRaw.bundle_e_sqlite3 3.0.3. No ORM.
+  Excel import: ClosedXML (MIT license — chosen over EPPlus, which is Polyform Noncommercial since v5)
+  Domain: daily tracking of urgent driver-license-folder requests (Chile). Source of truth today
+    is "URGENTES DIARIOS.xlsx" — 8 monthly sheets (MAYO-DICIEMBRE), ~1.800 real rows (MAYO-JULIO),
+    tracks CODIGO F8 and CONASET upload status. This app replaces that spreadsheet.
+  Prior analysis: engram topic sdd/f8-urgentes/explore (project gestion-licencias-v2, obs #159) and
+    sdd/f8-urgentes/decisions (project gestion-licencias-v2, obs #160) — see note below on
+    cross-project location.
+  All code, comments, and documentation in English. Domain/business terms may stay in Spanish
+    (CODIGO F8, CONASET, RUT) since they are fixed external identifiers.
+
+rules:
+  _global:
+    - This is a greenfield project — no application code exists yet; do not assume prior scaffolding
+    - Replicate outlook-comuna-router's project layout, Clean/Screaming Architecture style, and
+      Razor Pages/dashboard visual conventions unless a change explicitly overrides this
+    - IMPORTANT — cross-project artifact lookup: sdd-init/F8 was bootstrapped after the domain
+      analysis and decisions were already saved to Engram under project "gestion-licencias-v2"
+      (not "F8"), because "F8" did not exist as an Engram project yet at analysis time. Any phase
+      that needs sdd/f8-urgentes/explore or sdd/f8-urgentes/decisions MUST search BOTH project "F8"
+      and project "gestion-licencias-v2" if the first search misses.
+  proposal:
+    - Include a "Non-goals" section
+    - Include an explicit rollback plan (greenfield — rollback is usually "delete the scaffold")
+    - Map the historical-import approach to the Excel quirks captured in sdd/f8-urgentes/explore
+      (per-sheet header mapping, RUT normalization, "S/C" sentinel values, corrupt date cells)
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Document why fields differ from outlook-comuna-router's domain model (F8 tracks license
+      folders, not comuna routing)
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Break tasks into testable units (one feature = one task group)
+    - Mark tasks as [x] only when code + tests are both complete
+  apply:
+    - Follow outlook-comuna-router's existing code patterns and directory naming
+    tdd: true            # Strict TDD — RED-GREEN-REFACTOR mandatory, reference project mandates it
+    test_command: "dotnet test"
+  verify:
+    test_command: "dotnet test"
+    build_command: "dotnet build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas
+
+testing:
+  framework: xunit
+  xunit_version: "2.9.3"
+  test_sdk_version: "17.14.1"
+  coverlet_version: "6.0.4"
+  test_command: "dotnet test"
+  build_command: "dotnet build"
+  strict_tdd: true
+  dotnet_sdk_detected: "10.0.204"
+  notes: |
+    No test project scaffolded yet (greenfield). strict_tdd is enabled per user decision
+    (sdd/f8-urgentes/decisions, obs #160) because the reference project mandates TDD and the
+    stack fully supports it (xUnit + dotnet test). sdd-apply MUST follow strict-tdd.md.
