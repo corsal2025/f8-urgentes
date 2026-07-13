@@ -1,0 +1,39 @@
+change: f8-urgentes
+title: F8 Urgent Requests Web App
+artifact_store: openspec
+delivery_strategy: ask-on-risk
+created: 2026-07-13
+updated: 2026-07-13
+
+# DAG: proposal -> specs (+ design) -> tasks -> apply -> verify -> archive
+phases:
+  proposal:
+    status: done
+    artifact: openspec/changes/f8-urgentes/proposal.md
+  spec:
+    status: pending
+    depends_on: [proposal]
+  design:
+    status: pending
+    depends_on: [proposal]
+  tasks:
+    status: pending
+    depends_on: [spec, design]
+  apply:
+    status: pending
+    depends_on: [tasks]
+  verify:
+    status: pending
+    depends_on: [apply]
+  archive:
+    status: pending
+    depends_on: [verify]
+
+next_recommended: [spec, design]
+
+capabilities:
+  new:
+    - urgent-request-management
+    - historical-import
+    - dashboard
+  modified: []
