@@ -13,8 +13,19 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 var f8Options = builder.Configuration.GetSection(F8Options.SectionName).Get<F8Options>() ?? new F8Options();
 builder.Services.AddSingleton(f8Options);
 
+// Microsoft.Data.Sqlite resolves relative connection-string paths against
+// Environment.CurrentDirectory, NOT AppContext.BaseDirectory/ContentRootPath — so a
+// bare relative SqliteDbPath silently follows wherever the process happens to be
+// launched from (e.g. `dotnet run` sets CWD to the project folder). Resolve to an
+// absolute path explicitly so the DB always lands in the same place regardless of
+// launch method, matching the reference project's stated intent.
+var sqliteDbPath = Path.IsPathRooted(f8Options.SqliteDbPath)
+    ? f8Options.SqliteDbPath
+    : Path.Combine(AppContext.BaseDirectory, f8Options.SqliteDbPath);
+Directory.CreateDirectory(Path.GetDirectoryName(sqliteDbPath)!);
+
 builder.Services.AddSingleton<IUrgentRequestRepository>(_ =>
-    new UrgentRequestRepository($"Data Source={f8Options.SqliteDbPath}"));
+    new UrgentRequestRepository($"Data Source={sqliteDbPath}"));
 
 builder.Services.AddRazorPages(options => options.RootDirectory = "/Dashboard/Pages");
 

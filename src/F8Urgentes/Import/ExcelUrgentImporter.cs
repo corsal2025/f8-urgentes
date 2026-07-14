@@ -33,7 +33,12 @@ public static class ExcelUrgentImporter
 
         foreach (var sheetName in ImportableSheets)
         {
-            if (!workbook.Worksheets.TryGetWorksheet(sheetName, out var worksheet))
+            // Sheet names are matched trim+case-insensitively: the real workbook has
+            // a trailing-space sheet name ("JUNIO ") that would otherwise silently
+            // skip the whole sheet.
+            var worksheet = workbook.Worksheets.FirstOrDefault(ws =>
+                string.Equals(ws.Name.Trim(), sheetName, StringComparison.OrdinalIgnoreCase));
+            if (worksheet is null)
             {
                 continue;
             }
@@ -77,20 +82,59 @@ public static class ExcelUrgentImporter
                     return null;
                 }
                 var value = worksheet.Cell(rowNumber, firstColumn + offset).GetString();
-                return string.IsNullOrWhiteSpace(value) ? null : value;
+                return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+            }
+
+            // Excel stores dates as either a genuine date-typed cell or (in this
+            // workbook, inconsistently) plain text/number. GetString() alone would
+            // return a locale-formatted display string (e.g. "15/04/2024") that
+            // FolderDate can't parse as ISO or as a serial, silently flagging almost
+            // every valid date. Resolve to ISO/serial text explicitly here instead.
+            string? DateCell(string canonicalName)
+            {
+                if (!columnMap.TryGetValue(canonicalName, out var offset))
+                {
+                    return null;
+                }
+                var cell = worksheet.Cell(rowNumber, firstColumn + offset);
+
+                // The real workbook has at least one date-typed cell whose underlying value is
+                // itself out of .NET's representable OLE Automation date range (the corrupt
+                // MAYO H54 cell). Every ClosedXML accessor that can produce a string for a
+                // DateTime-typed XLCellValue — GetDateTime, GetString, even CachedValue.ToString()
+                // — ultimately calls DateTime.FromOADate internally and throws for this cell, so
+                // there is no typed or string accessor that can recover its raw content. Rather
+                // than crash the whole import on one dubious cell, treat any such failure as an
+                // unparseable value: the row is still imported (never dropped) and gets flagged.
+                try
+                {
+                    if (cell.DataType == XLDataType.DateTime)
+                    {
+                        return cell.GetDateTime().ToString("yyyy-MM-dd");
+                    }
+                    if (cell.DataType == XLDataType.Number)
+                    {
+                        return cell.GetDouble().ToString(System.Globalization.CultureInfo.InvariantCulture);
+                    }
+                    return string.IsNullOrWhiteSpace(cell.GetString()) ? null : cell.GetString().Trim();
+                }
+                catch (Exception ex) when (ex is ArgumentException or InvalidCastException or OverflowException)
+                {
+                    return "CORRUPT_CELL_VALUE";
+                }
             }
 
             var nombres = Cell(HeaderCanonicalizer.Nombres);
             var apellidos = Cell(HeaderCanonicalizer.Apellidos);
             var nombreCompleto = Cell(HeaderCanonicalizer.NombreCompleto);
             var rutRaw = Cell(HeaderCanonicalizer.Rut);
-            var fechaPeticionRaw = Cell(HeaderCanonicalizer.FechaPeticion);
-            var fechaUltimaCarpetaRaw = Cell(HeaderCanonicalizer.FechaUltimaCarpeta);
+            var fechaPeticionRaw = DateCell(HeaderCanonicalizer.FechaPeticion);
+            var fechaUltimaCarpetaRaw = DateCell(HeaderCanonicalizer.FechaUltimaCarpeta);
             var codigoF8 = Cell(HeaderCanonicalizer.CodigoF8);
-            var fechaPenultimaCarpetaRaw = Cell(HeaderCanonicalizer.FechaPenultimaCarpeta);
+            var fechaPenultimaCarpetaRaw = DateCell(HeaderCanonicalizer.FechaPenultimaCarpeta);
             var estadoRaw = Cell(HeaderCanonicalizer.Estado);
             var estadoActualRaw = Cell(HeaderCanonicalizer.EstadoActual);
-            var fechaDeSubidaRaw = Cell(HeaderCanonicalizer.FechaDeSubida);
+            var fechaDeSubidaRaw = DateCell(HeaderCanonicalizer.FechaDeSubida);
 
             rowsRead++;
 

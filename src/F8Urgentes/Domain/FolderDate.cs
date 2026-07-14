@@ -41,6 +41,14 @@ public static class FolderDate
 
         if (double.TryParse(text, NumberStyles.Number, CultureInfo.InvariantCulture, out var serial))
         {
+            if (serial is > int.MaxValue or < int.MinValue)
+            {
+                // Guards the (int) cast below: an out-of-int-range serial (the real MAYO H54
+                // corrupt cell can surface here as a huge double) would otherwise silently
+                // wrap instead of throwing, which AddDays relies on to signal OutOfRange.
+                return new FolderDateResult(null, FolderDateOutcome.OutOfRange);
+            }
+
             try
             {
                 var candidate = ExcelEpoch.AddDays((int)serial);

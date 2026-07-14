@@ -13,7 +13,7 @@ depends on the immediately preceding task(s) unless stated otherwise.
 
 ## Group 0 — Solution Scaffold (sequential, blocks everything)
 
-### T0.1 — Create solution and project skeleton
+### T0.1 [x] — Create solution and project skeleton
 - Run `dotnet new sln -n F8Urgentes` at repo root (if not already present).
 - `dotnet new web -n F8Urgentes -o src/F8Urgentes -f net10.0` (Razor Pages
   enabled: add `AddRazorPages()` / `MapRazorPages()` in `Program.cs`).
@@ -48,7 +48,7 @@ Depends on: T0.1. Tasks in this group are **[P]** with each other (separate
 files, no shared state) but each individually is test-first (red before
 green).
 
-### T1.1 — `Rut` value object [P]
+### T1.1 [x] — `Rut` value object [P]
 - Test first: `tests/.../Domain/RutTests.cs` — cases: dots stripped,
   no-dots input, lowercase `k` → uppercase `K`, valid módulo-11 check digit,
   invalid check digit (`IsValid=false` but parse still succeeds), blank/null
@@ -57,7 +57,7 @@ green).
   canonical `ToString()`, módulo-11 algorithm.
 - Satisfies: spec urgent-request-management "RUT Normalization"; design D3.
 
-### T1.2 — `FolderDate` parse helper [P]
+### T1.2 [x] — `FolderDate` parse helper [P]
 - Test first: `tests/.../Domain/FolderDateTests.cs` — `"S/C"` → null (no
   flag signal needed at this layer, just null), blank → null, ISO string →
   `DateOnly`, valid Excel serial → `DateOnly`, out-of-range serial
@@ -69,7 +69,7 @@ green).
 - Satisfies: spec historical-import "S/C Date Handling", "Corrupt Cell
   Flagging"; design D6.
 
-### T1.3 — `EstadoCatalog` [P]
+### T1.3 [x] — `EstadoCatalog` [P]
 - Test first: `tests/.../Domain/EstadoCatalogTests.cs` — known ESTADO set
   membership (`SUBIR CON F8`, `PRIMERA LICENCIA`, `CAMBIO DE DOMICILIO`,
   `CREAR CERTIFICADO`, `CARPETA SUBIDA`), known ESTADO ACTUAL set membership
@@ -81,7 +81,7 @@ green).
 - Satisfies: spec urgent-request-management "Known Status Value Sets";
   design D4.
 
-### T1.4 — `UrgentRequest` entity and `ImportFlag` record
+### T1.4 [x] — `UrgentRequest` entity and `ImportFlag` record
 - No independent test (plain data holder); covered indirectly by T1.1–T1.3
   and Data-layer tests. Depends on T1.1–T1.3 for field types.
 - Implement `src/F8Urgentes/Domain/UrgentRequest.cs` (all Excel columns +
@@ -98,7 +98,7 @@ Depends on: T1.4 (entity shapes must exist first). Sequential within the
 group because all tests exercise the same `UrgentRequestRepository` class
 file.
 
-### T2.1 — `EnsureSchema` + repository skeleton
+### T2.1 [x] — `EnsureSchema` + repository skeleton
 - Test first: `tests/.../Data/UrgentRequestRepositoryTests.cs` — ctor test:
   construct repository against a temp-file SQLite DB
   (`Path.GetTempPath()` + GUID), call `EnsureSchema()`, assert
@@ -110,7 +110,7 @@ file.
   from design D2, plus indexes.
 - Satisfies: design D2, D7 (repository contract).
 
-### T2.2 — Insert / FindById / Update / GetAll
+### T2.2 [x] — Insert / FindById / Update / GetAll
 - Test first: add cases to `UrgentRequestRepositoryTests` — insert returns
   generated Id; `FindById` round-trips all fields including nullable dates;
   `Update` persists a field change and updates `UpdatedAt`; `GetAll` returns
@@ -120,7 +120,7 @@ file.
 - Satisfies: spec urgent-request-management "Request Creation", "Request
   Editing".
 
-### T2.3 — `Query(filter, search)` — month / ESTADO / ESTADO ACTUAL / search
+### T2.3 [x] — `Query(filter, search)` — month / ESTADO / ESTADO ACTUAL / search
 - Test first: cases — filter by month of `FechaPeticion`, filter by ESTADO,
   filter by ESTADO ACTUAL, search by normalized RUT (with dots in the search
   input), search by partial name, combined filter (month + ESTADO
@@ -130,7 +130,7 @@ file.
 - Satisfies: spec dashboard "Filtering by Month", "Filtering by ESTADO",
   "Search by RUT or Name", "Combined Filters".
 
-### T2.4 — Flag operations: `AddFlag`, `GetFlagsFor`, `GetFlagged`, `ClearFlags`
+### T2.4 [x] — Flag operations: `AddFlag`, `GetFlagsFor`, `GetFlagged`, `ClearFlags`
 - Test first: cases — `AddFlag` inserts a child row and sets parent
   `NeedsReview=1`; `GetFlagsFor(id)` returns flags for a request;
   `GetFlagged()` returns only `NeedsReview=1` rows; `ClearFlags(id)` deletes
@@ -140,7 +140,7 @@ file.
 - Satisfies: spec dashboard "Flagged Row Review Surface"; design D2
   (NeedsReview rollup).
 
-### T2.5 — Import bookkeeping: `HasCompletedImport`, `RecordImportRun`, `DeleteImportedRows`
+### T2.5 [x] — Import bookkeeping: `HasCompletedImport`, `RecordImportRun`, `DeleteImportedRows`
 - Test first: cases — `HasCompletedImport(sourceFile)` false before any run,
   true after `RecordImportRun` for the same `SourceFile`, false for a
   different `SourceFile`; `DeleteImportedRows()` removes only
@@ -155,7 +155,7 @@ file.
 Depends on: Group 2 (repository is the import's write target). T3.1 and
 T3.2 are **[P]** (different files); T3.3 depends on both.
 
-### T3.1 — `HeaderCanonicalizer` [P]
+### T3.1 [x] — `HeaderCanonicalizer` [P]
 - Test first: `tests/.../Import/HeaderCanonicalizerTests.cs` — canonicalizes
   case/whitespace/accent variants of a header to the same key; maps the
   JUNIO/JULIO 11-column header row to all canonical fields including `FECHA
@@ -169,14 +169,14 @@ T3.2 are **[P]** (different files); T3.3 depends on both.
 - Satisfies: spec historical-import "Header-Name Column Mapping" (both
   scenarios); design D6.
 
-### T3.2 — `ImportResult` [P]
+### T3.2 [x] — `ImportResult` [P]
 - No independent test (plain summary DTO). Implement
   `src/F8Urgentes/Import/ImportResult.cs`: per-sheet rows read / imported /
   flagged / skipped counts + totals.
 - Satisfies: spec historical-import "Import Completeness" (reporting
   vehicle).
 
-### T3.3 — Pinned fixture tests: MAYO / JUNIO / JULIO header + row layouts
+### T3.3 [x] — Pinned fixture tests: MAYO / JUNIO / JULIO header + row layouts
 - Test first, before the importer pipeline exists: build small in-repo
   `.xlsx` fixtures under `tests/F8Urgentes.Tests/Fixtures/` —
   `mayo-sample.xlsx` (10 columns, reordered, `FECHA PETICION` last, no
@@ -194,7 +194,7 @@ T3.2 are **[P]** (different files); T3.3 depends on both.
   Mapping" (MAYO scenario explicitly required by user), design D6 pinned
   layouts note.
 
-### T3.4 — `ExcelUrgentImporter` pipeline
+### T3.4 [x] — `ExcelUrgentImporter` pipeline
 - Test first: extend `ExcelUrgentImporterTests` (from T3.3) plus new cases —
   RUT normalization + flag-on-mismatch (not drop), `S/C` → null no flag,
   out-of-range serial → null + `DATE_OUT_OF_RANGE` flag with `RawValue`
@@ -221,7 +221,7 @@ T3.2 are **[P]** (different files); T3.3 depends on both.
 
 Depends on: Group 3.
 
-### T4.1 — `F8Options` + `Program.cs` DI wiring
+### T4.1 [x] — `F8Options` + `Program.cs` DI wiring
 - No new unit test (composition root); covered by manual smoke verification
   in T6.1. Implement `src/F8Urgentes/Configuration/F8Options.cs`
   (`SqliteDbPath`, `ExcelSourcePath`) bound from `appsettings.json`;
@@ -233,7 +233,7 @@ Depends on: Group 3.
 - Satisfies: design D5, D7 integration points; proposal Approach (SQLite via
   Microsoft.Data.Sqlite, no ORM).
 
-### T4.2 — `--import` CLI flag handler
+### T4.2 [x] — `--import` CLI flag handler
 - Test first where feasible: a small unit test on the *argument-parsing*
   function in isolation (e.g. `TryParseImportArgs(string[] args)` →
   `(path, force)` tuple or null) under `tests/.../ImportCliArgsTests.cs`.
@@ -254,7 +254,7 @@ Depends on: Group 3.
 Depends on: Group 2 (repository), T4.1 (DI). T5.1/T5.2/T5.3 PageModels are
 **[P]** with each other; the CSS task (T5.4) is **[P]** with all of them.
 
-### T5.1 — Index page (list + filters + inline ESTADO edits) [P]
+### T5.1 [x] — Index page (list + filters + inline ESTADO edits) [P]
 - Test first: `tests/.../Pages/IndexPageModelTests.cs` (or under a
   `Dashboard` test folder mirroring source) — against a real temp-file
   repository: `OnGet` with no filters returns all requests; with month
@@ -272,7 +272,7 @@ Depends on: Group 2 (repository), T4.1 (DI). T5.1/T5.2/T5.3 PageModels are
   by ESTADO, Search by RUT or Name, Combined Filters; spec
   urgent-request-management "State Transitions".
 
-### T5.2 — Edit page (create / edit) [P]
+### T5.2 [x] — Edit page (create / edit) [P]
 - Test first: `tests/.../Pages/EditPageModelTests.cs` — `OnGet` with no id
   produces an empty/create form model; `OnGet ?id=` loads an existing
   request; `OnPost` with a valid RUT and required fields inserts a new
@@ -290,7 +290,7 @@ Depends on: Group 2 (repository), T4.1 (DI). T5.1/T5.2/T5.3 PageModels are
   Status Value Sets (unrecognized-value scenario via free-text fallback),
   Request Editing.
 
-### T5.3 — Review page (flagged-review surface) [P]
+### T5.3 [x] — Review page (flagged-review surface) [P]
 - Test first: `tests/.../Pages/ReviewPageModelTests.cs` — `OnGet` lists only
   `NeedsReview=1` requests joined with their `ImportFlag` rows
   (`ColumnName`, `ReasonCode`, `RawValue` visible); after a correcting
@@ -300,7 +300,7 @@ Depends on: Group 2 (repository), T4.1 (DI). T5.1/T5.2/T5.3 PageModels are
   lists flagged rows + flag detail, links to Edit.
 - Satisfies: spec dashboard "Flagged Row Review Surface".
 
-### T5.4 — `dashboard.css` + shared layout [P]
+### T5.4 [x] — `dashboard.css` + shared layout [P]
 - No test (static asset). Copy/adapt `wwwroot/css/dashboard.css` from
   `src/OutlookComunaRouter/` (or wherever the reference project's stylesheet
   lives), preserving class names used above (`app-header`, `nav-group`,
@@ -317,7 +317,7 @@ Depends on: Group 2 (repository), T4.1 (DI). T5.1/T5.2/T5.3 PageModels are
 Depends on: Group 4 (importer CLI) and Group 5 (Review page, to eyeball
 flags). Must run after all other code is green.
 
-### T6.1 — Real import run against `URGENTES DIARIOS.xlsx`
+### T6.1 [x] — Real import run against `URGENTES DIARIOS.xlsx`
 - Not a unit test — an operational verification step, run manually /
   scripted against the real workbook (outside `dotnet test`).
 - Run `dotnet run --project src/F8Urgentes -- --import "<path to URGENTES
@@ -335,6 +335,62 @@ flags). Must run after all other code is green.
 - Satisfies: proposal Success Criteria ("All ~1,800 MAYO–JULIO rows
   imported; dubious cells flagged, none silently lost"); spec
   historical-import "Import Completeness".
+
+**Actual results (recorded during apply, real workbook at repo root)**:
+```
+MAYO:  read=441 imported=441 flagged=2 skipped=0
+JUNIO: read=423 imported=110 flagged=1 skipped=313
+JULIO: read=423 imported=82  flagged=3 skipped=341
+TOTAL: read=1287 imported=633 flagged=6 skipped=654
+```
+Cross-checked against the raw OOXML (`sheetData` row count with any non-blank
+cell, independent of the importer): MAYO 441 data rows, JUNIO 110, JULIO 82 —
+exact match to `imported` above. **The proposal's "~1,800" estimate does not
+match the real workbook**; the actual non-empty MAYO–JULIO row count is 633,
+not ~1,800. `skipped=654` rows are genuinely blank padding rows inside each
+sheet's used range (the workbook's used range extends well past the last
+data row, likely from conditional formatting/filter ranges) — confirmed via
+independent inspection, not an importer bug. Recommend updating the proposal's
+Success Criteria to "633" (or "the real non-empty row count") before/at
+verify time.
+
+Spot-check: the real MAYO H54 corrupt cell (row 54, "DAMARIS CONSUELO PAVEZ
+VILCHES") appears in Review with `FechaPenultimaCarpeta=UNPARSEABLE,
+raw=CORRUPT_CELL_VALUE` — **not** `DATE_OUT_OF_RANGE` as the task anticipated.
+Reason: ClosedXML's cell was typed `DateTime` with an underlying OLE
+Automation value out of .NET's representable range; every ClosedXML string/
+numeric accessor for that cell (`GetDateTime`, `GetDouble`, `GetString`,
+`CachedValue.ToString()`) throws `ArgumentException`/`InvalidCastException`
+internally (`DateTime.FromOADate`) before the raw serial digits are ever
+reachable — there is no accessor that recovers the actual raw value. The
+importer catches this and substitutes a `CORRUPT_CELL_VALUE` sentinel so
+`FolderDate.Parse` classifies it `Unparseable` (not `OutOfRange`) — the row is
+still imported and flagged, never dropped, satisfying the "flag-don't-drop"
+requirement, but with a different (accurate, not lost) reason code than the
+task predicted from `FolderDateTests`'s synthetic 29262516-string case (which
+*is* recoverable as a plain string and correctly yields `DATE_OUT_OF_RANGE`).
+
+Idempotency verified: re-running `--import` without `--force` printed "Import
+skipped: this source file was already imported. Use --force to re-import."
+and made no DB changes. Re-running with `--force` reproduced identical counts
+(633 imported) with no duplication (repository's `DeleteImportedRows` clears
+prior `Origin='Import'` rows before re-inserting; no `Origin='Web'` rows
+existed during this test).
+
+Also discovered and fixed during this run:
+- Real workbook sheet name is `"JUNIO "` (trailing space) — importer sheet
+  matching is now trim+case-insensitive.
+- Date cells are ClosedXML-typed (`DateTime`/`Number`), not plain text —
+  `GetString()` alone returns a locale-formatted display string that
+  `FolderDate` can't parse, which was flagging ~100% of MAYO rows before the
+  fix. `ExcelUrgentImporter` now reads typed date/number cells explicitly.
+- `Microsoft.Data.Sqlite` resolves relative connection-string paths against
+  `Environment.CurrentDirectory`, not `AppContext.BaseDirectory`/
+  `ContentRootPath` — a bare relative `SqliteDbPath` was landing inside
+  `src/F8Urgentes/Data/` (case-insensitively colliding with the Data/ source
+  folder) when launched via `dotnet run` from the project directory. Fixed by
+  resolving to an absolute path against `AppContext.BaseDirectory` in
+  `Program.cs`.
 
 ---
 
