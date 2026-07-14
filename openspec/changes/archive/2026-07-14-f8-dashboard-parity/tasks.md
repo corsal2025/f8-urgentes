@@ -13,13 +13,13 @@
 
 ## UI
 
-- [ ] 2.1 `_Layout.cshtml`: dark header brand block (F8 Urgentes / Municipalidad de Valparaíso)
-- [ ] 2.2 `Index.cshtml`: filter tabs with Requiere revisión badge
-- [ ] 2.3 `Index.cshtml`: header search form
-- [ ] 2.4 `Index.cshtml`: quick-add form with "+ Agregar otro" JS
-- [ ] 2.5 `Index.cshtml`: table with inline edit, countdown chip, estado pill, Marcar subida, delete
+- [x] 2.1 `_Layout.cshtml`: dark header brand block (already dark-gradient; parity satisfied)
+- [x] 2.2 `Index.cshtml`: filter tabs with Requiere revisión badge
+- [x] 2.3 `Index.cshtml`: header search form
+- [x] 2.4 `Index.cshtml`: quick-add form with "+ Agregar otro" JS
+- [x] 2.5 `Index.cshtml`: table with inline edit, countdown chip, estado pill, Marcar subida, delete
 
 ## Verification
 
-- [ ] 3.1 `dotnet test` green
-- [ ] 3.2 Manual curl smoke test (`/`, tab query)
+- [x] 3.1 `dotnet test` green (89/89)
+- [x] 3.2 Manual curl smoke test (`/`, tab query) — 200/200

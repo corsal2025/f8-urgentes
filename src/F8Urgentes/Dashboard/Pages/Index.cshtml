@@ -2,21 +2,53 @@
 @model F8Urgentes.Dashboard.Pages.IndexModel
 @{
     ViewData["Title"] = "Solicitudes";
+    var currentTab = Model.Tab ?? "Todos";
 }
 
 <div class="nav-group">
-    <a href="/Index">Todos</a>
-    @foreach (var estado in F8Urgentes.Domain.EstadoCatalog.KnownEstados)
-    {
-        <a href="/Index?estado=@estado">@estado</a>
-    }
-    <a href="/Index?flagged=true">Requiere revisión (@Model.FlaggedCount)</a>
+    <a href="/Index?tab=Todos" class="@(currentTab == "Todos" ? "active" : "")">Todos</a>
+    <a href="/Index?tab=Pendientes" class="@(currentTab == "Pendientes" ? "active" : "")">Pendientes</a>
+    <a href="/Index?tab=Subidas" class="@(currentTab == "Subidas" ? "active" : "")">Subidas</a>
+    <a href="/Index?flagged=true" class="@(Model.Flagged == true ? "active" : "")">
+        Requiere revisión
+        @if (Model.FlaggedCount > 0)
+        {
+            <span class="badge badge-review">@Model.FlaggedCount</span>
+        }
+    </a>
 </div>
 
 <form class="nav-search" method="get" action="/Index">
+    <input type="hidden" name="tab" value="@currentTab" />
     <input type="text" name="search" value="@Model.Search" placeholder="Buscar por RUT o nombre" />
     <button type="submit">Buscar</button>
 </form>
+
+<div class="card">
+    <form method="post" asp-page-handler="AddManualCases" id="quick-add-form">
+        <div id="quick-add-rows">
+            <div class="quick-add-row">
+                <input class="input-block" name="nombreCompleto" placeholder="Nombre completo" />
+                <input class="input-block" name="rut" placeholder="RUT" />
+                <input class="input-block" name="estado" placeholder="Estado" />
+            </div>
+        </div>
+        <button type="button" id="add-row-btn">+ Agregar otro</button>
+        <button class="btn-primary" type="submit">Agregar</button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('add-row-btn').addEventListener('click', function () {
+        var rows = document.getElementById('quick-add-rows');
+        var row = document.createElement('div');
+        row.className = 'quick-add-row';
+        row.innerHTML = '<input class="input-block" name="nombreCompleto" placeholder="Nombre completo" />' +
+            '<input class="input-block" name="rut" placeholder="RUT" />' +
+            '<input class="input-block" name="estado" placeholder="Estado" />';
+        rows.appendChild(row);
+    });
+</script>
 
 <div class="card table-card">
     <table class="cases cases-index">
@@ -28,14 +60,24 @@
                 <th>Estado</th>
                 <th>Estado actual</th>
                 <th>Código F8</th>
+                <th>Días hábiles</th>
+                <th>Acciones</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var request in Model.Requests)
             {
+                var dias = Model.DiasHabilesRestantes(request);
                 <tr class="@(request.NeedsReview ? "row-needs-review" : "")">
                     <td class="text-cell">@request.FechaPeticion</td>
-                    <td class="name-cell">@request.NombreCompleto</td>
+                    <td class="name-cell">
+                        <form method="post" asp-page-handler="SetPersonData">
+                            <input type="hidden" name="id" value="@request.Id" />
+                            <input class="input-inline name-input" name="nombreCompleto" value="@request.NombreCompleto" />
+                            <input class="input-inline rut-input" name="rut" value="@request.Rut" />
+                            <button class="btn-primary" type="submit">Guardar</button>
+                        </form>
+                    </td>
                     <td class="rut-cell">@request.Rut</td>
                     <td class="text-cell">
                         <form method="post" asp-page-handler="SetEstado">
@@ -45,13 +87,29 @@
                         </form>
                     </td>
                     <td class="text-cell">
-                        <form method="post" asp-page-handler="SetEstadoActual">
-                            <input type="hidden" name="id" value="@request.Id" />
-                            <input class="input-inline" name="estadoActual" value="@request.EstadoActual" />
-                            <button class="btn-primary" type="submit">Guardar</button>
-                        </form>
+                        <span class="badge @(request.EstadoActual == "SUBIDA A CONASET" ? "badge-confirmed" : "badge-pending")">
+                            @(string.IsNullOrWhiteSpace(request.EstadoActual) ? "PENDIENTE" : request.EstadoActual)
+                        </span>
                     </td>
                     <td class="text-cell">@request.CodigoF8</td>
+                    <td class="text-cell">
+                        <span class="badge @(dias < 0 ? "badge-review" : "badge-confirmed")">
+                            @(dias < 0 ? $"vencido hace {-dias} días" : $"quedan {dias} días")
+                        </span>
+                    </td>
+                    <td>
+                        @if (request.EstadoActual != "SUBIDA A CONASET")
+                        {
+                            <form method="post" asp-page-handler="MarkUploaded">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-primary" type="submit">Marcar subida</button>
+                            </form>
+                        }
+                        <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
+                            <input type="hidden" name="id" value="@request.Id" />
+                            <button class="btn-outline-danger" type="submit">Eliminar</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

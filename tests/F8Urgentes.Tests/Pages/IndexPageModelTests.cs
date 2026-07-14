@@ -124,4 +124,97 @@ public sealed class IndexPageModelTests : IDisposable
         Assert.Equal("SUBIDA A CONASET", _repository.FindById(id)!.EstadoActual);
         Assert.NotNull(result);
     }
+
+    [Fact]
+    public void OnGet_TabPendientes_ExcludesUploadedCases()
+    {
+        var pendingId = Insert();
+        var uploadedId = Insert(rut: "7654321-K");
+        _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
+        var model = new IndexModel(_repository);
+
+        model.OnGet(null, null, null, null, null, "Pendientes");
+
+        Assert.Single(model.Requests);
+        Assert.Equal(pendingId, model.Requests[0].Id);
+    }
+
+    [Fact]
+    public void OnGet_TabSubidas_ReturnsOnlyUploadedCases()
+    {
+        Insert();
+        var uploadedId = Insert(rut: "7654321-K");
+        _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
+        var model = new IndexModel(_repository);
+
+        model.OnGet(null, null, null, null, null, "Subidas");
+
+        Assert.Single(model.Requests);
+        Assert.Equal(uploadedId, model.Requests[0].Id);
+    }
+
+    [Fact]
+    public void OnPostSetPersonData_PersistsNombreAndRut()
+    {
+        var id = Insert();
+        var model = new IndexModel(_repository);
+
+        var result = model.OnPostSetPersonData(id, "Maria Gonzalez", "7654321-K");
+
+        var found = _repository.FindById(id)!;
+        Assert.Equal("Maria Gonzalez", found.NombreCompleto);
+        Assert.Equal("7654321-K", found.Rut);
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void OnPostMarkUploaded_SetsEstadoActualAndFechaDeSubida()
+    {
+        var id = Insert();
+        var model = new IndexModel(_repository);
+
+        var result = model.OnPostMarkUploaded(id);
+
+        var found = _repository.FindById(id)!;
+        Assert.Equal("SUBIDA A CONASET", found.EstadoActual);
+        Assert.Equal(DateOnly.FromDateTime(DateTime.Today), found.FechaDeSubida);
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void OnPostDeleteCase_RemovesRequest()
+    {
+        var id = Insert();
+        var model = new IndexModel(_repository);
+
+        var result = model.OnPostDeleteCase(id);
+
+        Assert.Null(_repository.FindById(id));
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void OnPostAddManualCases_InsertsAllValidRows()
+    {
+        var model = new IndexModel(_repository);
+
+        var result = model.OnPostAddManualCases(
+            new List<string> { "Pedro Soto", "Ana Diaz" },
+            new List<string> { "15949558-2", "7654321-K" },
+            new List<string> { "PRIMERA LICENCIA", "CAMBIO DE DOMICILIO" });
+
+        Assert.Equal(2, _repository.GetAll().Count);
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void DiasHabilesRestantes_ComputesFromFechaPeticion()
+    {
+        var model = new IndexModel(_repository);
+        var request = new UrgentRequest { FechaPeticion = DateOnly.FromDateTime(DateTime.Today) };
+
+        var remaining = model.DiasHabilesRestantes(request);
+
+        Assert.True(remaining <= 15 && remaining >= 0);
+    }
 }

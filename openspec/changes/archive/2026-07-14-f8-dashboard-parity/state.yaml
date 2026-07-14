@@ -1,0 +1,27 @@
+change: f8-dashboard-parity
+phases:
+  proposal:
+    status: done
+    artifact: openspec/changes/f8-dashboard-parity/proposal.md
+  spec:
+    status: done
+    depends_on: [proposal]
+    artifact: openspec/changes/f8-dashboard-parity/specs/dashboard/spec.md
+  tasks:
+    status: done
+    depends_on: [spec]
+    artifact: openspec/changes/f8-dashboard-parity/tasks.md
+  apply:
+    status: done
+    depends_on: [tasks]
+    artifact: engram:sdd/f8-dashboard-parity/apply-progress
+  verify:
+    status: done
+    depends_on: [apply]
+    note: dotnet build 0 warnings, dotnet test 89/89, manual smoke /Index and /Index?tab=Pendientes both 200
+  archive:
+    status: done
+    depends_on: [verify]
+    artifact: openspec/changes/archive/2026-07-14-f8-dashboard-parity/
+
+next_recommended: []
