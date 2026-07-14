@@ -3,7 +3,7 @@ title: F8 Urgent Requests Web App
 artifact_store: openspec
 delivery_strategy: ask-on-risk
 created: 2026-07-13
-updated: 2026-07-13
+updated: 2026-07-14
 
 # DAG: proposal -> specs (+ design) -> tasks -> apply -> verify -> archive
 phases:
@@ -11,14 +11,20 @@ phases:
     status: done
     artifact: openspec/changes/f8-urgentes/proposal.md
   spec:
-    status: pending
+    status: done
     depends_on: [proposal]
+    artifacts:
+      - openspec/changes/f8-urgentes/specs/urgent-request-management/spec.md
+      - openspec/changes/f8-urgentes/specs/historical-import/spec.md
+      - openspec/changes/f8-urgentes/specs/dashboard/spec.md
   design:
-    status: pending
+    status: done
     depends_on: [proposal]
+    artifact: openspec/changes/f8-urgentes/design.md
   tasks:
-    status: pending
+    status: done
     depends_on: [spec, design]
+    artifact: openspec/changes/f8-urgentes/tasks.md
   apply:
     status: pending
     depends_on: [tasks]
@@ -29,7 +35,7 @@ phases:
     status: pending
     depends_on: [verify]
 
-next_recommended: [spec, design]
+next_recommended: [apply]
 
 capabilities:
   new:
