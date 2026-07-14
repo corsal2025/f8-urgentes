@@ -1,0 +1,59 @@
+@page
+@model F8Urgentes.Dashboard.Pages.IndexModel
+@{
+    ViewData["Title"] = "Solicitudes";
+}
+
+<div class="nav-group">
+    <a href="/Index">Todos</a>
+    @foreach (var estado in F8Urgentes.Domain.EstadoCatalog.KnownEstados)
+    {
+        <a href="/Index?estado=@estado">@estado</a>
+    }
+    <a href="/Index?flagged=true">Requiere revisión (@Model.FlaggedCount)</a>
+</div>
+
+<form class="nav-search" method="get" action="/Index">
+    <input type="text" name="search" value="@Model.Search" placeholder="Buscar por RUT o nombre" />
+    <button type="submit">Buscar</button>
+</form>
+
+<div class="card table-card">
+    <table class="cases cases-index">
+        <thead>
+            <tr>
+                <th>Fecha petición</th>
+                <th>Nombre</th>
+                <th>RUT</th>
+                <th>Estado</th>
+                <th>Estado actual</th>
+                <th>Código F8</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var request in Model.Requests)
+            {
+                <tr class="@(request.NeedsReview ? "row-needs-review" : "")">
+                    <td class="text-cell">@request.FechaPeticion</td>
+                    <td class="name-cell">@request.NombreCompleto</td>
+                    <td class="rut-cell">@request.Rut</td>
+                    <td class="text-cell">
+                        <form method="post" asp-page-handler="SetEstado">
+                            <input type="hidden" name="id" value="@request.Id" />
+                            <input class="input-inline" name="estado" value="@request.Estado" />
+                            <button class="btn-primary" type="submit">Guardar</button>
+                        </form>
+                    </td>
+                    <td class="text-cell">
+                        <form method="post" asp-page-handler="SetEstadoActual">
+                            <input type="hidden" name="id" value="@request.Id" />
+                            <input class="input-inline" name="estadoActual" value="@request.EstadoActual" />
+                            <button class="btn-primary" type="submit">Guardar</button>
+                        </form>
+                    </td>
+                    <td class="text-cell">@request.CodigoF8</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
