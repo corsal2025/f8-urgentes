@@ -11,9 +11,13 @@ obj/
 .env
 
 # Runtime data (SQLite DB — contains real PII: names, RUTs, licencia data)
-**/data/*
-!**/data/*.example.csv
-!**/data/README.md
+# NOTE: intentionally root-anchored (/data/*, not **/data/*) — a case-insensitive
+# **/data/* pattern also matches src/F8Urgentes/Data/ and tests/.../Data/ on
+# Windows (git's ignore matching is case-insensitive there by default), which
+# would silently drop the whole Data layer from version control.
+/data/*
+!/data/*.example.csv
+!/data/README.md
 *.db
 
 # OpenSpec local workset
