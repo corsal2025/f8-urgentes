@@ -11,6 +11,7 @@ public interface IUrgentRequestRepository
     long Insert(UrgentRequest request);
     UrgentRequest? FindById(long id);
     void Update(UrgentRequest request);
+    void Delete(long id);
     IReadOnlyList<UrgentRequest> GetAll();
     IReadOnlyList<UrgentRequest> Query(UrgentRequestFilter filter, string? search);
 

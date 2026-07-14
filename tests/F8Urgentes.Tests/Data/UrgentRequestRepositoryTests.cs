@@ -95,6 +95,16 @@ public sealed class UrgentRequestRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void Delete_RemovesRowById()
+    {
+        var id = _repository.Insert(SampleRequest());
+
+        _repository.Delete(id);
+
+        Assert.Null(_repository.FindById(id));
+    }
+
+    [Fact]
     public void GetAll_ReturnsInsertedRows()
     {
         _repository.Insert(SampleRequest("15949558-2"));

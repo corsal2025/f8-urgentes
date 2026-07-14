@@ -110,6 +110,15 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.ExecuteNonQuery();
     }
 
+    public void Delete(long id)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "DELETE FROM UrgentRequest WHERE Id = $id";
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
     public IReadOnlyList<UrgentRequest> GetAll()
     {
         using var connection = Open();
