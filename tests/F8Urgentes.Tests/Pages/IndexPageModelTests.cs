@@ -206,15 +206,4 @@ public sealed class IndexPageModelTests : IDisposable
         Assert.Equal(2, _repository.GetAll().Count);
         Assert.NotNull(result);
     }
-
-    [Fact]
-    public void DiasHabilesRestantes_ComputesFromFechaPeticion()
-    {
-        var model = new IndexModel(_repository);
-        var request = new UrgentRequest { FechaPeticion = DateOnly.FromDateTime(DateTime.Today) };
-
-        var remaining = model.DiasHabilesRestantes(request);
-
-        Assert.True(remaining <= 15 && remaining >= 0);
-    }
 }

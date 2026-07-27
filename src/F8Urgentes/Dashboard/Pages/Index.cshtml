@@ -24,80 +24,114 @@
     <button type="submit">Buscar</button>
 </form>
 
-<div class="card">
+<div class="card quick-add-card">
     <form method="post" asp-page-handler="AddManualCases" id="quick-add-form">
         <div id="quick-add-rows">
             <div class="quick-add-row">
-                <input class="input-block" name="nombreCompleto" placeholder="Nombre completo" />
-                <input class="input-block" name="rut" placeholder="RUT" />
-                <input class="input-block" name="estado" placeholder="Estado" />
+                <label>Nombre completo<input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" /></label>
+                <label>RUT<input class="input-block" name="rut" placeholder="ej: 18.785.387-7" /></label>
+                <label>Estado<input class="input-block" name="estado" placeholder="ej: Pendiente" /></label>
+                <button type="button" class="btn-danger remove-row-btn" title="Quitar fila" hidden>×</button>
             </div>
         </div>
-        <button type="button" id="add-row-btn">+ Agregar otro</button>
-        <button class="btn-primary" type="submit">Agregar</button>
+        <div class="quick-add-actions">
+            <button type="button" id="add-row-btn" class="btn-outline">+ Agregar otro</button>
+            <button class="btn-primary" type="submit">Agregar caso(s)</button>
+        </div>
     </form>
 </div>
 
 <script>
+    document.getElementById('quick-add-rows').addEventListener('click', function (event) {
+        if (event.target.classList.contains('remove-row-btn')) {
+            event.target.closest('.quick-add-row').remove();
+        }
+    });
+
     document.getElementById('add-row-btn').addEventListener('click', function () {
         var rows = document.getElementById('quick-add-rows');
         var row = document.createElement('div');
         row.className = 'quick-add-row';
-        row.innerHTML = '<input class="input-block" name="nombreCompleto" placeholder="Nombre completo" />' +
-            '<input class="input-block" name="rut" placeholder="RUT" />' +
-            '<input class="input-block" name="estado" placeholder="Estado" />';
+        row.innerHTML = '<label>Nombre completo<input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" /></label>' +
+            '<label>RUT<input class="input-block" name="rut" placeholder="ej: 18.785.387-7" /></label>' +
+            '<label>Estado<input class="input-block" name="estado" placeholder="ej: Pendiente" /></label>' +
+            '<button type="button" class="btn-danger remove-row-btn" title="Quitar fila">×</button>';
         rows.appendChild(row);
     });
 </script>
 
 <div class="card table-card">
-    <table class="cases cases-index">
+    <table class="cases cases-list">
         <thead>
             <tr>
-                <th>Fecha petición</th>
+                <th>Marcar</th>
+                <th>Pend. carpeta</th>
+                <th>Recibido</th>
                 <th>Nombre</th>
                 <th>RUT</th>
                 <th>Estado</th>
                 <th>Estado actual</th>
                 <th>Código F8</th>
-                <th>Días hábiles</th>
-                <th>Acciones</th>
+                <th>Acción</th>
             </tr>
         </thead>
         <tbody>
             @foreach (var request in Model.Requests)
             {
-                var dias = Model.DiasHabilesRestantes(request);
-                <tr class="@(request.NeedsReview ? "row-needs-review" : "")">
+                <tr class="@(request.NeedsReview ? "row-needs-review" : "") @F8Urgentes.Dashboard.Pages.IndexModel.EstadoRowClass(request.Estado) @(request.EstadoActual == "SUBIDA A CONASET" ? "row-confirmed" : "")">
+                    <td class="text-cell">
+                        <form class="toggle-form" method="post" asp-page-handler="ToggleMarked">
+                            <input type="hidden" name="id" value="@request.Id" />
+                            <input type="checkbox" class="marked-checkbox" name="markedValue" value="on" checked="@request.Marked" title="Incluir en próxima impresión de sector" />
+                        </form>
+                    </td>
+                    <td class="text-cell">
+                        <form class="toggle-form" method="post" asp-page-handler="TogglePendienteCarpeta">
+                            <input type="hidden" name="id" value="@request.Id" />
+                            <input type="checkbox" class="pendiente-checkbox" name="pendienteCarpetaValue" value="on" checked="@request.PendienteCarpeta" title="Pendiente de carpeta" />
+                        </form>
+                    </td>
                     <td class="text-cell">@request.FechaPeticion</td>
                     <td class="name-cell">
-                        <form method="post" asp-page-handler="SetPersonData">
-                            <input type="hidden" name="id" value="@request.Id" />
-                            <input class="input-inline name-input" name="nombreCompleto" value="@request.NombreCompleto" />
-                            <input class="input-inline rut-input" name="rut" value="@request.Rut" />
-                            <button class="btn-primary" type="submit">Guardar</button>
-                        </form>
+                        <input class="input-inline autosave" form="person-@request.Id" name="nombreCompleto" value="@request.NombreCompleto" />
                     </td>
-                    <td class="rut-cell">@request.Rut</td>
-                    <td class="text-cell">
-                        <form method="post" asp-page-handler="SetEstado">
+                    <td class="rut-cell">
+                        <input class="input-inline autosave" form="person-@request.Id" name="rut" value="@request.Rut" />
+                        <form id="person-@request.Id" method="post" asp-page-handler="SetPersonData">
                             <input type="hidden" name="id" value="@request.Id" />
-                            <input class="input-inline" name="estado" value="@request.Estado" />
-                            <button class="btn-primary" type="submit">Guardar</button>
                         </form>
                     </td>
                     <td class="text-cell">
-                        <span class="badge @(request.EstadoActual == "SUBIDA A CONASET" ? "badge-confirmed" : "badge-pending")">
-                            @(string.IsNullOrWhiteSpace(request.EstadoActual) ? "PENDIENTE" : request.EstadoActual)
-                        </span>
+                        <select class="input-inline estado-select" form="estado-@request.Id" name="estado">
+                            @foreach (var option in F8Urgentes.Domain.EstadoCatalog.KnownEstados)
+                            {
+                                <option value="@option" selected="@(option == request.Estado)">@option</option>
+                            }
+                        </select>
+                        <form class="toggle-form" id="estado-@request.Id" method="post" asp-page-handler="SetEstado">
+                            <input type="hidden" name="id" value="@request.Id" />
+                        </form>
                     </td>
-                    <td class="text-cell">@request.CodigoF8</td>
                     <td class="text-cell">
-                        <span class="badge @(dias < 0 ? "badge-review" : "badge-confirmed")">
-                            @(dias < 0 ? $"vencido hace {-dias} días" : $"quedan {dias} días")
-                        </span>
+                        <select class="input-inline estado-actual-select @F8Urgentes.Dashboard.Pages.IndexModel.EstadoActualBadgeClass(request.EstadoActual)" form="estadoactual-@request.Id" name="estadoActual">
+                            @foreach (var option in F8Urgentes.Domain.EstadoCatalog.KnownEstadosActuales)
+                            {
+                                var label = string.IsNullOrEmpty(option) ? "PENDIENTE" : option;
+                                var isSelected = option == (request.EstadoActual ?? "");
+                                <option value="@option" selected="@isSelected">@label</option>
+                            }
+                        </select>
+                        <form class="toggle-form" id="estadoactual-@request.Id" method="post" asp-page-handler="SetEstadoActual">
+                            <input type="hidden" name="id" value="@request.Id" />
+                        </form>
                     </td>
-                    <td>
+                    <td class="text-cell">
+                        <input class="input-inline autosave" form="codigof8-@request.Id" name="codigoF8" value="@request.CodigoF8" />
+                        <form id="codigof8-@request.Id" method="post" asp-page-handler="SetCodigoF8">
+                            <input type="hidden" name="id" value="@request.Id" />
+                        </form>
+                    </td>
+                    <td class="action-cell">
                         @if (request.EstadoActual != "SUBIDA A CONASET")
                         {
                             <form method="post" asp-page-handler="MarkUploaded">
@@ -107,7 +141,7 @@
                         }
                         <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
                             <input type="hidden" name="id" value="@request.Id" />
-                            <button class="btn-outline-danger" type="submit">Eliminar</button>
+                            <button class="btn-danger" type="submit" title="Eliminar">🗑</button>
                         </form>
                     </td>
                 </tr>
@@ -115,3 +149,95 @@
         </tbody>
     </table>
 </div>
+
+<script>
+    document.querySelectorAll('input.autosave').forEach(function (input) {
+        var initial = input.value;
+        input.addEventListener('blur', function () {
+            if (input.value !== initial && input.form) {
+                input.form.requestSubmit();
+            }
+        });
+    });
+
+    // Toggle forms (Marcar / Pendiente Carpeta) post in the background instead of doing a
+    // full-page navigation — a full RedirectToPage round trip on every checkbox click caused
+    // a visible white-page flash/flicker on every click.
+    document.querySelectorAll('form.toggle-form').forEach(function (form) {
+        var checkbox = form.querySelector('input[type="checkbox"]');
+        if (!checkbox) {
+            return;
+        }
+        checkbox.addEventListener('change', function () {
+            // Marcar and Pendiente Carpeta are mutually exclusive per row — checking one clears
+            // the other (both client-side, for instant feedback, and server-side via its form).
+            if (checkbox.checked) {
+                var row = form.closest('tr');
+                var otherCheckbox = Array.from(row.querySelectorAll('form.toggle-form input[type="checkbox"]'))
+                    .find(function (cb) { return cb !== checkbox; });
+                if (otherCheckbox && otherCheckbox.checked) {
+                    otherCheckbox.checked = false;
+                    submitToggle(otherCheckbox.closest('form'));
+                }
+            }
+            submitToggle(form);
+        });
+    });
+
+    // Estado dropdown: recolors the whole row instantly, then saves in the background.
+    var estadoRowClasses = {
+        'SUBIR CON F8': 'estado-row-f8',
+        'PRIMERA LICENCIA': 'estado-row-licencia',
+        'CAMBIO DE DOMICILIO': 'estado-row-domicilio',
+        'CREAR CERTIFICADO': 'estado-row-certificado',
+        'CARPETA SUBIDA': 'estado-row-subida',
+        'PENDIENTE': 'estado-row-pendiente',
+        'DENEGADA': 'estado-row-denegada',
+    };
+    document.querySelectorAll('select.estado-select').forEach(function (select) {
+        select.addEventListener('change', function () {
+            var row = select.closest('tr');
+            Object.values(estadoRowClasses).forEach(function (cls) { row.classList.remove(cls); });
+            var cls = estadoRowClasses[select.value];
+            if (cls) {
+                row.classList.add(cls);
+            }
+            if (select.form) {
+                submitToggle(select.form);
+            }
+        });
+    });
+
+    // Estado actual dropdown: recolors its own badge pill and, when it becomes "SUBIDA A
+    // CONASET", turns the whole row blue (matching the original F8 project's finished-case
+    // color) since the deadline/marking workflow no longer applies once a case is uploaded.
+    var estadoActualBadgeClasses = {
+        'SUBIDA A CONASET': 'badge-confirmed',
+        'CREAR CERTIFICADO': 'badge-uploaded',
+        'PENDIENTE': 'badge-pending',
+        '': 'badge-pending',
+    };
+    document.querySelectorAll('select.estado-actual-select').forEach(function (select) {
+        select.addEventListener('change', function () {
+            Object.values(estadoActualBadgeClasses).forEach(function (cls) { select.classList.remove(cls); });
+            select.classList.add(estadoActualBadgeClasses[select.value] || 'badge-review');
+
+            var row = select.closest('tr');
+            row.classList.toggle('row-confirmed', select.value === 'SUBIDA A CONASET');
+
+            if (select.form) {
+                submitToggle(select.form);
+            }
+        });
+    });
+
+    function submitToggle(form) {
+        fetch(form.action || window.location.pathname + window.location.search, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        }).catch(function () {
+            form.requestSubmit();
+        });
+    }
+</script>

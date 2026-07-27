@@ -8,20 +8,25 @@ namespace F8Urgentes.Domain;
 /// </summary>
 public static class EstadoCatalog
 {
+    // Extracted from the source workbook (URGENTES DIARIOS.xlsx, all monthly sheets) — every
+    // distinct value that actually appears in the ESTADO / ESTADO ACTUAL columns, ordered by
+    // frequency descending.
     public static readonly IReadOnlyCollection<string> KnownEstados = new[]
     {
         "SUBIR CON F8",
-        "PRIMERA LICENCIA",
         "CAMBIO DE DOMICILIO",
         "CREAR CERTIFICADO",
         "CARPETA SUBIDA",
+        "PRIMERA LICENCIA",
+        "PENDIENTE",
+        "DENEGADA",
     };
 
     public static readonly IReadOnlyCollection<string> KnownEstadosActuales = new[]
     {
         "SUBIDA A CONASET",
-        "PENDIENTE",
         "CREAR CERTIFICADO",
+        "PENDIENTE",
         "",
     };
 

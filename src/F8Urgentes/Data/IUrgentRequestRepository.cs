@@ -23,4 +23,8 @@ public interface IUrgentRequestRepository
     bool HasCompletedImport(string sourceFile);
     void RecordImportRun(string sourceFile, int rowsImported, int rowsFlagged);
     void DeleteImportedRows();
+
+    void SetMarked(long id, bool marked);
+    void SetPendienteCarpeta(long id, bool pendienteCarpeta);
+    void SetSectorPdfGenerated(long id, DateTimeOffset generatedAt);
 }

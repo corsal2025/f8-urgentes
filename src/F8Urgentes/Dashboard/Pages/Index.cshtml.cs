@@ -85,6 +85,49 @@ public sealed class IndexModel(IUrgentRequestRepository repository) : PageModel
         return RedirectToPage();
     }
 
+    public static string EstadoRowClass(string? estado) => estado switch
+    {
+        "SUBIR CON F8" => "estado-row-f8",
+        "PRIMERA LICENCIA" => "estado-row-licencia",
+        "CAMBIO DE DOMICILIO" => "estado-row-domicilio",
+        "CREAR CERTIFICADO" => "estado-row-certificado",
+        "CARPETA SUBIDA" => "estado-row-subida",
+        "PENDIENTE" => "estado-row-pendiente",
+        "DENEGADA" => "estado-row-denegada",
+        _ => "",
+    };
+
+    public static string EstadoActualBadgeClass(string? estadoActual) => estadoActual switch
+    {
+        EstadoActualSubida => "badge-confirmed",
+        "CREAR CERTIFICADO" => "badge-uploaded",
+        "PENDIENTE" or null or "" => "badge-pending",
+        _ => "badge-review",
+    };
+
+    public IActionResult OnPostSetCodigoF8(long id, string? codigoF8)
+    {
+        var request = repository.FindById(id);
+        if (request is not null)
+        {
+            request.CodigoF8 = string.IsNullOrWhiteSpace(codigoF8) ? null : codigoF8.Trim();
+            repository.Update(request);
+        }
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostToggleMarked(long id, string? markedValue)
+    {
+        repository.SetMarked(id, markedValue == "on");
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostTogglePendienteCarpeta(long id, string? pendienteCarpetaValue)
+    {
+        repository.SetPendienteCarpeta(id, pendienteCarpetaValue == "on");
+        return RedirectToPage();
+    }
+
     public IActionResult OnPostDeleteCase(long id)
     {
         repository.Delete(id);
@@ -116,14 +159,4 @@ public sealed class IndexModel(IUrgentRequestRepository repository) : PageModel
         return RedirectToPage();
     }
 
-    public int DiasHabilesRestantes(UrgentRequest request)
-    {
-        if (request.FechaPeticion is not { } fechaPeticion)
-        {
-            return 0;
-        }
-
-        var deadline = DeadlineCalculator.AddBusinessDays(fechaPeticion, 15);
-        return DeadlineCalculator.BusinessDaysRemaining(DateOnly.FromDateTime(DateTime.Today), deadline);
-    }
 }

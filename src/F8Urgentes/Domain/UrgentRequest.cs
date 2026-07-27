@@ -30,4 +30,11 @@ public sealed class UrgentRequest
 
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
+
+    public bool Marked { get; set; }
+    public DateTimeOffset? MarkedAt { get; set; }
+    public DateTimeOffset? SectorPdfGeneratedAt { get; set; }
+    public bool PendienteCarpeta { get; set; }
+
+    public FolderSector? Sector => FolderSectorCalculator.For(FechaUltimaCarpeta);
 }

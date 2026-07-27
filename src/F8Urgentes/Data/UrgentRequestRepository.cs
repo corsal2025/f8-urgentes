@@ -34,7 +34,11 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
                 Origin                TEXT NOT NULL,
                 NeedsReview           INTEGER NOT NULL DEFAULT 0,
                 CreatedAt             TEXT NOT NULL,
-                UpdatedAt             TEXT NULL
+                UpdatedAt             TEXT NULL,
+                Marked                INTEGER NOT NULL DEFAULT 0,
+                MarkedAt              TEXT NULL,
+                SectorPdfGeneratedAt  TEXT NULL,
+                PendienteCarpeta      INTEGER NOT NULL DEFAULT 0
             );
             CREATE INDEX IF NOT EXISTS IX_UrgentRequest_Rut ON UrgentRequest (Rut);
             CREATE INDEX IF NOT EXISTS IX_UrgentRequest_NeedsReview ON UrgentRequest (NeedsReview);
@@ -59,6 +63,33 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
             );
             """;
         command.ExecuteNonQuery();
+
+        // CREATE TABLE IF NOT EXISTS above only shapes brand-new databases — existing ones
+        // created before Marked/PendienteCarpeta/etc. were added need these columns backfilled.
+        EnsureColumnExists(connection, "UrgentRequest", "Marked", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumnExists(connection, "UrgentRequest", "MarkedAt", "TEXT NULL");
+        EnsureColumnExists(connection, "UrgentRequest", "SectorPdfGeneratedAt", "TEXT NULL");
+        EnsureColumnExists(connection, "UrgentRequest", "PendienteCarpeta", "INTEGER NOT NULL DEFAULT 0");
+    }
+
+    private static void EnsureColumnExists(SqliteConnection connection, string table, string column, string definition)
+    {
+        using (var check = connection.CreateCommand())
+        {
+            check.CommandText = $"PRAGMA table_info({table})";
+            using var reader = check.ExecuteReader();
+            while (reader.Read())
+            {
+                if (string.Equals(reader.GetString(reader.GetOrdinal("name")), column, StringComparison.OrdinalIgnoreCase))
+                {
+                    return;
+                }
+            }
+        }
+
+        using var alter = connection.CreateCommand();
+        alter.CommandText = $"ALTER TABLE {table} ADD COLUMN {column} {definition}";
+        alter.ExecuteNonQuery();
     }
 
     public long Insert(UrgentRequest request)
@@ -299,6 +330,46 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.ExecuteNonQuery();
     }
 
+    public void SetMarked(long id, bool marked)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        // Re-marking (marked=true) resets SectorPdfGeneratedAt so the case is pulled back into
+        // the next print batch instead of staying excluded from an earlier run. Marked and
+        // PendienteCarpeta are mutually exclusive, so marking one always clears the other —
+        // enforced here (not just client-side) so the two can never both end up true.
+        command.CommandText = marked
+            ? "UPDATE UrgentRequest SET Marked = 1, MarkedAt = $at, SectorPdfGeneratedAt = NULL, PendienteCarpeta = 0 WHERE Id = $id"
+            : "UPDATE UrgentRequest SET Marked = 0, MarkedAt = NULL WHERE Id = $id";
+        if (marked)
+        {
+            command.Parameters.AddWithValue("$at", DateTimeOffset.UtcNow.ToString("O"));
+        }
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
+    public void SetPendienteCarpeta(long id, bool pendienteCarpeta)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = pendienteCarpeta
+            ? "UPDATE UrgentRequest SET PendienteCarpeta = 1, Marked = 0, MarkedAt = NULL WHERE Id = $id"
+            : "UPDATE UrgentRequest SET PendienteCarpeta = 0 WHERE Id = $id";
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
+    public void SetSectorPdfGenerated(long id, DateTimeOffset generatedAt)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE UrgentRequest SET SectorPdfGeneratedAt = $at WHERE Id = $id";
+        command.Parameters.AddWithValue("$at", generatedAt.ToString("O"));
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
     private SqliteConnection Open()
     {
         var connection = new SqliteConnection(connectionString);
@@ -354,6 +425,10 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         NeedsReview = reader.GetInt32(reader.GetOrdinal("NeedsReview")) == 1,
         CreatedAt = DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("CreatedAt"))),
         UpdatedAt = reader.IsDBNull(reader.GetOrdinal("UpdatedAt")) ? null : DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("UpdatedAt"))),
+        Marked = reader.GetInt32(reader.GetOrdinal("Marked")) == 1,
+        MarkedAt = reader.IsDBNull(reader.GetOrdinal("MarkedAt")) ? null : DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("MarkedAt"))),
+        SectorPdfGeneratedAt = reader.IsDBNull(reader.GetOrdinal("SectorPdfGeneratedAt")) ? null : DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("SectorPdfGeneratedAt"))),
+        PendienteCarpeta = reader.GetInt32(reader.GetOrdinal("PendienteCarpeta")) == 1,
     };
 
     private static ImportFlag MapFlag(SqliteDataReader reader) => new(

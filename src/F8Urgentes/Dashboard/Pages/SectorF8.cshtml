@@ -1,0 +1,50 @@
+@page
+@model F8Urgentes.Dashboard.Pages.SectorF8Model
+@{
+    ViewData["Title"] = "Cola de impresión F8";
+}
+
+<div class="nav-group">
+    <a href="/SectorF8?sector=Archivo" class="@(Model.SelectedSector == F8Urgentes.Domain.FolderSector.Archivo ? "active" : "")">Archivo</a>
+    <a href="/SectorF8?sector=Oficina43" class="@(Model.SelectedSector == F8Urgentes.Domain.FolderSector.Oficina43 ? "active" : "")">Oficina 43</a>
+</div>
+
+<div class="card table-card">
+    <table class="cases">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>RUT</th>
+                <th>Código F8</th>
+                <th>Fecha última carpeta</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var request in Model.Cases)
+            {
+                <tr>
+                    <td class="name-cell">@request.NombreCompleto</td>
+                    <td class="text-cell">@request.Rut</td>
+                    <td class="text-cell">@request.CodigoF8</td>
+                    <td class="text-cell">@(request.FechaUltimaCarpeta?.ToString("dd/MM/yyyy"))</td>
+                    <td class="action-cell">
+                        <form method="post" asp-page-handler="RemoveOne">
+                            <input type="hidden" name="id" value="@request.Id" />
+                            <input type="hidden" name="sector" value="@Model.SelectedSector" />
+                            <button class="btn-outline" type="submit">Quitar</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (Model.Cases.Count > 0)
+{
+    <form method="post" asp-page-handler="ClearAll" style="margin-top: 14px;">
+        <input type="hidden" name="sector" value="@Model.SelectedSector" />
+        <button class="btn-primary" type="submit">Marcar todos como impresos</button>
+    </form>
+}
