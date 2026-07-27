@@ -71,6 +71,7 @@
                 <th>RUT</th>
                 <th>Estado</th>
                 <th>Estado actual</th>
+                <th>Fecha penúltima carpeta</th>
                 <th>Código F8</th>
                 <th>Acción</th>
             </tr>
@@ -116,12 +117,20 @@
                         <select class="input-inline estado-actual-select @F8Urgentes.Dashboard.Pages.IndexModel.EstadoActualBadgeClass(request.EstadoActual)" form="estadoactual-@request.Id" name="estadoActual">
                             @foreach (var option in F8Urgentes.Domain.EstadoCatalog.KnownEstadosActuales)
                             {
-                                var label = string.IsNullOrEmpty(option) ? "PENDIENTE" : option;
-                                var isSelected = option == (request.EstadoActual ?? "");
-                                <option value="@option" selected="@isSelected">@label</option>
+                                var isSelected = option == "PENDIENTE"
+                                    ? string.IsNullOrEmpty(request.EstadoActual) || request.EstadoActual == "PENDIENTE"
+                                    : option == request.EstadoActual;
+                                <option value="@option" selected="@isSelected">@option</option>
                             }
                         </select>
+                        <span class="pendiente-alert" title="Pendiente" style="@(string.IsNullOrEmpty(request.EstadoActual) || request.EstadoActual == "PENDIENTE" ? "" : "display:none")">⚠</span>
                         <form class="toggle-form" id="estadoactual-@request.Id" method="post" asp-page-handler="SetEstadoActual">
+                            <input type="hidden" name="id" value="@request.Id" />
+                        </form>
+                    </td>
+                    <td class="text-cell">
+                        <input class="input-inline autosave" form="fechapenultima-@request.Id" name="fecha" value="@(request.FechaPenultimaCarpeta?.ToString("dd/MM/yyyy") ?? "S/C")" placeholder="ej: 15/03/2024 o S/C" />
+                        <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
                     </td>
@@ -136,7 +145,7 @@
                         {
                             <form method="post" asp-page-handler="MarkUploaded">
                                 <input type="hidden" name="id" value="@request.Id" />
-                                <button class="btn-primary" type="submit">Marcar subida</button>
+                                <button class="btn-primary" type="submit" title="Marcar subida">Subir</button>
                             </form>
                         }
                         <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
@@ -155,78 +164,10 @@
         var initial = input.value;
         input.addEventListener('blur', function () {
             if (input.value !== initial && input.form) {
-                input.form.requestSubmit();
-            }
-        });
-    });
-
-    // Toggle forms (Marcar / Pendiente Carpeta) post in the background instead of doing a
-    // full-page navigation — a full RedirectToPage round trip on every checkbox click caused
-    // a visible white-page flash/flicker on every click.
-    document.querySelectorAll('form.toggle-form').forEach(function (form) {
-        var checkbox = form.querySelector('input[type="checkbox"]');
-        if (!checkbox) {
-            return;
-        }
-        checkbox.addEventListener('change', function () {
-            // Marcar and Pendiente Carpeta are mutually exclusive per row — checking one clears
-            // the other (both client-side, for instant feedback, and server-side via its form).
-            if (checkbox.checked) {
-                var row = form.closest('tr');
-                var otherCheckbox = Array.from(row.querySelectorAll('form.toggle-form input[type="checkbox"]'))
-                    .find(function (cb) { return cb !== checkbox; });
-                if (otherCheckbox && otherCheckbox.checked) {
-                    otherCheckbox.checked = false;
-                    submitToggle(otherCheckbox.closest('form'));
-                }
-            }
-            submitToggle(form);
-        });
-    });
-
-    // Estado dropdown: recolors the whole row instantly, then saves in the background.
-    var estadoRowClasses = {
-        'SUBIR CON F8': 'estado-row-f8',
-        'PRIMERA LICENCIA': 'estado-row-licencia',
-        'CAMBIO DE DOMICILIO': 'estado-row-domicilio',
-        'CREAR CERTIFICADO': 'estado-row-certificado',
-        'CARPETA SUBIDA': 'estado-row-subida',
-        'PENDIENTE': 'estado-row-pendiente',
-        'DENEGADA': 'estado-row-denegada',
-    };
-    document.querySelectorAll('select.estado-select').forEach(function (select) {
-        select.addEventListener('change', function () {
-            var row = select.closest('tr');
-            Object.values(estadoRowClasses).forEach(function (cls) { row.classList.remove(cls); });
-            var cls = estadoRowClasses[select.value];
-            if (cls) {
-                row.classList.add(cls);
-            }
-            if (select.form) {
-                submitToggle(select.form);
-            }
-        });
-    });
-
-    // Estado actual dropdown: recolors its own badge pill and, when it becomes "SUBIDA A
-    // CONASET", turns the whole row blue (matching the original F8 project's finished-case
-    // color) since the deadline/marking workflow no longer applies once a case is uploaded.
-    var estadoActualBadgeClasses = {
-        'SUBIDA A CONASET': 'badge-confirmed',
-        'CREAR CERTIFICADO': 'badge-uploaded',
-        'PENDIENTE': 'badge-pending',
-        '': 'badge-pending',
-    };
-    document.querySelectorAll('select.estado-actual-select').forEach(function (select) {
-        select.addEventListener('change', function () {
-            Object.values(estadoActualBadgeClasses).forEach(function (cls) { select.classList.remove(cls); });
-            select.classList.add(estadoActualBadgeClasses[select.value] || 'badge-review');
-
-            var row = select.closest('tr');
-            row.classList.toggle('row-confirmed', select.value === 'SUBIDA A CONASET');
-
-            if (select.form) {
-                submitToggle(select.form);
+                // Background save — a full requestSubmit() here reloads the whole page and
+                // resets scroll position, which is jarring while editing several rows in a row.
+                submitToggle(input.form);
+                initial = input.value;
             }
         });
     });
@@ -239,5 +180,95 @@
         }).catch(function () {
             form.requestSubmit();
         });
+    }
+
+    // Each wiring block runs independently (own try/catch) — a bad selector or a missing
+    // element in one block must not stop the others below it from ever registering.
+    try {
+        // Toggle forms (Marcar / Pendiente Carpeta) post in the background instead of doing a
+        // full-page navigation — a full RedirectToPage round trip on every checkbox click caused
+        // a visible white-page flash/flicker on every click.
+        document.querySelectorAll('form.toggle-form').forEach(function (form) {
+            var checkbox = form.querySelector('input[type="checkbox"]');
+            if (!checkbox) {
+                return;
+            }
+            checkbox.addEventListener('change', function () {
+                // Marcar and Pendiente Carpeta are mutually exclusive per row — checking one
+                // clears the other (client-side for instant feedback, server-side via its form).
+                if (checkbox.checked) {
+                    var row = form.closest('tr');
+                    var otherCheckbox = Array.from(row.querySelectorAll('form.toggle-form input[type="checkbox"]'))
+                        .find(function (cb) { return cb !== checkbox; });
+                    if (otherCheckbox && otherCheckbox.checked) {
+                        otherCheckbox.checked = false;
+                        submitToggle(otherCheckbox.closest('form'));
+                    }
+                }
+                submitToggle(form);
+            });
+        });
+    } catch (err) {
+        console.error('Marcar/Pendiente Carpeta wiring failed', err);
+    }
+
+    try {
+        // Estado dropdown: recolors the whole row instantly, then saves in the background.
+        var estadoRowClasses = {
+            'SUBIR CON F8': 'estado-row-f8',
+            'PRIMERA LICENCIA': 'estado-row-licencia',
+            'CAMBIO DE DOMICILIO': 'estado-row-domicilio',
+            'CREAR CERTIFICADO': 'estado-row-certificado',
+            'CARPETA SUBIDA': 'estado-row-subida',
+            'PENDIENTE': 'estado-row-pendiente',
+            'DENEGADA': 'estado-row-denegada',
+        };
+        document.querySelectorAll('select.estado-select').forEach(function (select) {
+            select.addEventListener('change', function () {
+                var row = select.closest('tr');
+                Object.values(estadoRowClasses).forEach(function (cls) { row.classList.remove(cls); });
+                var cls = estadoRowClasses[select.value];
+                if (cls) {
+                    row.classList.add(cls);
+                }
+                if (select.form) {
+                    submitToggle(select.form);
+                }
+            });
+        });
+    } catch (err) {
+        console.error('Estado dropdown wiring failed', err);
+    }
+
+    try {
+        // Estado actual dropdown: recolors its own badge pill and, when it becomes "SUBIDA A
+        // CONASET", turns the whole row blue (matching the original F8 project's finished-case
+        // color) since the deadline/marking workflow no longer applies once a case is uploaded.
+        var estadoActualBadgeClasses = {
+            'SUBIDA A CONASET': 'badge-confirmed',
+            'CREAR CERTIFICADO': 'badge-uploaded',
+            'PENDIENTE': 'badge-pending',
+            '': 'badge-pending',
+        };
+        document.querySelectorAll('select.estado-actual-select').forEach(function (select) {
+            select.addEventListener('change', function () {
+                Object.values(estadoActualBadgeClasses).forEach(function (cls) { select.classList.remove(cls); });
+                select.classList.add(estadoActualBadgeClasses[select.value] || 'badge-review');
+
+                var row = select.closest('tr');
+                row.classList.toggle('row-confirmed', select.value === 'SUBIDA A CONASET');
+
+                var alertIcon = select.parentElement.querySelector('.pendiente-alert');
+                if (alertIcon) {
+                    alertIcon.style.display = select.value === 'PENDIENTE' ? '' : 'none';
+                }
+
+                if (select.form) {
+                    submitToggle(select.form);
+                }
+            });
+        });
+    } catch (err) {
+        console.error('Estado actual dropdown wiring failed', err);
     }
 </script>

@@ -22,12 +22,14 @@ public static class EstadoCatalog
         "DENEGADA",
     };
 
+    // No blank entry here on purpose — blank/null EstadoActual is treated as equivalent to the
+    // literal "PENDIENTE" value everywhere it's displayed, so the dropdown doesn't show two
+    // entries that both read "Pendiente".
     public static readonly IReadOnlyCollection<string> KnownEstadosActuales = new[]
     {
         "SUBIDA A CONASET",
         "CREAR CERTIFICADO",
         "PENDIENTE",
-        "",
     };
 
     public static string Canonicalize(string? value) =>
@@ -35,5 +37,6 @@ public static class EstadoCatalog
 
     public static bool IsKnownEstado(string? value) => KnownEstados.Contains(Canonicalize(value));
 
-    public static bool IsKnownEstadoActual(string? value) => KnownEstadosActuales.Contains(Canonicalize(value));
+    public static bool IsKnownEstadoActual(string? value) =>
+        Canonicalize(value) is "" || KnownEstadosActuales.Contains(Canonicalize(value));
 }

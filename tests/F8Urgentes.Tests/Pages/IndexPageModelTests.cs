@@ -206,4 +206,39 @@ public sealed class IndexPageModelTests : IDisposable
         Assert.Equal(2, _repository.GetAll().Count);
         Assert.NotNull(result);
     }
+
+    [Fact]
+    public void OnPostSetFechaPenultimaCarpeta_ParsesDate()
+    {
+        var id = Insert();
+        var model = new IndexModel(_repository);
+
+        model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
+
+        Assert.Equal(new DateOnly(2024, 3, 15), _repository.FindById(id)!.FechaPenultimaCarpeta);
+    }
+
+    [Fact]
+    public void OnPostSetFechaPenultimaCarpeta_SinCarpeta_ClearsDate()
+    {
+        var id = Insert();
+        var model = new IndexModel(_repository);
+        model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
+
+        model.OnPostSetFechaPenultimaCarpeta(id, "S/C");
+
+        Assert.Null(_repository.FindById(id)!.FechaPenultimaCarpeta);
+    }
+
+    [Fact]
+    public void OnPostSetFechaPenultimaCarpeta_Unparseable_LeavesDateUnchanged()
+    {
+        var id = Insert();
+        var model = new IndexModel(_repository);
+        model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
+
+        model.OnPostSetFechaPenultimaCarpeta(id, "no es una fecha");
+
+        Assert.Equal(new DateOnly(2024, 3, 15), _repository.FindById(id)!.FechaPenultimaCarpeta);
+    }
 }

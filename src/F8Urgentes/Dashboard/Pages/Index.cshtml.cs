@@ -105,6 +105,35 @@ public sealed class IndexModel(IUrgentRequestRepository repository) : PageModel
         _ => "badge-review",
     };
 
+    public IActionResult OnPostSetFechaPenultimaCarpeta(long id, string? fecha)
+    {
+        var request = repository.FindById(id);
+        if (request is null)
+        {
+            return RedirectToPage();
+        }
+
+        // Operators type dates as dd/MM/yyyy (the format shown in the input) or "S/C" — FolderDate
+        // only understands ISO/serial forms (it's built for parsing the historical Excel import),
+        // so dd/MM/yyyy is tried first here for manual entry.
+        if (DateOnly.TryParseExact(fecha?.Trim(), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var typed))
+        {
+            request.FechaPenultimaCarpeta = typed;
+            repository.Update(request);
+        }
+        else
+        {
+            var result = FolderDate.Parse(fecha);
+            if (result.Outcome is FolderDateOutcome.Ok or FolderDateOutcome.SinCarpeta)
+            {
+                request.FechaPenultimaCarpeta = result.Value;
+                repository.Update(request);
+            }
+        }
+
+        return RedirectToPage();
+    }
+
     public IActionResult OnPostSetCodigoF8(long id, string? codigoF8)
     {
         var request = repository.FindById(id);

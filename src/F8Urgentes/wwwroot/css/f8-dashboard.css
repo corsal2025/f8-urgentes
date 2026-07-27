@@ -270,7 +270,12 @@ body.cases-page main {
 .card.table-card {
     flex: 1;
     min-height: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
     overflow-y: auto;
+    overflow-x: auto;
 }
 
 table.cases {
@@ -295,7 +300,7 @@ table.cases td {
     border-bottom: 1px solid var(--color-border);
     vertical-align: middle;
     text-align: center;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 table.cases tbody tr:nth-child(even) { background: #fafbfc; }
@@ -422,8 +427,8 @@ table.cases-list .pendiente-checkbox {
     cursor: pointer;
 }
 
-/* Estado row colors are the baseline tint for a row — Marcar/Pendiente Carpeta below take
-   priority when checked, since those flag an operator action in progress. */
+/* Row color on the cases-list table comes only from the Estado dropdown (below) — Marcar and
+   Pendiente Carpeta are plain checkboxes here with no row tint of their own. */
 table.cases-list tbody tr.estado-row-f8 { background: #d9ecd1; }
 table.cases-list tbody tr.estado-row-f8:hover { background: #c7e3ba; }
 table.cases-list tbody tr.estado-row-licencia { background: #fff3c4; }
@@ -436,24 +441,24 @@ table.cases-list tbody tr.estado-row-subida { background: #e3d9f2; }
 table.cases-list tbody tr.estado-row-subida:hover { background: #d5c6ea; }
 table.cases-list tbody tr.estado-row-pendiente { background: #eceff1; }
 table.cases-list tbody tr.estado-row-pendiente:hover { background: #dee3e7; }
-table.cases-list tbody tr.estado-row-denegada { background: #fbe4e8; }
-table.cases-list tbody tr.estado-row-denegada:hover { background: #f6d0d8; }
+table.cases-list tbody tr.estado-row-denegada { background: #f3a8b3 !important; }
+table.cases-list tbody tr.estado-row-denegada:hover { background: #ee8fa0 !important; }
 
-table.cases-index tbody tr:has(.marked-checkbox:checked),
-table.cases-list tbody tr:has(.marked-checkbox:checked) {
+.pendiente-alert {
+    flex: none;
+    color: var(--color-review);
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-left: 4px;
+    cursor: help;
+    animation: review-alert-blink 1.2s ease-in-out infinite;
+}
+
+table.cases-index tbody tr:has(.marked-checkbox:checked) {
     background: #bfe3b4;
 }
 
-table.cases-list tbody tr:has(.pendiente-checkbox:checked):not(:has(.marked-checkbox:checked)) {
-    background: #fff3c4;
-}
-
-table.cases-list tbody tr:has(.pendiente-checkbox:checked):not(:has(.marked-checkbox:checked)):hover {
-    background: #fce9a8;
-}
-
-table.cases-index tbody tr:has(.marked-checkbox:checked):hover,
-table.cases-list tbody tr:has(.marked-checkbox:checked):hover {
+table.cases-index tbody tr:has(.marked-checkbox:checked):hover {
     background: #aed89f;
 }
 
@@ -588,17 +593,23 @@ button.btn-outline:hover { background: var(--color-bg); }
 table.cases-list {
     table-layout: fixed;
     font-size: 0.82rem;
+    /* On narrow viewports, percentage widths under table-layout:fixed shrink every column
+       together instead of triggering the card's horizontal scroll — squeezing button text
+       down to a single letter. A min-width forces the table to keep its real size and scroll
+       sideways instead. */
+    min-width: 1120px;
 }
 
-table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { width: 6%; }
-table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { width: 7%; }
-table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { width: 8%; }
-table.cases-list th:nth-child(4), table.cases-list td:nth-child(4) { width: 22%; }
-table.cases-list th:nth-child(5), table.cases-list td:nth-child(5) { width: 13%; }
-table.cases-list th:nth-child(6), table.cases-list td:nth-child(6) { width: 10%; }
-table.cases-list th:nth-child(7), table.cases-list td:nth-child(7) { width: 12%; }
-table.cases-list th:nth-child(8), table.cases-list td:nth-child(8) { width: 10%; }
-table.cases-list th:nth-child(9), table.cases-list td:nth-child(9) { width: 12%; }
+table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { width: 5%; }
+table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { width: 6%; }
+table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { width: 6%; }
+table.cases-list th:nth-child(4), table.cases-list td:nth-child(4) { width: 15%; }
+table.cases-list th:nth-child(5), table.cases-list td:nth-child(5) { width: 10%; }
+table.cases-list th:nth-child(6), table.cases-list td:nth-child(6) { width: 14%; }
+table.cases-list th:nth-child(7), table.cases-list td:nth-child(7) { width: 14%; }
+table.cases-list th:nth-child(8), table.cases-list td:nth-child(8) { width: 11%; }
+table.cases-list th:nth-child(9), table.cases-list td:nth-child(9) { width: 7%; }
+table.cases-list th:nth-child(10), table.cases-list td:nth-child(10) { width: 12%; }
 
 table.cases-list td.name-cell,
 table.cases-list td.rut-cell {
@@ -608,8 +619,16 @@ table.cases-list td.rut-cell {
 table.cases-list td.action-cell {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
+    justify-content: flex-start;
+    gap: 6px;
+    overflow: hidden;
+}
+
+table.cases-list td.action-cell button.btn-primary {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    flex: none;
 }
 
 table.cases-list td.action-cell form {
@@ -622,7 +641,7 @@ table.cases-list td.action-cell form {
     border-radius: 4px;
     padding: 4px 6px;
     font-size: 0.78rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--color-text);
     text-align: center;
 }
@@ -638,6 +657,13 @@ table.cases-list .input-inline {
 select.estado-select {
     cursor: pointer;
     background: #fff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 4px 3px;
+}
+
+select.estado-select option {
+    font-weight: 700;
 }
 
 select.estado-actual-select {
