@@ -15,6 +15,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
     public string? SyncMessage { get; set; }
 
     public IReadOnlyList<UrgentRequest> Requests { get; private set; } = [];
+    public IReadOnlyList<string> DuplicateRuts { get; private set; } = [];
     public string? Month { get; private set; }
     public string? Estado { get; private set; }
     public string? EstadoActual { get; private set; }
@@ -34,12 +35,27 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
 
         var allMatching = repository.Query(new UrgentRequestFilter(month, estado, estadoActual, flagged), search);
 
-        Requests = tab switch
+        var filtered = tab switch
         {
             "Pendientes" => allMatching.Where(r => r.EstadoActual != EstadoActualSubida).ToList(),
             "Subidas" => allMatching.Where(r => r.EstadoActual == EstadoActualSubida).ToList(),
             _ => allMatching,
         };
+
+        // Completed cases (SUBIDA A CONASET) drop to the bottom, everything still in progress
+        // stays on top in the order it arrived — so newly loaded/pending cases are always the
+        // first thing the operator sees instead of mixed in among finished ones.
+        Requests = filtered
+            .OrderBy(r => r.EstadoActual == EstadoActualSubida ? 1 : 0)
+            .ThenBy(r => r.Id)
+            .ToList();
+
+        DuplicateRuts = repository.GetAll()
+            .Where(r => !string.IsNullOrWhiteSpace(r.Rut))
+            .GroupBy(r => r.Rut!)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
 
         FlaggedCount = repository.GetFlagged().Count;
     }
@@ -72,7 +88,10 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         if (request is not null)
         {
             request.NombreCompleto = nombreCompleto;
-            request.Rut = rut;
+            // Normalize however the operator typed it (with/without dots, with/without dash,
+            // missing the leading zero) into the canonical stored form — display then adds
+            // dots back via RutFormatter, so storage and formatting stay independent.
+            request.Rut = Rut.TryParse(rut, out var parsed) ? parsed.ToString() : rut;
             repository.Update(request);
         }
         return RedirectToPage();
@@ -92,6 +111,18 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
                 request.PendienteEscrituraExcel = true;
             }
             repository.Update(request);
+
+            // Marcar/Pendiente carpeta are print-queue flags for cases still in progress —
+            // once a case is uploaded it's done, so its checkbox tickets clear automatically
+            // instead of lingering checked in a queue it no longer belongs to.
+            if (request.Marked)
+            {
+                repository.SetMarked(id, false);
+            }
+            if (request.PendienteCarpeta)
+            {
+                repository.SetPendienteCarpeta(id, false);
+            }
         }
         return RedirectToPage();
     }
@@ -115,6 +146,22 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         return Path.IsPathRooted(matrizPath)
             ? matrizPath
             : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, matrizPath));
+    }
+
+    // Width is computed once per render from the stored value's own length (not the live
+    // input, which would grow with every keystroke and reflow the whole table while typing).
+    // Falls back to the placeholder's length when empty, so blank cells still show the hint.
+    public static int InputWidthCh(string? value, string placeholder, int min = 6, int max = 26)
+    {
+        // A blank cell only needs to hint at the format, not fit the whole placeholder — that
+        // would make every empty column as wide as its longest instruction text. Filled cells
+        // size to their real value so nothing typed in is ever clipped.
+        var length = string.IsNullOrEmpty(value) ? Math.Min(placeholder.Length, min) : value.Length;
+        // 1ch = width of the font's "0" glyph, but this table's text is bold + uppercase, whose
+        // average letter is noticeably wider than a digit — a 1:1 char-to-ch mapping visibly
+        // clips real names (confirmed: "LUIS RODRIGO VASQUEZ SALAZAR", 29 chars, still clipped
+        // at 30ch). A 1.5x multiplier plus buffer covers that gap.
+        return Math.Clamp((int)Math.Ceiling(length * 1.5) + 2, min, max);
     }
 
     public static string EstadoRowClass(string? estado) => estado switch
@@ -145,10 +192,14 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
             return RedirectToPage();
         }
 
-        // Operators type dates as dd/MM/yyyy (the format shown in the input) or "S/C" — FolderDate
-        // only understands ISO/serial forms (it's built for parsing the historical Excel import),
-        // so dd/MM/yyyy is tried first here for manual entry.
-        if (DateOnly.TryParseExact(fecha?.Trim(), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var typed))
+        // The field displays/expects the long Spanish form ("15 de mayo de 2024"), but dd/MM/yyyy
+        // and FolderDate's ISO/serial forms are still accepted for whatever an operator pastes in.
+        if (SpanishDateFormatter.TryParseLongDate(fecha, out var longForm))
+        {
+            request.FechaPenultimaCarpeta = longForm;
+            repository.Update(request);
+        }
+        else if (DateOnly.TryParseExact(fecha?.Trim(), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var typed))
         {
             request.FechaPenultimaCarpeta = typed;
             repository.Update(request);

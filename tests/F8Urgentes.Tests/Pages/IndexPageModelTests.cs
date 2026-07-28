@@ -163,7 +163,7 @@ public sealed class IndexPageModelTests : IDisposable
 
         var found = _repository.FindById(id)!;
         Assert.Equal("Maria Gonzalez", found.NombreCompleto);
-        Assert.Equal("7654321-K", found.Rut);
+        Assert.Equal("07654321-K", found.Rut);
         Assert.NotNull(result);
     }
 

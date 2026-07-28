@@ -22,7 +22,7 @@ public class RutTests
     public void TryParse_UppercasesLowercaseK()
     {
         Assert.True(Rut.TryParse("7654321-k", out var rut));
-        Assert.Equal("7654321-K", rut.ToString());
+        Assert.Equal("07654321-K", rut.ToString());
     }
 
     [Fact]
@@ -52,6 +52,6 @@ public class RutTests
     public void ToString_ReturnsCanonicalForm()
     {
         Assert.True(Rut.TryParse("7.654.321-K", out var rut));
-        Assert.Equal("7654321-K", rut.ToString());
+        Assert.Equal("07654321-K", rut.ToString());
     }
 }

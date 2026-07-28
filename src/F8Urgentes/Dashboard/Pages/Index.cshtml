@@ -16,6 +16,9 @@
             <span class="badge badge-review">@Model.FlaggedCount</span>
         }
     </a>
+    <a href="/SectorF8?sector=Archivo" class="pdf-chip pdf-chip-archivo">PDF Archivo</a>
+    <a href="/SectorF8?sector=Oficina43" class="pdf-chip pdf-chip-oficina43">PDF Oficina 43</a>
+    <a href="/Estadisticas" class="pdf-chip pdf-chip-stats">Estadísticas</a>
     <form method="post" asp-page-handler="Sincronizar" style="margin-left:auto;">
         <button class="btn-outline" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
             Sincronizar datos
@@ -27,6 +30,13 @@
 {
     <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#eef6ec; border-left:4px solid #4a934a; font-size:0.85rem;">
         @Model.SyncMessage
+    </div>
+}
+
+@if (Model.DuplicateRuts.Count > 0)
+{
+    <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#fdecea; border-left:4px solid #c0392b; font-size:0.85rem;">
+        ⚠ RUT duplicado(s), hay más de un caso con el mismo RUT: @string.Join(", ", Model.DuplicateRuts.Select(F8Urgentes.Domain.RutFormatter.WithDots))
     </div>
 }
 
@@ -54,6 +64,21 @@
 </div>
 
 <script>
+    // Quick-add does a full RedirectToPage round trip, and a full navigation always resets
+    // scroll to the top — jarring after adding a case while scrolled down the list. Stash the
+    // scroll position before submitting and restore it once the reloaded page settles.
+    (function () {
+        var scrollKey = 'f8-index-scroll';
+        var restore = sessionStorage.getItem(scrollKey);
+        if (restore !== null) {
+            sessionStorage.removeItem(scrollKey);
+            window.scrollTo(0, parseInt(restore, 10) || 0);
+        }
+        document.getElementById('quick-add-form').addEventListener('submit', function () {
+            sessionStorage.setItem(scrollKey, String(window.scrollY));
+        });
+    })();
+
     document.getElementById('quick-add-rows').addEventListener('click', function (event) {
         if (event.target.classList.contains('remove-row-btn')) {
             event.target.closest('.quick-add-row').remove();
@@ -77,14 +102,17 @@
         <thead>
             <tr>
                 <th>Marcar</th>
-                <th>Pend. carpeta</th>
-                <th>Recibido</th>
-                <th>Nombre</th>
+                <th class="th-wrap">Pend.<br />carpeta</th>
+                <th class="th-wrap">Fecha de<br />citación</th>
+                <th>Nombre contribuyente</th>
                 <th>RUT</th>
+                <th>Sector oficina</th>
                 <th>Estado</th>
                 <th>Estado actual</th>
-                <th>Fecha penúltima carpeta</th>
                 <th>Código F8</th>
+                <th class="th-wrap">Fecha<br />penúltima<br />carpeta</th>
+                <th class="th-wrap">Sector<br />carpeta</th>
+                <th>Fecha subida F8</th>
                 <th>Acción</th>
             </tr>
         </thead>
@@ -106,16 +134,19 @@
                     </td>
                     <td class="text-cell">@request.FechaPeticion</td>
                     <td class="name-cell">
-                        <input class="input-inline autosave" form="person-@request.Id" name="nombreCompleto" value="@request.NombreCompleto" />
+                        <input class="input-inline autosave" form="person-@request.Id" name="nombreCompleto" value="@request.NombreCompleto" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(request.NombreCompleto, "Nombre completo", 10, 70))ch" />
                     </td>
                     <td class="rut-cell">
-                        <input class="input-inline autosave" form="person-@request.Id" name="rut" value="@request.Rut" />
+                        @{ var rutDisplay = F8Urgentes.Domain.RutFormatter.WithDots(request.Rut); }
+                        <input class="input-inline autosave rut-input" form="person-@request.Id" name="rut" value="@rutDisplay" style="width:13ch" />
                         <form id="person-@request.Id" method="post" asp-page-handler="SetPersonData">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
                     </td>
+                    <td class="text-cell">@(request.MatrizSector ?? "—")</td>
                     <td class="text-cell">
                         <select class="input-inline estado-select" form="estado-@request.Id" name="estado">
+                            <option value="" selected="@string.IsNullOrEmpty(request.Estado)"></option>
                             @foreach (var option in F8Urgentes.Domain.EstadoCatalog.KnownEstados)
                             {
                                 <option value="@option" selected="@(option == request.Estado)">@option</option>
@@ -126,14 +157,19 @@
                         </form>
                     </td>
                     <td class="text-cell">
-                        <select class="input-inline estado-actual-select @F8Urgentes.Dashboard.Pages.IndexModel.EstadoActualBadgeClass(request.EstadoActual)" form="estadoactual-@request.Id" name="estadoActual">
-                            @foreach (var option in F8Urgentes.Domain.EstadoCatalog.KnownEstadosActuales)
+                        @{
+                            // PENDIENTE (default) and SUBIDA A CONASET (set only via the Subir
+                            // button) are automatic states, not manual choices — CREAR
+                            // CERTIFICADO is the only thing an operator picks from this dropdown.
+                            var currentEstadoActual = string.IsNullOrEmpty(request.EstadoActual) ? "PENDIENTE" : request.EstadoActual;
+                            var isLocked = currentEstadoActual == "SUBIDA A CONASET";
+                        }
+                        <select class="input-inline estado-actual-select @F8Urgentes.Dashboard.Pages.IndexModel.EstadoActualBadgeClass(request.EstadoActual)" form="estadoactual-@request.Id" name="estadoActual" disabled="@isLocked">
+                            @if (currentEstadoActual != "CREAR CERTIFICADO")
                             {
-                                var isSelected = option == "PENDIENTE"
-                                    ? string.IsNullOrEmpty(request.EstadoActual) || request.EstadoActual == "PENDIENTE"
-                                    : option == request.EstadoActual;
-                                <option value="@option" selected="@isSelected">@option</option>
+                                <option value="@currentEstadoActual" selected>@currentEstadoActual</option>
                             }
+                            <option value="CREAR CERTIFICADO" selected="@(currentEstadoActual == "CREAR CERTIFICADO")">CREAR CERTIFICADO</option>
                         </select>
                         <span class="pendiente-alert" title="Pendiente" style="@(string.IsNullOrEmpty(request.EstadoActual) || request.EstadoActual == "PENDIENTE" ? "" : "display:none")">⚠</span>
                         <form class="toggle-form" id="estadoactual-@request.Id" method="post" asp-page-handler="SetEstadoActual">
@@ -141,17 +177,27 @@
                         </form>
                     </td>
                     <td class="text-cell">
-                        <input class="input-inline autosave" form="fechapenultima-@request.Id" name="fecha" value="@(request.FechaPenultimaCarpeta?.ToString("dd/MM/yyyy") ?? "S/C")" placeholder="ej: 15/03/2024 o S/C" />
+                        <input class="input-inline autosave" form="codigof8-@request.Id" name="codigoF8" value="@request.CodigoF8" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(request.CodigoF8, "Código F8", 8, 40))ch" />
+                        <form id="codigof8-@request.Id" method="post" asp-page-handler="SetCodigoF8">
+                            <input type="hidden" name="id" value="@request.Id" />
+                        </form>
+                    </td>
+                    <td class="text-cell">
+                        @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is { } fpc ? F8Urgentes.Domain.SpanishDateFormatter.LongDate(fpc) : ""; }
+                        <input class="input-inline autosave" form="fechapenultima-@request.Id" name="fecha" value="@fechaPenultimaDisplay" placeholder="ej: 15 de marzo de 2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15 de marzo de 2024 o S/C", 10, 48))ch" />
                         <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
                     </td>
                     <td class="text-cell">
-                        <input class="input-inline autosave" form="codigof8-@request.Id" name="codigoF8" value="@request.CodigoF8" />
-                        <form id="codigof8-@request.Id" method="post" asp-page-handler="SetCodigoF8">
-                            <input type="hidden" name="id" value="@request.Id" />
-                        </form>
+                        @(request.Sector switch
+                        {
+                            F8Urgentes.Domain.FolderSector.Archivo => "Archivo",
+                            F8Urgentes.Domain.FolderSector.Oficina43 => "Oficina 43",
+                            _ => "",
+                        })
                     </td>
+                    <td class="text-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
                     <td class="action-cell">
                         @if (request.EstadoActual != "SUBIDA A CONASET")
                         {
@@ -189,6 +235,15 @@
             method: 'POST',
             body: new FormData(form),
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        }).then(function (response) {
+            // fetch() only rejects on network failure — a non-2xx response (e.g. the
+            // anti-forgery token going stale after the server restarts) resolves normally and
+            // was previously swallowed here, silently dropping the save. Fall back to a real
+            // form submit (full page reload, fresh token) whenever the background save didn't
+            // actually succeed.
+            if (!response.ok) {
+                form.requestSubmit();
+            }
         }).catch(function () {
             form.requestSubmit();
         });
@@ -282,5 +337,22 @@
         });
     } catch (err) {
         console.error('Estado actual dropdown wiring failed', err);
+    }
+
+    try {
+        // RUT is displayed with dots for readability, but copying should hand over the plain
+        // "12345678-9" form (no dots) that gets pasted elsewhere (other systems, search boxes).
+        document.querySelectorAll('input.rut-input').forEach(function (input) {
+            input.addEventListener('copy', function (event) {
+                var selected = input.value.substring(input.selectionStart, input.selectionEnd);
+                if (!selected) {
+                    return;
+                }
+                event.clipboardData.setData('text/plain', selected.replace(/\./g, ''));
+                event.preventDefault();
+            });
+        });
+    } catch (err) {
+        console.error('RUT copy wiring failed', err);
     }
 </script>

@@ -46,5 +46,5 @@ public sealed class UrgentRequest
     public string? MatrizSector { get; set; }
     public bool PendienteEscrituraExcel { get; set; }
 
-    public FolderSector? Sector => FolderSectorCalculator.For(FechaUltimaCarpeta);
+    public FolderSector? Sector => FolderSectorCalculator.For(FechaPenultimaCarpeta);
 }

@@ -1,5 +1,6 @@
 using F8Urgentes.Configuration;
 using F8Urgentes.Data;
+using Microsoft.AspNetCore.DataProtection;
 
 // ContentRootPath pinned to the exe's own folder so every relative path in config
 // (SqliteDbPath, ExcelSourcePath) resolves the same way regardless of how the app
@@ -26,6 +27,15 @@ Directory.CreateDirectory(Path.GetDirectoryName(sqliteDbPath)!);
 
 builder.Services.AddSingleton<IUrgentRequestRepository>(_ =>
     new UrgentRequestRepository($"Data Source={sqliteDbPath}"));
+
+// Default data protection keys are ephemeral (regenerated every process start), which
+// invalidates every anti-forgery token issued to a page still open in a browser from before
+// a restart — autosave then fails (fetch resolves with a non-2xx, previously swallowed
+// silently) and full-page POSTs like "Subir" show an error instead of saving. Persisting the
+// key ring means tokens survive restarts/deploys, matching how the app is actually restarted
+// in practice (frequent redeploys, not a long-lived single process).
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Path.GetDirectoryName(sqliteDbPath)!, "keys")));
 
 builder.Services.AddRazorPages(options => options.RootDirectory = "/Dashboard/Pages");
 

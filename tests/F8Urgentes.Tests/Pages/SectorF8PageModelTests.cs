@@ -22,13 +22,13 @@ public sealed class SectorF8PageModelTests : IDisposable
         if (File.Exists(_dbPath)) File.Delete(_dbPath);
     }
 
-    private long Insert(DateOnly fechaUltimaCarpeta, bool marked = false, bool pendienteCarpeta = false)
+    private long Insert(DateOnly fechaPenultimaCarpeta, bool marked = false, bool pendienteCarpeta = false)
     {
         var id = _repository.Insert(new UrgentRequest
         {
             NombreCompleto = "Juan Perez",
             Rut = "15949558-2",
-            FechaUltimaCarpeta = fechaUltimaCarpeta,
+            FechaPenultimaCarpeta = fechaPenultimaCarpeta,
             Origin = "Web",
             CreatedAt = DateTimeOffset.UtcNow,
         });

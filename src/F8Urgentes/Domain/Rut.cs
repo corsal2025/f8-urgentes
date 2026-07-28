@@ -79,5 +79,28 @@ public readonly struct Rut
         };
     }
 
-    public override string ToString() => string.Create(CultureInfo.InvariantCulture, $"{Body}-{CheckDigit}");
+    // RUTs under 10,000,000 are conventionally written with a leading zero (e.g. 01.234.567-8)
+    // so the body always reads as 7-8 digits — padding here doesn't affect the check digit
+    // (already computed from the unpadded body: leading zeros contribute nothing to the sum).
+    private string PaddedBody => long.Parse(Body, CultureInfo.InvariantCulture) < 10_000_000
+        ? Body.PadLeft(8, '0')
+        : Body;
+
+    public override string ToString() => string.Create(CultureInfo.InvariantCulture, $"{PaddedBody}-{CheckDigit}");
+
+    public string ToStringWithDots() => $"{FormatWithDots(PaddedBody)}-{CheckDigit}";
+
+    private static string FormatWithDots(string digits)
+    {
+        var result = new System.Text.StringBuilder();
+        for (var i = 0; i < digits.Length; i++)
+        {
+            if (i > 0 && (digits.Length - i) % 3 == 0)
+            {
+                result.Append('.');
+            }
+            result.Append(digits[i]);
+        }
+        return result.ToString();
+    }
 }

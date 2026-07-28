@@ -26,10 +26,19 @@ namespace F8Urgentes.Matriz;
 public static class MatrizSyncService
 {
     private static readonly string[] KnownSectors = ["AV. ARGENTINA", "PLACILLA", "MERC. PUERTO"];
-    private const string EstadoNoHayCarpeta = "NO HAY CARPETA";
+    // The real workbook uses "NO EXISTE CARPETA" — "NO HAY CARPETA" is kept as a second accepted
+    // spelling since operators across sheets/months aren't perfectly consistent in wording.
+    private static readonly string[] EstadosSinCarpeta = ["NO EXISTE CARPETA", "NO HAY CARPETA"];
     private const string EstadoSubidaConF8 = "SUBIDA CON F8";
     private const int MaxRetries = 4;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
+
+    // Salida (write-back to the Excel matriz) is disabled by request — the office wants to do
+    // that step by hand for now, until the matching/row-relocation logic is more battle-tested.
+    // Entrada (reading NO EXISTE CARPETA cases into the dashboard) keeps running as normal.
+    // Cases marked "Subir" still queue up (PendienteEscrituraExcel stays true) so nothing is
+    // lost — flip this back to true whenever salida should resume.
+    private static readonly bool SalidaEnabled = false;
 
     public static MatrizSyncResult Sync(string? workbookPath, IUrgentRequestRepository repository)
     {
@@ -41,7 +50,10 @@ public static class MatrizSyncService
         }
 
         RunEntrada(workbookPath, repository, result);
-        RunSalida(workbookPath, repository, result);
+        if (SalidaEnabled)
+        {
+            RunSalida(workbookPath, repository, result);
+        }
         return result;
     }
 
@@ -93,7 +105,7 @@ public static class MatrizSyncService
                     break;
                 }
 
-                if (!string.Equals(NormalizeHeader(estado), EstadoNoHayCarpeta, StringComparison.Ordinal))
+                if (!EstadosSinCarpeta.Contains(NormalizeHeader(estado), StringComparer.Ordinal))
                 {
                     continue;
                 }
@@ -229,26 +241,43 @@ public static class MatrizSyncService
                     columnsBySheet[sheet.Name!.Value!] = columns;
                 }
 
+                // Compare through Rut.TryParse on both sides, not raw string equality — some
+                // cases were stored before the leading-zero canonical form existed (their
+                // request.Rut is still e.g. "9629999-0" instead of "09629999-0"), which would
+                // otherwise never match the Excel's own (correctly padded) cell.
+                var requestRutCanonical = Rut.TryParse(request.Rut, out var parsedRequestRut) ? parsedRequestRut.ToString() : request.Rut;
+
                 var rowNumber = request.SourceRowNumber!.Value;
                 var row = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex!.Value == (uint)rowNumber);
-                if (row is null)
+
+                var currentRutRaw = row is null ? "" : GetCellText(row, columns.Rut, sharedStrings)?.Trim() ?? "";
+                var rowMatchesRut = Rut.TryParse(currentRutRaw, out var rowRut) && rowRut.ToString() == requestRutCanonical;
+
+                if (!rowMatchesRut)
                 {
-                    result.Alerts.Add($"Fila {rowNumber} ya no existe en '{sheet.Name!.Value}' — RUT {request.Rut} no actualizado.");
-                    continue;
+                    // The stored row number was captured at import time — rows shift whenever
+                    // someone inserts/deletes rows in the live shared spreadsheet since then.
+                    // Before giving up, re-locate the case by scanning the whole sheet for its
+                    // RUT rather than trusting a now-possibly-stale row number.
+                    var relocated = sheetData.Elements<Row>().FirstOrDefault(r =>
+                        Rut.TryParse(GetCellText(r, columns.Rut, sharedStrings), out var candidateRut) &&
+                        candidateRut.ToString() == requestRutCanonical);
+
+                    if (relocated is null)
+                    {
+                        result.Alerts.Add($"No se encontro el RUT {request.Rut} en '{sheet.Name!.Value}' (fila {rowNumber} ahora tiene otro caso) — revisar manualmente.");
+                        continue;
+                    }
+
+                    result.Alerts.Add($"RUT {request.Rut} se movio de la fila {rowNumber} a la fila {relocated.RowIndex!.Value} en '{sheet.Name!.Value}' — actualizado igual, se detecto y siguio el cambio.");
+                    row = relocated;
                 }
 
-                var currentRutRaw = GetCellText(row, columns.Rut, sharedStrings)?.Trim() ?? "";
-                if (Rut.TryParse(currentRutRaw, out var rowRut) && rowRut.ToString() != request.Rut)
-                {
-                    result.Alerts.Add($"Fila {rowNumber} de '{sheet.Name!.Value}' ya no corresponde al RUT {request.Rut} (cambio detectado) — revisar manualmente.");
-                    continue;
-                }
-
-                SetCellText(row, columns.EstadoCarpeta, EstadoSubidaConF8);
+                SetCellText(row!, columns.EstadoCarpeta, EstadoSubidaConF8);
                 if (columns.FechaSubioCarpeta != 0)
                 {
                     var fecha = (request.FechaDeSubida ?? DateOnly.FromDateTime(DateTime.Today)).ToString("dd/MM/yyyy");
-                    SetCellText(row, columns.FechaSubioCarpeta, fecha);
+                    SetCellText(row!, columns.FechaSubioCarpeta, fecha);
                 }
 
                 writtenIds.Add(request.Id);
