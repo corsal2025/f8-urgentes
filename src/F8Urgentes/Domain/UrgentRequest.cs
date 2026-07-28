@@ -36,5 +36,15 @@ public sealed class UrgentRequest
     public DateTimeOffset? SectorPdfGeneratedAt { get; set; }
     public bool PendienteCarpeta { get; set; }
 
+    // Matriz sync (design: Excel matriz de distribucion de carpetas). MatrizSector is the
+    // physical office sector (AV. ARGENTINA / PLACILLA / MERC. PUERTO) read from the sheet
+    // name the row came from — distinct from the computed FolderSector (Archivo/Oficina43)
+    // above, which is about the old-vs-new filing room, not the department office.
+    // PendienteEscrituraExcel is set when the operator marks a case as uploaded and the
+    // matching row in the matriz still needs "SUBIDA CON F8" + today's date written back;
+    // it's cleared only after MatrizSyncService confirms the write succeeded.
+    public string? MatrizSector { get; set; }
+    public bool PendienteEscrituraExcel { get; set; }
+
     public FolderSector? Sector => FolderSectorCalculator.For(FechaUltimaCarpeta);
 }

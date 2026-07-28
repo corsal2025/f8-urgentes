@@ -444,6 +444,25 @@ table.cases-list tbody tr.estado-row-pendiente:hover { background: #dee3e7; }
 table.cases-list tbody tr.estado-row-denegada { background: #f3a8b3 !important; }
 table.cases-list tbody tr.estado-row-denegada:hover { background: #ee8fa0 !important; }
 
+table.cases-list td:has(select.estado-actual-select) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+table.cases-list td:has(select.estado-actual-select) select.estado-actual-select {
+    /* table-layout:auto lets the column grow with it — pill shrinks to its own text
+       instead of stretching to fill a fixed-width column. */
+    width: auto;
+    flex: none;
+}
+
+table.cases-list td:has(select.estado-actual-select) .pendiente-alert {
+    position: static;
+    margin-left: 0;
+}
+
 .pendiente-alert {
     flex: none;
     color: var(--color-review);
@@ -591,44 +610,73 @@ button.btn-outline:hover { background: var(--color-bg); }
 /* cases-list is the Index page's own column scheme (8 columns) — distinct from cases-index
    (11 columns, used by a checkbox-driven review grid) so widths never fight each other. */
 table.cases-list {
-    table-layout: fixed;
-    font-size: 0.82rem;
-    /* On narrow viewports, percentage widths under table-layout:fixed shrink every column
-       together instead of triggering the card's horizontal scroll — squeezing button text
-       down to a single letter. A min-width forces the table to keep its real size and scroll
-       sideways instead. */
-    min-width: 1120px;
+    /* auto layout: each column sizes to its widest content (input/select/button), so names,
+       codes, dates etc. are never clipped. The card's overflow-x scrolls when the total
+       exceeds the viewport instead of squeezing columns down to unreadable slivers. */
+    table-layout: auto;
+    font-size: 0.72rem;
+    width: auto;
+    min-width: 100%;
+    border-collapse: collapse;
 }
 
-table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { width: 5%; }
-table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { width: 6%; }
-table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { width: 6%; }
-table.cases-list th:nth-child(4), table.cases-list td:nth-child(4) { width: 15%; }
-table.cases-list th:nth-child(5), table.cases-list td:nth-child(5) { width: 10%; }
-table.cases-list th:nth-child(6), table.cases-list td:nth-child(6) { width: 14%; }
-table.cases-list th:nth-child(7), table.cases-list td:nth-child(7) { width: 14%; }
-table.cases-list th:nth-child(8), table.cases-list td:nth-child(8) { width: 11%; }
-table.cases-list th:nth-child(9), table.cases-list td:nth-child(9) { width: 7%; }
-table.cases-list th:nth-child(10), table.cases-list td:nth-child(10) { width: 12%; }
-
-table.cases-list td.name-cell,
-table.cases-list td.rut-cell {
+table.cases-list th,
+table.cases-list td {
+    white-space: nowrap;
+    width: auto;
     text-align: center;
+    padding: 6px 10px;
+    height: 40px;
+    border-right: 1px solid var(--color-border);
+}
+
+table.cases-list th:last-child,
+table.cases-list td:last-child {
+    border-right: none;
+}
+
+table.cases-list thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 2px solid var(--color-border);
+}
+
+table.cases-list td > * {
+    vertical-align: middle;
 }
 
 table.cases-list td.action-cell {
     display: flex;
+    flex-direction: row;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 6px;
-    overflow: hidden;
+    padding: 6px 8px;
+    white-space: nowrap;
 }
 
 table.cases-list td.action-cell button.btn-primary {
-    padding: 5px 10px;
-    font-size: 0.72rem;
+    padding: 3px 8px;
+    font-size: 0.62rem;
     white-space: nowrap;
-    flex: none;
+    border-radius: 4px;
+    min-width: 44px;
+}
+
+table.cases-list td.action-cell button.btn-danger {
+    font-size: 0.7rem;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border-radius: 4px;
+    background: var(--color-review-bg);
+    color: var(--color-review);
+}
+
+table.cases-list td.action-cell button.btn-danger:hover {
+    background: var(--color-review);
+    color: #fff;
 }
 
 table.cases-list td.action-cell form {
@@ -647,11 +695,14 @@ table.cases-list td.action-cell form {
 }
 
 table.cases-list .input-inline {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-    min-width: 0;
-    text-overflow: ellipsis;
+    /* size to the value's own length instead of stretching to fill (or being clipped by) a
+       fixed column width — column then auto-sizes around the input's natural width. */
+    width: auto;
+    min-width: 6ch;
+    box-sizing: content-box;
+    field-sizing: content;
+    font-size: 0.68rem;
+    padding: 3px 5px;
 }
 
 select.estado-select {
@@ -669,6 +720,8 @@ select.estado-select option {
 select.estado-actual-select {
     border-radius: 999px;
     font-weight: 600;
+    font-size: 0.66rem;
+    padding: 3px 8px;
     text-align: center;
     text-align-last: center;
 }

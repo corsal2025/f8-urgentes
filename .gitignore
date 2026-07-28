@@ -26,3 +26,6 @@ publish/
 publish-pendrive/
 imagenes/
 .atl/
+
+# Copia local de prueba del Excel matriz — contiene datos personales reales, nunca commitear
+testdata/

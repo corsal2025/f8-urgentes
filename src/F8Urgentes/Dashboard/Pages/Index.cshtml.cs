@@ -1,13 +1,18 @@
+using F8Urgentes.Configuration;
 using F8Urgentes.Data;
 using F8Urgentes.Domain;
+using F8Urgentes.Matriz;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace F8Urgentes.Dashboard.Pages;
 
-public sealed class IndexModel(IUrgentRequestRepository repository) : PageModel
+public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? options = null) : PageModel
 {
     private const string EstadoActualSubida = "SUBIDA A CONASET";
+
+    [TempData]
+    public string? SyncMessage { get; set; }
 
     public IReadOnlyList<UrgentRequest> Requests { get; private set; } = [];
     public string? Month { get; private set; }
@@ -80,9 +85,36 @@ public sealed class IndexModel(IUrgentRequestRepository repository) : PageModel
         {
             request.EstadoActual = EstadoActualSubida;
             request.FechaDeSubida = DateOnly.FromDateTime(DateTime.Today);
+            // Only cases that came from the matriz workbook have a SourceSheet/SourceRowNumber
+            // to write back to — manual/other-origin cases have nowhere in the Excel to update.
+            if (request.SourceSheet is not null && request.SourceRowNumber is not null)
+            {
+                request.PendienteEscrituraExcel = true;
+            }
             repository.Update(request);
         }
         return RedirectToPage();
+    }
+
+    public IActionResult OnPostSincronizar()
+    {
+        var result = MatrizSyncService.Sync(ResolveMatrizPath(), repository);
+        SyncMessage = result.NoOp
+            ? "Sincronizacion: configura F8:MatrizExcelPath en appsettings para habilitarla."
+            : result.Summary() + (result.Alerts.Count > 0 ? " Detalle: " + string.Join(" | ", result.Alerts) : string.Empty);
+        return RedirectToPage();
+    }
+
+    private string? ResolveMatrizPath()
+    {
+        var matrizPath = options?.MatrizExcelPath;
+        if (string.IsNullOrWhiteSpace(matrizPath))
+        {
+            return null;
+        }
+        return Path.IsPathRooted(matrizPath)
+            ? matrizPath
+            : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, matrizPath));
     }
 
     public static string EstadoRowClass(string? estado) => estado switch

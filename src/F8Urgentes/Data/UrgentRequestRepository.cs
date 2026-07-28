@@ -38,7 +38,9 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
                 Marked                INTEGER NOT NULL DEFAULT 0,
                 MarkedAt              TEXT NULL,
                 SectorPdfGeneratedAt  TEXT NULL,
-                PendienteCarpeta      INTEGER NOT NULL DEFAULT 0
+                PendienteCarpeta      INTEGER NOT NULL DEFAULT 0,
+                MatrizSector          TEXT NULL,
+                PendienteEscrituraExcel INTEGER NOT NULL DEFAULT 0
             );
             CREATE INDEX IF NOT EXISTS IX_UrgentRequest_Rut ON UrgentRequest (Rut);
             CREATE INDEX IF NOT EXISTS IX_UrgentRequest_NeedsReview ON UrgentRequest (NeedsReview);
@@ -70,6 +72,8 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         EnsureColumnExists(connection, "UrgentRequest", "MarkedAt", "TEXT NULL");
         EnsureColumnExists(connection, "UrgentRequest", "SectorPdfGeneratedAt", "TEXT NULL");
         EnsureColumnExists(connection, "UrgentRequest", "PendienteCarpeta", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumnExists(connection, "UrgentRequest", "MatrizSector", "TEXT NULL");
+        EnsureColumnExists(connection, "UrgentRequest", "PendienteEscrituraExcel", "INTEGER NOT NULL DEFAULT 0");
     }
 
     private static void EnsureColumnExists(SqliteConnection connection, string table, string column, string definition)
@@ -100,11 +104,11 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
             INSERT INTO UrgentRequest
                 (FechaPeticion, Nombres, Apellidos, NombreCompleto, Rut, RutRaw, FechaUltimaCarpeta, CodigoF8,
                  FechaPenultimaCarpeta, Estado, EstadoActual, FechaDeSubida, SourceSheet, SourceRowNumber, Origin,
-                 NeedsReview, CreatedAt, UpdatedAt)
+                 NeedsReview, CreatedAt, UpdatedAt, MatrizSector, PendienteEscrituraExcel)
             VALUES
                 ($fechaPeticion, $nombres, $apellidos, $nombreCompleto, $rut, $rutRaw, $fechaUltimaCarpeta, $codigoF8,
                  $fechaPenultimaCarpeta, $estado, $estadoActual, $fechaDeSubida, $sourceSheet, $sourceRowNumber, $origin,
-                 $needsReview, $createdAt, $updatedAt);
+                 $needsReview, $createdAt, $updatedAt, $matrizSector, $pendienteEscrituraExcel);
             SELECT last_insert_rowid();
             """;
         BindParameters(command, request);
@@ -132,7 +136,8 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
                 FechaUltimaCarpeta = $fechaUltimaCarpeta, CodigoF8 = $codigoF8,
                 FechaPenultimaCarpeta = $fechaPenultimaCarpeta, Estado = $estado, EstadoActual = $estadoActual,
                 FechaDeSubida = $fechaDeSubida, SourceSheet = $sourceSheet, SourceRowNumber = $sourceRowNumber,
-                Origin = $origin, NeedsReview = $needsReview, UpdatedAt = $now
+                Origin = $origin, NeedsReview = $needsReview, UpdatedAt = $now,
+                MatrizSector = $matrizSector, PendienteEscrituraExcel = $pendienteEscrituraExcel
             WHERE Id = $id
             """;
         BindParameters(command, request);
@@ -370,6 +375,40 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.ExecuteNonQuery();
     }
 
+    public UrgentRequest? FindByRut(string rut)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM UrgentRequest WHERE Rut = $rut LIMIT 1";
+        command.Parameters.AddWithValue("$rut", rut);
+        using var reader = command.ExecuteReader();
+        return reader.Read() ? Map(reader) : null;
+    }
+
+    public void SetPendienteEscrituraExcel(long id, bool pendiente)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE UrgentRequest SET PendienteEscrituraExcel = $pendiente WHERE Id = $id";
+        command.Parameters.AddWithValue("$pendiente", pendiente ? 1 : 0);
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
+    public IReadOnlyList<UrgentRequest> GetPendingEscrituraExcel()
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM UrgentRequest WHERE PendienteEscrituraExcel = 1 ORDER BY Id";
+        using var reader = command.ExecuteReader();
+        var results = new List<UrgentRequest>();
+        while (reader.Read())
+        {
+            results.Add(Map(reader));
+        }
+        return results;
+    }
+
     private SqliteConnection Open()
     {
         var connection = new SqliteConnection(connectionString);
@@ -402,6 +441,8 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.Parameters.AddWithValue("$needsReview", request.NeedsReview ? 1 : 0);
         command.Parameters.AddWithValue("$createdAt", request.CreatedAt == default ? DateTimeOffset.UtcNow.ToString("O") : request.CreatedAt.ToString("O"));
         command.Parameters.AddWithValue("$updatedAt", (object?)request.UpdatedAt?.ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$matrizSector", (object?)request.MatrizSector ?? DBNull.Value);
+        command.Parameters.AddWithValue("$pendienteEscrituraExcel", request.PendienteEscrituraExcel ? 1 : 0);
     }
 
     private static UrgentRequest Map(SqliteDataReader reader) => new()
@@ -429,6 +470,8 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         MarkedAt = reader.IsDBNull(reader.GetOrdinal("MarkedAt")) ? null : DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("MarkedAt"))),
         SectorPdfGeneratedAt = reader.IsDBNull(reader.GetOrdinal("SectorPdfGeneratedAt")) ? null : DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("SectorPdfGeneratedAt"))),
         PendienteCarpeta = reader.GetInt32(reader.GetOrdinal("PendienteCarpeta")) == 1,
+        MatrizSector = ReadString(reader, "MatrizSector"),
+        PendienteEscrituraExcel = reader.GetInt32(reader.GetOrdinal("PendienteEscrituraExcel")) == 1,
     };
 
     private static ImportFlag MapFlag(SqliteDataReader reader) => new(

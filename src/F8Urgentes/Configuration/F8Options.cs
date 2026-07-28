@@ -6,4 +6,5 @@ public sealed class F8Options
 
     public string SqliteDbPath { get; set; } = "data/f8urgentes.db";
     public string? ExcelSourcePath { get; set; }
+    public string? MatrizExcelPath { get; set; }
 }
