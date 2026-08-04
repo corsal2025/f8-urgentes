@@ -172,16 +172,24 @@ public static class ExcelUrgentImporter
             var fechaPenultimaCarpeta = ParseDate(fechaPenultimaCarpetaRaw, "FechaPenultimaCarpeta", flags);
             var fechaDeSubida = ParseDate(fechaDeSubidaRaw, "FechaDeSubida", flags);
 
-            var estado = estadoRaw is null ? null : EstadoCatalog.Canonicalize(estadoRaw);
-            if (estado is not null && !EstadoCatalog.IsKnownEstado(estado))
+            string? estado = null;
+            if (estadoRaw is not null)
             {
-                flags.Add(("Estado", ImportFlag.ReasonCodes.UnknownEstado, estadoRaw));
+                estado = EstadoCatalog.NormalizeForPersistence(estadoRaw, isEstado: true);
+                if (!EstadoCatalog.IsKnownEstado(estadoRaw))
+                {
+                    flags.Add(("Estado", ImportFlag.ReasonCodes.UnknownEstado, estadoRaw));
+                }
             }
 
-            var estadoActual = estadoActualRaw is null ? null : EstadoCatalog.Canonicalize(estadoActualRaw);
-            if (estadoActual is not null && !EstadoCatalog.IsKnownEstadoActual(estadoActual))
+            string? estadoActual = null;
+            if (estadoActualRaw is not null)
             {
-                flags.Add(("EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, estadoActualRaw));
+                estadoActual = EstadoCatalog.NormalizeForPersistence(estadoActualRaw, isEstado: false);
+                if (!EstadoCatalog.IsKnownEstadoActual(estadoActualRaw))
+                {
+                    flags.Add(("EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, estadoActualRaw));
+                }
             }
 
             var request = new UrgentRequest

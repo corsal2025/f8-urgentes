@@ -65,8 +65,22 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         var request = repository.FindById(id);
         if (request is not null)
         {
-            request.Estado = EstadoCatalog.Canonicalize(estado);
-            repository.Update(request);
+            var normalized = EstadoCatalog.NormalizeForPersistence(estado, isEstado: true);
+            var unknown = EstadoCatalog.IsUnknownEstado(estado);
+            request.Estado = normalized;
+
+            if (unknown)
+            {
+                request.NeedsReview = true;
+                repository.Update(request);
+                repository.AddFlag(id, "Estado", ImportFlag.ReasonCodes.UnknownEstado, estado);
+            }
+            else
+            {
+                request.NeedsReview = false;
+                repository.Update(request);
+                repository.ClearFlags(id);
+            }
         }
         return RedirectToPage();
     }
@@ -76,8 +90,30 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         var request = repository.FindById(id);
         if (request is not null)
         {
-            request.EstadoActual = EstadoCatalog.Canonicalize(estadoActual);
-            repository.Update(request);
+            var normalized = EstadoCatalog.NormalizeForPersistence(estadoActual, isEstado: false);
+            var unknown = EstadoCatalog.IsUnknownEstadoActual(estadoActual);
+            request.EstadoActual = normalized;
+            if (normalized == EstadoActualSubida)
+            {
+                request.FechaDeSubida = DateOnly.FromDateTime(DateTime.Today);
+            }
+            else if (normalized != EstadoActualSubida && request.FechaDeSubida is not null)
+            {
+                request.FechaDeSubida = null;
+            }
+
+            if (unknown)
+            {
+                request.NeedsReview = true;
+                repository.Update(request);
+                repository.AddFlag(id, "EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, estadoActual);
+            }
+            else
+            {
+                request.NeedsReview = false;
+                repository.Update(request);
+                repository.ClearFlags(id);
+            }
         }
         return RedirectToPage();
     }
@@ -184,6 +220,34 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         _ => "badge-review",
     };
 
+    public static string DeadlineChipText(DateOnly? fechaPeticion) => DeadlineChipText(DateOnly.FromDateTime(DateTime.Today), fechaPeticion);
+
+    public static string DeadlineChipText(DateOnly today, DateOnly? fechaPeticion)
+    {
+        if (fechaPeticion is null)
+        {
+            return "—";
+        }
+
+        var deadline = DeadlineCalculator.AddBusinessDays(fechaPeticion.Value, 15);
+        var remaining = DeadlineCalculator.BusinessDaysRemaining(today, deadline);
+        return remaining >= 0 ? $"+{remaining}" : $"{remaining}";
+    }
+
+    public static string DeadlineChipClass(DateOnly? fechaPeticion) => DeadlineChipClass(DateOnly.FromDateTime(DateTime.Today), fechaPeticion);
+
+    public static string DeadlineChipClass(DateOnly today, DateOnly? fechaPeticion)
+    {
+        if (fechaPeticion is null)
+        {
+            return "badge-review";
+        }
+
+        var deadline = DeadlineCalculator.AddBusinessDays(fechaPeticion.Value, 15);
+        var remaining = DeadlineCalculator.BusinessDaysRemaining(today, deadline);
+        return remaining >= 0 ? "badge-ok" : "badge-review";
+    }
+
     public IActionResult OnPostSetFechaPenultimaCarpeta(long id, string? fecha)
     {
         var request = repository.FindById(id);
@@ -258,15 +322,22 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
                 continue;
             }
 
-            repository.Insert(new UrgentRequest
+            var rawEstado = estado[i];
+            var normalizedEstado = EstadoCatalog.NormalizeForPersistence(rawEstado, isEstado: true);
+            var insertedId = repository.Insert(new UrgentRequest
             {
                 NombreCompleto = nombre,
                 Rut = rutValue,
-                Estado = string.IsNullOrWhiteSpace(estado[i]) ? null : EstadoCatalog.Canonicalize(estado[i]),
+                Estado = normalizedEstado,
                 FechaPeticion = DateOnly.FromDateTime(DateTime.Today),
                 Origin = "Web",
                 CreatedAt = DateTimeOffset.UtcNow,
+                NeedsReview = EstadoCatalog.IsUnknownEstado(rawEstado),
             });
+            if (EstadoCatalog.IsUnknownEstado(rawEstado))
+            {
+                repository.AddFlag(insertedId, "Estado", ImportFlag.ReasonCodes.UnknownEstado, rawEstado);
+            }
         }
         return RedirectToPage();
     }

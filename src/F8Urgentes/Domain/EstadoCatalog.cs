@@ -35,8 +35,25 @@ public static class EstadoCatalog
     public static string Canonicalize(string? value) =>
         string.IsNullOrWhiteSpace(value) ? string.Empty : value.Trim().ToUpperInvariant();
 
+    public static string? NormalizeForPersistence(string? value, bool isEstado)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        return isEstado
+            ? IsKnownEstado(trimmed) ? Canonicalize(trimmed) : trimmed
+            : IsKnownEstadoActual(trimmed) ? Canonicalize(trimmed) : trimmed;
+    }
+
     public static bool IsKnownEstado(string? value) => KnownEstados.Contains(Canonicalize(value));
 
     public static bool IsKnownEstadoActual(string? value) =>
         Canonicalize(value) is "" || KnownEstadosActuales.Contains(Canonicalize(value));
+
+    public static bool IsUnknownEstado(string? value) => !string.IsNullOrWhiteSpace(value) && !IsKnownEstado(value);
+
+    public static bool IsUnknownEstadoActual(string? value) => !string.IsNullOrWhiteSpace(value) && !IsKnownEstadoActual(value);
 }

@@ -102,6 +102,36 @@ public sealed class ExcelUrgentImporterTests : IDisposable
     }
 
     [Fact]
+    public void Import_UnrecognizedEstado_PreservesOriginalCasing()
+    {
+        var dbPath = Path.Combine(Path.GetTempPath(), $"f8urgentes-import-casing-{Guid.NewGuid():N}.db");
+        var workbookPath = WorkbookFixtures.BuildPinnedWorkbook();
+        var repo = new UrgentRequestRepository($"Data Source={dbPath}");
+        repo.EnsureSchema();
+
+        try
+        {
+            using var workbook = new ClosedXML.Excel.XLWorkbook(workbookPath);
+            var sheet = workbook.Worksheet("JUNIO");
+            sheet.Cell(5, 9).Value = "estado inventado";
+            sheet.Cell(5, 4).Value = "Ana Lopez";
+            sheet.Cell(5, 5).Value = "9876543-3";
+            workbook.SaveAs(workbookPath);
+
+            F8Urgentes.Import.ExcelUrgentImporter.Import(workbookPath, repo);
+
+            var ana = repo.GetAll().Single(r => r.NombreCompleto == "Ana Lopez" && r.SourceSheet == "JUNIO");
+            Assert.Equal("estado inventado", ana.Estado);
+        }
+        finally
+        {
+            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+            if (File.Exists(workbookPath)) File.Delete(workbookPath);
+            if (File.Exists(dbPath)) File.Delete(dbPath);
+        }
+    }
+
+    [Fact]
     public void Import_FullyEmptyRow_SkippedNoRecordNoFlag()
     {
         var result = F8Urgentes.Import.ExcelUrgentImporter.Import(_workbookPath, _repository);

@@ -76,17 +76,51 @@ public sealed class EditModel(IUrgentRequestRepository repository) : PageModel
         request.FechaUltimaCarpeta = Input.FechaUltimaCarpeta;
         request.CodigoF8 = Input.CodigoF8;
         request.FechaPenultimaCarpeta = Input.FechaPenultimaCarpeta;
-        request.Estado = string.IsNullOrWhiteSpace(Input.Estado) ? null : EstadoCatalog.Canonicalize(Input.Estado);
-        request.EstadoActual = string.IsNullOrWhiteSpace(Input.EstadoActual) ? null : EstadoCatalog.Canonicalize(Input.EstadoActual);
+        var estadoValue = EstadoCatalog.NormalizeForPersistence(Input.Estado, isEstado: true);
+        var estadoActualValue = EstadoCatalog.NormalizeForPersistence(Input.EstadoActual, isEstado: false);
+        var unknownEstado = EstadoCatalog.IsUnknownEstado(Input.Estado);
+        var unknownEstadoActual = EstadoCatalog.IsUnknownEstadoActual(Input.EstadoActual);
+        request.Estado = estadoValue;
+        request.EstadoActual = estadoActualValue;
         request.FechaDeSubida = Input.FechaDeSubida;
+
+        var shouldClearReview = Input.Id is not null && !unknownEstado && !unknownEstadoActual;
+        if (shouldClearReview)
+        {
+            request.NeedsReview = false;
+        }
+        else
+        {
+            request.NeedsReview = request.NeedsReview || unknownEstado || unknownEstadoActual;
+        }
 
         if (Input.Id is null)
         {
-            repository.Insert(request);
+            var insertedId = repository.Insert(request);
+            if (unknownEstado)
+            {
+                repository.AddFlag(insertedId, "Estado", ImportFlag.ReasonCodes.UnknownEstado, Input.Estado);
+            }
+            if (unknownEstadoActual)
+            {
+                repository.AddFlag(insertedId, "EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, Input.EstadoActual);
+            }
         }
         else
         {
             repository.Update(request);
+            if (shouldClearReview)
+            {
+                repository.ClearFlags(request.Id);
+            }
+            if (unknownEstado)
+            {
+                repository.AddFlag(request.Id, "Estado", ImportFlag.ReasonCodes.UnknownEstado, Input.Estado);
+            }
+            if (unknownEstadoActual)
+            {
+                repository.AddFlag(request.Id, "EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, Input.EstadoActual);
+            }
         }
 
         return RedirectToPage("Index");

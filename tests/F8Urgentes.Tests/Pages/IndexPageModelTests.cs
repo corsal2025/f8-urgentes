@@ -114,6 +114,24 @@ public sealed class IndexPageModelTests : IDisposable
     }
 
     [Fact]
+    public void OnPostSetEstado_ClearsReviewWhenUnknownValueBecomesValid()
+    {
+        var id = Insert(estado: "ESTADO INVENTADO");
+        _repository.AddFlag(id, "Estado", ImportFlag.ReasonCodes.UnknownEstado, "ESTADO INVENTADO");
+        var request = _repository.FindById(id)!;
+        request.NeedsReview = true;
+        _repository.Update(request);
+        var model = new IndexModel(_repository);
+
+        model.OnPostSetEstado(id, "CARPETA SUBIDA");
+
+        var updated = _repository.FindById(id)!;
+        Assert.Equal("CARPETA SUBIDA", updated.Estado);
+        Assert.False(updated.NeedsReview);
+        Assert.Empty(_repository.GetFlagsFor(id));
+    }
+
+    [Fact]
     public void OnPostSetEstadoActual_PersistsChangeAndRedirects()
     {
         var id = Insert();
@@ -123,6 +141,38 @@ public sealed class IndexPageModelTests : IDisposable
 
         Assert.Equal("SUBIDA A CONASET", _repository.FindById(id)!.EstadoActual);
         Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void OnPostSetEstadoActual_SetsFechaDeSubidaWhenMarkedAsUploaded()
+    {
+        var id = Insert();
+        var model = new IndexModel(_repository);
+
+        model.OnPostSetEstadoActual(id, "SUBIDA A CONASET");
+
+        var found = _repository.FindById(id)!;
+        Assert.Equal(DateOnly.FromDateTime(DateTime.Today), found.FechaDeSubida);
+    }
+
+    [Fact]
+    public void OnPostSetEstadoActual_ClearsReviewWhenUnknownValueBecomesValid()
+    {
+        var id = Insert();
+        var request = _repository.FindById(id)!;
+        request.EstadoActual = "ESTADO ACTUAL INVENTADO";
+        request.NeedsReview = true;
+        _repository.Update(request);
+        _repository.AddFlag(id, "EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, "ESTADO ACTUAL INVENTADO");
+
+        var model = new IndexModel(_repository);
+
+        model.OnPostSetEstadoActual(id, "PENDIENTE");
+
+        var updated = _repository.FindById(id)!;
+        Assert.Equal("PENDIENTE", updated.EstadoActual);
+        Assert.False(updated.NeedsReview);
+        Assert.Empty(_repository.GetFlagsFor(id));
     }
 
     [Fact]
@@ -205,6 +255,20 @@ public sealed class IndexPageModelTests : IDisposable
 
         Assert.Equal(2, _repository.GetAll().Count);
         Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void DeadlineChipText_ShowsPositiveAndNegativeBusinessDays()
+    {
+        Assert.Equal("+15", IndexModel.DeadlineChipText(new DateOnly(2024, 6, 3), new DateOnly(2024, 6, 3)));
+        Assert.Equal("-1", IndexModel.DeadlineChipText(new DateOnly(2024, 6, 25), new DateOnly(2024, 6, 3)));
+    }
+
+    [Fact]
+    public void DeadlineChipClass_UsesGreenForTimeLeftAndRedWhenOverdue()
+    {
+        Assert.Equal("badge-ok", IndexModel.DeadlineChipClass(new DateOnly(2024, 6, 3), new DateOnly(2024, 6, 3)));
+        Assert.Equal("badge-review", IndexModel.DeadlineChipClass(new DateOnly(2024, 6, 25), new DateOnly(2024, 6, 3)));
     }
 
     [Fact]

@@ -88,6 +88,53 @@ public sealed class EditPageModelTests : IDisposable
     }
 
     [Fact]
+    public void OnPost_UnrecognizedEstado_StoresVerbatimAndFlagsReview()
+    {
+        var id = _repository.Insert(new UrgentRequest { Rut = "15949558-2", NombreCompleto = "Juan Perez", Origin = "Web", CreatedAt = DateTimeOffset.UtcNow });
+        var model = new EditModel(_repository)
+        {
+            Input = new EditModel.InputModel
+            {
+                Id = id,
+                Rut = "15949558-2",
+                NombreCompleto = "Juan Perez Actualizado",
+                Estado = "estado inventado",
+            },
+        };
+
+        model.OnPost();
+
+        var updated = _repository.FindById(id)!;
+        Assert.Equal("estado inventado", updated.Estado);
+        Assert.True(updated.NeedsReview);
+        Assert.Contains(_repository.GetFlagsFor(id), f => f.ReasonCode == ImportFlag.ReasonCodes.UnknownEstado && f.RawValue == "estado inventado");
+    }
+
+    [Fact]
+    public void OnPost_ValidStatusAfterReviewResolution_ClearsReviewFlags()
+    {
+        var id = _repository.Insert(new UrgentRequest { Rut = "15949558-2", NombreCompleto = "Juan Perez", Origin = "Web", CreatedAt = DateTimeOffset.UtcNow, NeedsReview = true });
+        _repository.AddFlag(id, "Estado", ImportFlag.ReasonCodes.UnknownEstado, "estado inventado");
+
+        var model = new EditModel(_repository)
+        {
+            Input = new EditModel.InputModel
+            {
+                Id = id,
+                Rut = "15949558-2",
+                NombreCompleto = "Juan Perez",
+                Estado = "PRIMERA LICENCIA",
+            },
+        };
+
+        model.OnPost();
+
+        var updated = _repository.FindById(id)!;
+        Assert.False(updated.NeedsReview);
+        Assert.Empty(_repository.GetFlagsFor(id));
+    }
+
+    [Fact]
     public void OnPost_EstadoActualSubidaAConasetWithUploadDate_PersistsFechaDeSubida()
     {
         var model = new EditModel(_repository)

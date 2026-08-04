@@ -198,6 +198,11 @@
                         })
                     </td>
                     <td class="text-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
+                    <td class="text-cell">
+                        <span class="badge @F8Urgentes.Dashboard.Pages.IndexModel.DeadlineChipClass(request.FechaPeticion)">
+                            @F8Urgentes.Dashboard.Pages.IndexModel.DeadlineChipText(request.FechaPeticion)
+                        </span>
+                    </td>
                     <td class="action-cell">
                         @if (request.EstadoActual != "SUBIDA A CONASET")
                         {
