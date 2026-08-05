@@ -29,3 +29,15 @@ imagenes/
 
 # Copia local de prueba del Excel matriz — contiene datos personales reales, nunca commitear
 testdata/
+
+# Temp build, logs, and run credentials
+build-output.txt
+build_log.txt
+build_log_utf8.txt
+build_verify.txt
+cookies.txt
+curl-cookies.txt
+image.png
+live_index.html
+postbody.txt
+token.txt

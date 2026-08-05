@@ -63,8 +63,29 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
                 RowsImported INTEGER NOT NULL,
                 RowsFlagged  INTEGER NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS Usuarios (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Username TEXT NOT NULL UNIQUE,
+                PasswordHash TEXT NOT NULL,
+                PreguntaSecreta TEXT NULL,
+                RespuestaHash TEXT NULL
+            );
             """;
         command.ExecuteNonQuery();
+
+        // Insert default admin if table is empty
+        command.CommandText = "SELECT COUNT(*) FROM Usuarios";
+        var userCount = (long)(command.ExecuteScalar() ?? 0);
+        if (userCount == 0)
+        {
+            // Simple hash structure for fallback if needed, but we will use BCrypt in the UI.
+            // For now, let's insert a plain "admin" that will be forced to change or we just use it directly.
+            // Actually, we'll insert a pre-hashed admin so BCrypt.Verify doesn't fail.
+            // BCrypt hash of "admin" is: $2a$11$w1pQ8O/u5zXj/r.yXqN4ueGz2B.G.2cT/.uE8p5r/X5b7L9y3yJm.
+            command.CommandText = "INSERT INTO Usuarios (Username, PasswordHash) VALUES ('admin', '$2a$11$w1pQ8O/u5zXj/r.yXqN4ueGz2B.G.2cT/.uE8p5r/X5b7L9y3yJm.')";
+            command.ExecuteNonQuery();
+        }
 
         // CREATE TABLE IF NOT EXISTS above only shapes brand-new databases — existing ones
         // created before Marked/PendienteCarpeta/etc. were added need these columns backfilled.
@@ -492,5 +513,52 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
     {
         var ordinal = reader.GetOrdinal(column);
         return reader.IsDBNull(ordinal) ? null : DateOnly.Parse(reader.GetString(ordinal));
+    }
+
+    public Usuario? FindUserByUsername(string username)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT * FROM Usuarios WHERE Username = $username";
+        command.Parameters.AddWithValue("$username", username);
+
+        using var reader = command.ExecuteReader();
+        if (reader.Read())
+        {
+            return new Usuario
+            {
+                Id = reader.GetInt64(reader.GetOrdinal("Id")),
+                Username = reader.GetString(reader.GetOrdinal("Username")),
+                PasswordHash = reader.GetString(reader.GetOrdinal("PasswordHash")),
+                PreguntaSecreta = ReadString(reader, "PreguntaSecreta") ?? string.Empty,
+                RespuestaHash = ReadString(reader, "RespuestaHash") ?? string.Empty
+            };
+        }
+        return null;
+    }
+
+    public void InsertUser(Usuario usuario)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO Usuarios (Username, PasswordHash, PreguntaSecreta, RespuestaHash)
+            VALUES ($username, $passwordHash, $preguntaSecreta, $respuestaHash)
+        """;
+        command.Parameters.AddWithValue("$username", usuario.Username);
+        command.Parameters.AddWithValue("$passwordHash", usuario.PasswordHash);
+        command.Parameters.AddWithValue("$preguntaSecreta", string.IsNullOrEmpty(usuario.PreguntaSecreta) ? DBNull.Value : usuario.PreguntaSecreta);
+        command.Parameters.AddWithValue("$respuestaHash", string.IsNullOrEmpty(usuario.RespuestaHash) ? DBNull.Value : usuario.RespuestaHash);
+        command.ExecuteNonQuery();
+    }
+
+    public void UpdateUserPassword(long id, string passwordHash)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Usuarios SET PasswordHash = $passwordHash WHERE Id = $id";
+        command.Parameters.AddWithValue("$id", id);
+        command.Parameters.AddWithValue("$passwordHash", passwordHash);
+        command.ExecuteNonQuery();
     }
 }

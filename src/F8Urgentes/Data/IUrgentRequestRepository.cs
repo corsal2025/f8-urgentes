@@ -31,4 +31,9 @@ public interface IUrgentRequestRepository
     UrgentRequest? FindByRut(string rut);
     void SetPendienteEscrituraExcel(long id, bool pendiente);
     IReadOnlyList<UrgentRequest> GetPendingEscrituraExcel();
+
+    // User management
+    Usuario? FindUserByUsername(string username);
+    void InsertUser(Usuario usuario);
+    void UpdateUserPassword(long id, string passwordHash);
 }

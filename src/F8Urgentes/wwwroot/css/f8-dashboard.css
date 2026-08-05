@@ -639,10 +639,37 @@ table.cases-list td {
    jagged — each box a different width but all centered gives a wavy left edge. Left-aligning
    these specific cells keeps every row's box starting at the same edge instead. */
 table.cases-list td.name-cell,
-table.cases-list td.rut-cell,
-table.cases-list td:has(> .input-inline) {
+table.cases-list td.rut-cell {
     text-align: left;
 }
+
+/* Make inputs align text formally and fit their dynamic inline width sizes */
+table.cases-list td.name-cell input.input-inline {
+    text-align: left !important;
+    padding-left: 8px;
+}
+
+table.cases-list td.rut-cell input.input-inline {
+    text-align: left !important;
+    padding-left: 8px;
+    font-family: monospace;
+    font-size: 0.75rem;
+}
+
+/* Prevent table columns from compressing/squishing when resizing or minimizing */
+table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { min-width: 55px; }   /* Marcar */
+table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { min-width: 65px; }   /* Pend. Carpeta */
+table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { min-width: 90px; }   /* Fecha Citación */
+table.cases-list th:nth-child(4), table.cases-list td:nth-child(4) { min-width: 320px; }  /* Nombre Contribuyente */
+table.cases-list th:nth-child(5), table.cases-list td:nth-child(5) { min-width: 120px; }  /* RUT */
+table.cases-list th:nth-child(6), table.cases-list td:nth-child(6) { min-width: 110px; }  /* Sector Oficina */
+table.cases-list th:nth-child(7), table.cases-list td:nth-child(7) { min-width: 160px; }  /* Estado */
+table.cases-list th:nth-child(8), table.cases-list td:nth-child(8) { min-width: 140px; }  /* Estado Actual */
+table.cases-list th:nth-child(9), table.cases-list td:nth-child(9) { min-width: 90px; }   /* Código F8 */
+table.cases-list th:nth-child(10), table.cases-list td:nth-child(10) { min-width: 170px; } /* Fecha Penúltima */
+table.cases-list th:nth-child(11), table.cases-list td:nth-child(11) { min-width: 90px; }  /* Sector Carpeta */
+table.cases-list th:nth-child(12), table.cases-list td:nth-child(12) { min-width: 100px; } /* Fecha Subida F8 */
+table.cases-list th:nth-child(13), table.cases-list td:nth-child(13) { min-width: 90px; }  /* Acción */
 
 table.cases-list th.th-wrap {
     white-space: normal;
@@ -709,37 +736,70 @@ table.cases-list td.action-cell form {
     border-radius: 4px;
     padding: 4px 6px;
     font-size: 0.78rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--color-text);
     text-align: center;
 }
 
 table.cases-list .input-inline {
-    /* Width comes from the inline style="width:...ch" set server-side in Index.cshtml.cs
-       (InputWidthCh), sized to each row's actual value — never from live field-sizing, which
-       would grow the input (and reflow the whole table) on every keystroke while typing. This
-       is just the fallback for any input that doesn't set one explicitly. */
     width: 9ch;
-    box-sizing: content-box;
-    font-size: 0.66rem;
-    padding: 3px 4px;
-    text-overflow: ellipsis;
+    box-sizing: border-box;
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    box-shadow: none;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    font-weight: 600;
+}
+
+table.cases-list .input-inline:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+table.cases-list .input-inline:focus {
+    background: #ffffff !important;
+    border-color: var(--color-accent) !important;
+    box-shadow: 0 0 0 2px rgba(26, 115, 176, 0.2) !important;
+    color: var(--color-text) !important;
 }
 
 select.estado-select {
-    cursor: pointer;
-    background: #fff;
-    font-size: 0.68rem;
-    font-weight: 700;
-    padding: 4px 3px;
-    /* Wide enough for the longest catalog entry ("CAMBIO DE DOMICILIO", 20 chars) — bold
-       uppercase text runs wider than 1ch/char, so this needs real headroom past the raw
-       character count, same issue as the text inputs above. */
+    background: transparent;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 18px 4px 6px;
     width: 30ch !important;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23333333' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    background-size: 8px;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+select.estado-select:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+select.estado-select:focus {
+    background-color: #ffffff;
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 2px rgba(26, 115, 176, 0.2);
+    outline: none;
 }
 
 select.estado-select option {
-    font-weight: 700;
+    font-weight: 600;
+    background-color: #ffffff;
+    color: var(--color-text);
 }
 
 select.estado-actual-select {
@@ -749,11 +809,20 @@ select.estado-actual-select {
     padding: 3px 8px;
     text-align: center;
     text-align-last: center;
+    border: 1px solid transparent;
+    cursor: pointer;
+    outline: none;
+    transition: box-shadow 0.15s;
 }
-select.estado-actual-select.badge-pending { background: var(--color-pending-bg); color: var(--color-pending); border-color: var(--color-pending-bg); }
-select.estado-actual-select.badge-uploaded { background: var(--color-uploaded-bg); color: var(--color-uploaded); border-color: var(--color-uploaded-bg); }
-select.estado-actual-select.badge-confirmed { background: var(--color-confirmed-bg); color: var(--color-confirmed); border-color: var(--color-confirmed-bg); }
-select.estado-actual-select.badge-review { background: var(--color-review-bg); color: var(--color-review); border-color: var(--color-review-bg); }
+
+select.estado-actual-select:focus {
+    box-shadow: 0 0 0 2px rgba(26, 115, 176, 0.3);
+}
+
+select.estado-actual-select.badge-pending { background: var(--color-pending-bg); color: var(--color-pending); border-color: transparent; }
+select.estado-actual-select.badge-uploaded { background: var(--color-uploaded-bg); color: var(--color-uploaded); border-color: transparent; }
+select.estado-actual-select.badge-confirmed { background: var(--color-confirmed-bg); color: var(--color-confirmed); border-color: transparent; }
+select.estado-actual-select.badge-review { background: var(--color-review-bg); color: var(--color-review); border-color: transparent; }
 
 .review-hint {
     margin-top: 4px;
@@ -798,6 +867,46 @@ input[type="date"] {
     padding: 4px 6px;
     font-size: 0.85rem;
 }
+
+/* ==========================================================================
+   Login Page Styles
+   ========================================================================== */
+body.login-shell {
+    background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 40px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.login-card h1 {
+    color: #ffffff;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.8rem;
+}
+
+.login-card p.subtitle {
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
+}
+
 
 button.btn-primary {
     background: var(--color-accent);
@@ -847,23 +956,27 @@ button.btn-outline-danger:hover { background: var(--color-review-bg); }
 }
 
 .login-card {
-    background: var(--color-surface);
-    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
     padding: 32px 36px;
     width: 320px;
 }
 
 .login-card h1 {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     margin: 0 0 4px;
-    color: var(--color-primary);
+    color: #ffffff;
+    font-weight: 600;
 }
 
 .login-card p.subtitle {
     margin: 0 0 20px;
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .login-card input {

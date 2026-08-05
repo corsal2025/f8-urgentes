@@ -140,17 +140,10 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         {
             request.EstadoActual = EstadoActualSubida;
             request.FechaDeSubida = DateOnly.FromDateTime(DateTime.Today);
-            // Only cases that came from the matriz workbook have a SourceSheet/SourceRowNumber
-            // to write back to — manual/other-origin cases have nowhere in the Excel to update.
-            if (request.SourceSheet is not null && request.SourceRowNumber is not null)
-            {
-                request.PendienteEscrituraExcel = true;
-            }
             repository.Update(request);
 
-            // Marcar/Pendiente carpeta are print-queue flags for cases still in progress —
-            // once a case is uploaded it's done, so its checkbox tickets clear automatically
-            // instead of lingering checked in a queue it no longer belongs to.
+            // Marcar/Pendiente carpeta son flags de la cola de impresión para casos en curso.
+            // Una vez subido el caso, ya no pertenece a esa cola.
             if (request.Marked)
             {
                 repository.SetMarked(id, false);

@@ -20,6 +20,16 @@
                 <a href="/Index">Solicitudes</a>
                 <a href="/Edit">Nueva solicitud</a>
             </div>
+            
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="nav-group" style="margin-left: auto;">
+                    <span style="margin-right: 15px; font-size: 0.9rem; color: var(--color-text-muted);">
+                        Hola, <strong>@User.Identity.Name</strong>
+                    </span>
+                    <a href="/Logout" style="color: #c0392b; font-weight: 500;">Salir</a>
+                </div>
+            }
         </nav>
     </header>
     <main>

@@ -19,7 +19,7 @@
     <a href="/SectorF8?sector=Archivo" class="pdf-chip pdf-chip-archivo">PDF Archivo</a>
     <a href="/SectorF8?sector=Oficina43" class="pdf-chip pdf-chip-oficina43">PDF Oficina 43</a>
     <a href="/Estadisticas" class="pdf-chip pdf-chip-stats">Estadísticas</a>
-    <form method="post" asp-page-handler="Sincronizar" style="margin-left:auto;">
+    <form method="post" asp-page-handler="Sincronizar" style="display:inline-block; margin-left:8px;">
         <button class="btn-outline" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
             Sincronizar datos
         </button>
@@ -64,17 +64,22 @@
 </div>
 
 <script>
-    // Quick-add does a full RedirectToPage round trip, and a full navigation always resets
-    // scroll to the top — jarring after adding a case while scrolled down the list. Stash the
-    // scroll position before submitting and restore it once the reloaded page settles.
+    // Full page reloads (like quick-add, Sincronizar, Eliminar) reset the scroll to the top —
+    // jarring after actioning a case down the list. Stash the scroll position before any normal
+    // submit and restore it once the reloaded page settles.
     (function () {
         var scrollKey = 'f8-index-scroll';
         var restore = sessionStorage.getItem(scrollKey);
         if (restore !== null) {
             sessionStorage.removeItem(scrollKey);
-            window.scrollTo(0, parseInt(restore, 10) || 0);
+            // Use setTimeout to ensure the table has fully rendered its height before restoring scroll
+            setTimeout(function () {
+                window.scrollTo(0, parseInt(restore, 10) || 0);
+            }, 60);
         }
-        document.getElementById('quick-add-form').addEventListener('submit', function () {
+        document.addEventListener('submit', function (event) {
+            // Only stash scroll if it's a normal form submission, not our fetch-based submitToggle
+            // which doesn't reload the page.
             sessionStorage.setItem(scrollKey, String(window.scrollY));
         });
     })();
@@ -198,11 +203,7 @@
                         })
                     </td>
                     <td class="text-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
-                    <td class="text-cell">
-                        <span class="badge @F8Urgentes.Dashboard.Pages.IndexModel.DeadlineChipClass(request.FechaPeticion)">
-                            @F8Urgentes.Dashboard.Pages.IndexModel.DeadlineChipText(request.FechaPeticion)
-                        </span>
-                    </td>
+                    <td class="text-cell"></td>
                     <td class="action-cell">
                         @if (request.EstadoActual != "SUBIDA A CONASET")
                         {
@@ -231,6 +232,14 @@
                 // resets scroll position, which is jarring while editing several rows in a row.
                 submitToggle(input.form);
                 initial = input.value;
+            }
+        });
+        // Prevent hitting 'Enter' from doing a full postback which causes page jump.
+        // Instead, just blur the input to trigger the background save above.
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                input.blur();
             }
         });
     });

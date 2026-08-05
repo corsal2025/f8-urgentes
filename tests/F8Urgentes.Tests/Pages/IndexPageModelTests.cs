@@ -228,6 +228,26 @@ public sealed class IndexPageModelTests : IDisposable
         var found = _repository.FindById(id)!;
         Assert.Equal("SUBIDA A CONASET", found.EstadoActual);
         Assert.Equal(DateOnly.FromDateTime(DateTime.Today), found.FechaDeSubida);
+        Assert.False(found.PendienteEscrituraExcel);
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void OnPostMarkUploaded_DoesNotQueueExcelWriteBack()
+    {
+        var id = Insert();
+        var request = _repository.FindById(id)!;
+        request.SourceSheet = "2DO SEM. AV. ARGENTINA";
+        request.SourceRowNumber = 12;
+        _repository.Update(request);
+
+        var model = new IndexModel(_repository);
+        var result = model.OnPostMarkUploaded(id);
+
+        var found = _repository.FindById(id)!;
+        Assert.Equal("SUBIDA A CONASET", found.EstadoActual);
+        Assert.Equal(DateOnly.FromDateTime(DateTime.Today), found.FechaDeSubida);
+        Assert.False(found.PendienteEscrituraExcel);
         Assert.NotNull(result);
     }
 
