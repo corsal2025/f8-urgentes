@@ -1,4 +1,5 @@
 using F8Urgentes.Data;
+using F8Urgentes.Services;
 using Microsoft.AspNetCore.DataProtection;
 
 namespace F8Urgentes.Configuration;
@@ -23,6 +24,11 @@ public static class HostingExtensions
 
         builder.Services.AddSingleton<IUrgentRequestRepository>(_ =>
             new UrgentRequestRepository($"Data Source={sqliteDbPath}"));
+
+        builder.Services.AddOptions<SmtpOptions>()
+            .Bind(builder.Configuration.GetSection(SmtpOptions.SectionName))
+            .ValidateDataAnnotations();
+        builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 
         builder.Services.AddDataProtection()
             .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Path.GetDirectoryName(sqliteDbPath)!, "keys")));

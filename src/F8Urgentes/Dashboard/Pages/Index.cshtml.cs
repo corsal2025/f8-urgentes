@@ -2,17 +2,23 @@ using F8Urgentes.Configuration;
 using F8Urgentes.Data;
 using F8Urgentes.Domain;
 using F8Urgentes.Matriz;
+using F8Urgentes.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace F8Urgentes.Dashboard.Pages;
 
-public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? options = null) : PageModel
+public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender emailSender, F8Options? options = null) : PageModel
 {
     private const string EstadoActualSubida = "SUBIDA A CONASET";
+    private const string EstadoActualCertificado = "CREAR CERTIFICADO";
+    private const string CertificadoRecipient = "matias.villalobos@munivalpo.cl";
 
     [TempData]
     public string? SyncMessage { get; set; }
+
+    [TempData]
+    public string? CertificadoMessage { get; set; }
 
     public IReadOnlyList<UrgentRequest> Requests { get; private set; } = [];
     public IReadOnlyList<string> DuplicateRuts { get; private set; } = [];
@@ -39,6 +45,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         {
             "Pendientes" => allMatching.Where(r => r.EstadoActual != EstadoActualSubida).ToList(),
             "Subidas" => allMatching.Where(r => r.EstadoActual == EstadoActualSubida).ToList(),
+            "Certificados" => allMatching.Where(r => r.EstadoActual == EstadoActualCertificado).ToList(),
             _ => allMatching,
         };
 
@@ -154,6 +161,38 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
             }
         }
         return RedirectToPage();
+    }
+
+    public async Task<IActionResult> OnPostEnviarCorreoCertificado(long id)
+    {
+        var request = repository.FindById(id);
+        if (request is not null)
+        {
+            var rutDisplay = RutFormatter.WithDots(request.Rut);
+            var subject = $"Solicitud de certificado - {request.NombreCompleto}";
+            var body = $"""
+                Estimado Matías,
+
+                Se solicita gestionar el certificado ante la Dirección para el siguiente contribuyente:
+
+                Nombre: {request.NombreCompleto}
+                RUT: {rutDisplay}
+
+                Saludos,
+                F8 Urgentes
+                """;
+
+            try
+            {
+                await emailSender.SendAsync(CertificadoRecipient, subject, body);
+                CertificadoMessage = $"Correo enviado a {CertificadoRecipient} por {request.NombreCompleto}.";
+            }
+            catch (Exception ex)
+            {
+                CertificadoMessage = $"No se pudo enviar el correo: {ex.Message}";
+            }
+        }
+        return RedirectToPage(new { tab = "Certificados" });
     }
 
     public IActionResult OnPostSincronizar()

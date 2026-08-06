@@ -14,48 +14,46 @@
 </head>
 <body class="login-shell">
     <div class="login-card">
-        <div class="brand" style="justify-content: center; margin-bottom: 1.5rem; text-align: center;">
-            <img src="~/img/logo-municipalidad.png" alt="Municipalidad de Valparaíso" class="brand-logo" style="margin: 0 auto; display: block; filter: brightness(0) invert(1); height: 80px; width: auto;" />
-            <h2 style="margin-top: 10px; color: #ffffff;">F8 Urgentes</h2>
+        <div class="brand">
+            <img src="~/img/logo-municipalidad.png" alt="Municipalidad de Valparaíso" class="brand-logo" />
+            <h2>F8 Urgentes</h2>
         </div>
-        
-        <h1 style="color: #ffffff;">Acceso</h1>
-        <p class="subtitle" style="color: rgba(255,255,255,0.7); text-align: center; margin-bottom: 30px; font-size: 0.9rem;">Ingresa tus credenciales para continuar</p>
-        
+
+        <h1>Acceso</h1>
+        <p class="subtitle">Ingresa tus credenciales para continuar</p>
+
         <form method="post">
             @if (!ModelState.IsValid)
             {
-                <div class="error" style="color: #ffbaba; background: rgba(220, 53, 69, 0.2); border-left: 4px solid #dc3545; padding: 10px; margin-bottom: 15px; font-size: 0.9rem; border-radius: 4px;">
+                <div class="error">
                     Usuario o contraseña incorrectos.
                 </div>
             }
-            
-            <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; color: #ffffff;">Usuario</label>
-                <input type="text" asp-for="Username" placeholder="Ingresa tu usuario" required style="width: 100%; padding: 10px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.1); color: #fff;" />
+
+            <div class="field">
+                <label for="username-input">Usuario</label>
+                <input type="text" asp-for="Username" id="username-input" placeholder="Ingresa tu usuario" required />
             </div>
-            
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; color: #ffffff;">Contraseña</label>
-                <div class="password-field" style="position: relative; display: flex; align-items: center;">
-                    <input type="password" asp-for="Password" id="password-input" placeholder="Ingresa tu contraseña" required style="width: 100%; padding: 10px; padding-right: 40px; border: 1px solid rgba(255,255,255,0.3); border-radius: 6px; background: rgba(255,255,255,0.1); color: #fff;" />
-                    <button type="button" id="toggle-password" style="position: absolute; right: 10px; background: none; border: none; font-size: 1.1rem; cursor: pointer; color: rgba(255,255,255,0.7); padding: 0; margin: 0; display: flex; align-items: center; height: 100%;">👁️</button>
+
+            <div class="field">
+                <label for="password-input">Contraseña</label>
+                <div class="password-field">
+                    <input type="password" asp-for="Password" id="password-input" placeholder="Ingresa tu contraseña" required />
+                    <button type="button" id="toggle-password" class="password-toggle" aria-label="Mostrar contraseña">👁️</button>
                 </div>
             </div>
-            
-            <button type="submit" style="width: 100%; padding: 12px; background: #ffffff; color: var(--color-primary-dark); border: none; border-radius: 6px; font-weight: 700; cursor: pointer; transition: background 0.2s;">
-                Ingresar
-            </button>
 
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-top: 15px;">
-                <a href="/Recuperar" style="color: rgba(255,255,255,0.9); text-decoration: underline;">¿Olvidaste tu contraseña?</a>
-                <a href="/Registro" style="color: #ffffff; text-decoration: underline; font-weight: 600;">Registrarse</a>
+            <button type="submit" class="btn-submit">Ingresar</button>
+
+            <div class="login-links">
+                <a href="/Recuperar">¿Olvidaste tu contraseña?</a>
+                <a href="/Registro" class="register">Registrarse</a>
             </div>
         </form>
     </div>
 
     <script>
-        document.getElementById('toggle-password').addEventListener('click', function() {
+        document.getElementById('toggle-password').addEventListener('click', function () {
             var pwd = document.getElementById('password-input');
             if (pwd.type === 'password') {
                 pwd.type = 'text';

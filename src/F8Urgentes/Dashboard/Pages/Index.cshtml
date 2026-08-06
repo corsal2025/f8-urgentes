@@ -9,6 +9,7 @@
     <a href="/Index?tab=Todos" class="@(currentTab == "Todos" ? "active" : "")">Todos</a>
     <a href="/Index?tab=Pendientes" class="@(currentTab == "Pendientes" ? "active" : "")">Pendientes</a>
     <a href="/Index?tab=Subidas" class="@(currentTab == "Subidas" ? "active" : "")">Subidas</a>
+    <a href="/Index?tab=Certificados" class="@(currentTab == "Certificados" ? "active" : "")">Solicitud de certificado</a>
     <a href="/Index?flagged=true" class="@(Model.Flagged == true ? "active" : "")">
         Requiere revisión
         @if (Model.FlaggedCount > 0)
@@ -20,7 +21,7 @@
     <a href="/SectorF8?sector=Oficina43" class="pdf-chip pdf-chip-oficina43">PDF Oficina 43</a>
     <a href="/Estadisticas" class="pdf-chip pdf-chip-stats">Estadísticas</a>
     <form method="post" asp-page-handler="Sincronizar" style="display:inline-block; margin-left:8px;">
-        <button class="btn-outline" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
+        <button class="btn-outline btn-sync" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
             Sincronizar datos
         </button>
     </form>
@@ -30,6 +31,13 @@
 {
     <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#eef6ec; border-left:4px solid #4a934a; font-size:0.85rem;">
         @Model.SyncMessage
+    </div>
+}
+
+@if (!string.IsNullOrEmpty(Model.CertificadoMessage))
+{
+    <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#eef6ec; border-left:4px solid #4a934a; font-size:0.85rem;">
+        @Model.CertificadoMessage
     </div>
 }
 
@@ -44,6 +52,10 @@
     <input type="hidden" name="tab" value="@currentTab" />
     <input type="text" name="search" value="@Model.Search" placeholder="Buscar por RUT o nombre" />
     <button type="submit">Buscar</button>
+    @if (!string.IsNullOrEmpty(Model.Search))
+    {
+        <a class="nav-search-clear" href="/Index?tab=@currentTab">Limpiar búsqueda</a>
+    }
 </form>
 
 <div class="card quick-add-card">
@@ -188,8 +200,8 @@
                         </form>
                     </td>
                     <td class="text-cell">
-                        @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is { } fpc ? F8Urgentes.Domain.SpanishDateFormatter.LongDate(fpc) : ""; }
-                        <input class="input-inline autosave" form="fechapenultima-@request.Id" name="fecha" value="@fechaPenultimaDisplay" placeholder="ej: 15 de marzo de 2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15 de marzo de 2024 o S/C", 10, 48))ch" />
+                        @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is { } fpc ? fpc.ToString("dd/MM/yyyy") : ""; }
+                        <input class="input-inline autosave" form="fechapenultima-@request.Id" name="fecha" autocomplete="off" value="@fechaPenultimaDisplay" placeholder="ej: 15/03/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/03/2024 o S/C", 10, 48))ch" />
                         <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
@@ -203,13 +215,19 @@
                         })
                     </td>
                     <td class="text-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
-                    <td class="text-cell"></td>
                     <td class="action-cell">
                         @if (request.EstadoActual != "SUBIDA A CONASET")
                         {
                             <form method="post" asp-page-handler="MarkUploaded">
                                 <input type="hidden" name="id" value="@request.Id" />
                                 <button class="btn-primary" type="submit" title="Marcar subida">Subir</button>
+                            </form>
+                        }
+                        @if (request.EstadoActual == "CREAR CERTIFICADO")
+                        {
+                            <form method="post" asp-page-handler="EnviarCorreoCertificado">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-sync" type="submit" title="Enviar correo a Matías solicitando el certificado">✉</button>
                             </form>
                         }
                         <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
@@ -250,16 +268,18 @@
             body: new FormData(form),
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
         }).then(function (response) {
-            // fetch() only rejects on network failure — a non-2xx response (e.g. the
-            // anti-forgery token going stale after the server restarts) resolves normally and
-            // was previously swallowed here, silently dropping the save. Fall back to a real
-            // form submit (full page reload, fresh token) whenever the background save didn't
-            // actually succeed.
+            // A real full-page form.requestSubmit() fallback here used to kick the whole page
+            // back to /Login on any non-2xx response (stale antiforgery token, transient 4xx,
+            // etc.) — every single edit could end the session for the whole table, not just the
+            // one field that failed. Instead, only warn: the field keeps its edited value so the
+            // user can retry, and a real session expiry still surfaces normally on next navigation.
             if (!response.ok) {
-                form.requestSubmit();
+                console.error('Guardado en segundo plano falló con estado', response.status);
+                alert('No se pudo guardar el cambio. Intenta nuevamente; si el problema persiste, recarga la página.');
             }
         }).catch(function () {
-            form.requestSubmit();
+            console.error('Guardado en segundo plano falló: error de red');
+            alert('No se pudo guardar el cambio por un problema de conexión. Intenta nuevamente.');
         });
     }
 
