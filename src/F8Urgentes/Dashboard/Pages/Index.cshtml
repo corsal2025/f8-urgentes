@@ -20,12 +20,21 @@
     <a href="/SectorF8?sector=Archivo" class="pdf-chip pdf-chip-archivo">PDF Archivo</a>
     <a href="/SectorF8?sector=Oficina43" class="pdf-chip pdf-chip-oficina43">PDF Oficina 43</a>
     <a href="/Estadisticas" class="pdf-chip pdf-chip-stats">Estadísticas</a>
+    <a href="/ImpresionMensual" class="pdf-chip pdf-chip-stats">Impresión mensual</a>
     <form method="post" asp-page-handler="Sincronizar" style="display:inline-block; margin-left:8px;">
         <button class="btn-outline btn-sync" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
             Sincronizar datos
         </button>
     </form>
 </div>
+
+@if (Model.ShowMonthlyPrintReminder)
+{
+    <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#fff4d6; border-left:4px solid #b8860b; font-size:0.85rem;">
+        ⚠ Recuerda imprimir las penúltimas carpetas de @Model.PreviousMonthKey.
+        <a href="/ImpresionMensual?month=@Model.PreviousMonthKey">Ir a impresión mensual</a>
+    </div>
+}
 
 @if (!string.IsNullOrEmpty(Model.SyncMessage))
 {
@@ -201,7 +210,7 @@
                     </td>
                     <td class="text-cell">
                         @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is { } fpc ? fpc.ToString("dd/MM/yyyy") : ""; }
-                        <input class="input-inline autosave" form="fechapenultima-@request.Id" name="fecha" autocomplete="off" value="@fechaPenultimaDisplay" placeholder="ej: 15/03/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/03/2024 o S/C", 10, 48))ch" />
+                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="off" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/03/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/03/2024 o S/C", 10, 48))ch" />
                         <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
@@ -242,6 +251,17 @@
 </div>
 
 <script>
+    // Chrome ignores autocomplete="off" on plain text inputs and will autofill these date
+    // boxes with whatever was typed there before the display format changed to dd/MM/yyyy —
+    // showing stale, unpadded values ("14/3/2019") mixed in with the correct ones. Autofill
+    // runs after the initial render (sometimes even after DOMContentLoaded), so force each
+    // box back to the value the server actually sent once the page has settled.
+    window.addEventListener('load', function () {
+        document.querySelectorAll('.fecha-penultima-input[data-server-value]').forEach(function (input) {
+            input.value = input.dataset.serverValue;
+        });
+    });
+
     document.querySelectorAll('input.autosave').forEach(function (input) {
         var initial = input.value;
         input.addEventListener('blur', function () {

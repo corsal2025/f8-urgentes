@@ -46,5 +46,10 @@ public sealed class UrgentRequest
     public string? MatrizSector { get; set; }
     public bool PendienteEscrituraExcel { get; set; }
 
+    // Set when a completed case (SUBIDA A CONASET) has been included in a monthly print
+    // batch (ImpresionMensual page) — lets the end-of-month reminder know which cases from
+    // the previous month still need printing.
+    public DateTimeOffset? ImpresoMensualAt { get; set; }
+
     public FolderSector? Sector => FolderSectorCalculator.For(FechaPenultimaCarpeta);
 }

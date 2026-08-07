@@ -27,6 +27,7 @@ public interface IUrgentRequestRepository
     void SetMarked(long id, bool marked);
     void SetPendienteCarpeta(long id, bool pendienteCarpeta);
     void SetSectorPdfGenerated(long id, DateTimeOffset generatedAt);
+    void SetImpresoMensual(long id, DateTimeOffset? generatedAt);
 
     UrgentRequest? FindByRut(string rut);
     void SetPendienteEscrituraExcel(long id, bool pendiente);

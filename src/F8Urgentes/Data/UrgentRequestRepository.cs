@@ -40,7 +40,8 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
                 SectorPdfGeneratedAt  TEXT NULL,
                 PendienteCarpeta      INTEGER NOT NULL DEFAULT 0,
                 MatrizSector          TEXT NULL,
-                PendienteEscrituraExcel INTEGER NOT NULL DEFAULT 0
+                PendienteEscrituraExcel INTEGER NOT NULL DEFAULT 0,
+                ImpresoMensualAt      TEXT NULL
             );
             CREATE INDEX IF NOT EXISTS IX_UrgentRequest_Rut ON UrgentRequest (Rut);
             CREATE INDEX IF NOT EXISTS IX_UrgentRequest_NeedsReview ON UrgentRequest (NeedsReview);
@@ -95,6 +96,7 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         EnsureColumnExists(connection, "UrgentRequest", "PendienteCarpeta", "INTEGER NOT NULL DEFAULT 0");
         EnsureColumnExists(connection, "UrgentRequest", "MatrizSector", "TEXT NULL");
         EnsureColumnExists(connection, "UrgentRequest", "PendienteEscrituraExcel", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumnExists(connection, "UrgentRequest", "ImpresoMensualAt", "TEXT NULL");
     }
 
     private static void EnsureColumnExists(SqliteConnection connection, string table, string column, string definition)
@@ -396,6 +398,16 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.ExecuteNonQuery();
     }
 
+    public void SetImpresoMensual(long id, DateTimeOffset? generatedAt)
+    {
+        using var connection = Open();
+        using var command = connection.CreateCommand();
+        command.CommandText = "UPDATE UrgentRequest SET ImpresoMensualAt = $at WHERE Id = $id";
+        command.Parameters.AddWithValue("$at", (object?)generatedAt?.ToString("O") ?? DBNull.Value);
+        command.Parameters.AddWithValue("$id", id);
+        command.ExecuteNonQuery();
+    }
+
     public UrgentRequest? FindByRut(string rut)
     {
         using var connection = Open();
@@ -493,6 +505,7 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         PendienteCarpeta = reader.GetInt32(reader.GetOrdinal("PendienteCarpeta")) == 1,
         MatrizSector = ReadString(reader, "MatrizSector"),
         PendienteEscrituraExcel = reader.GetInt32(reader.GetOrdinal("PendienteEscrituraExcel")) == 1,
+        ImpresoMensualAt = reader.IsDBNull(reader.GetOrdinal("ImpresoMensualAt")) ? null : DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("ImpresoMensualAt"))),
     };
 
     private static ImportFlag MapFlag(SqliteDataReader reader) => new(

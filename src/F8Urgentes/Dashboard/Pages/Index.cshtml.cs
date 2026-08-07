@@ -30,6 +30,12 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public string? Tab { get; private set; }
     public int FlaggedCount { get; private set; }
 
+    // Shown during the first 10 days of the month as a nudge to run the previous month's
+    // monthly print batch before it's forgotten — only fires if unprinted completed cases
+    // from that month actually exist.
+    public bool ShowMonthlyPrintReminder { get; private set; }
+    public string PreviousMonthKey { get; private set; } = string.Empty;
+
     public void OnGet(string? month, string? estado, string? estadoActual, bool? flagged, string? search, string? tab = null)
     {
         Month = month;
@@ -51,9 +57,12 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
 
         // Completed cases (SUBIDA A CONASET) drop to the bottom, everything still in progress
         // stays on top in the order it arrived — so newly loaded/pending cases are always the
-        // first thing the operator sees instead of mixed in among finished ones.
+        // first thing the operator sees instead of mixed in among finished ones. Within the
+        // completed group, sort by FechaDeSubida so the monthly print workflow can walk them
+        // in the order they were closed out.
         Requests = filtered
             .OrderBy(r => r.EstadoActual == EstadoActualSubida ? 1 : 0)
+            .ThenBy(r => r.EstadoActual == EstadoActualSubida ? r.FechaDeSubida : null)
             .ThenBy(r => r.Id)
             .ToList();
 
@@ -65,6 +74,14 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             .ToList();
 
         FlaggedCount = repository.GetFlagged().Count;
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        PreviousMonthKey = ImpresionMensualModel.PreviousMonthKey(today);
+        ShowMonthlyPrintReminder = today.Day <= 10 && repository.GetAll().Any(r =>
+            r.EstadoActual == EstadoActualSubida &&
+            r.ImpresoMensualAt is null &&
+            r.FechaDeSubida is not null &&
+            r.FechaDeSubida.Value.ToString("yyyy-MM") == PreviousMonthKey);
     }
 
     public IActionResult OnPostSetEstado(long id, string estado)
