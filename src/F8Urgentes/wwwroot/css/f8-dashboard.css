@@ -264,9 +264,9 @@ main > .nav-group a .badge {
 body.cases-page {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     width: 100%;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 body.cases-page main {
@@ -732,6 +732,35 @@ table.cases-list thead th {
     top: 0;
     z-index: 1;
     border-bottom: 2px solid var(--color-border);
+}
+
+/* Freeze Marcar/Pend.Carpeta/Fecha/Nombre/RUT while the row scrolls horizontally, so the
+   identifying columns stay visible past the fold — offsets are cumulative sums of the
+   min-width values set above for columns 1-5. */
+table.cases-list th:nth-child(1),
+table.cases-list td:nth-child(1) { position: sticky; left: 0; z-index: 2; }
+
+table.cases-list th:nth-child(2),
+table.cases-list td:nth-child(2) { position: sticky; left: 55px; z-index: 2; }
+
+table.cases-list th:nth-child(3),
+table.cases-list td:nth-child(3) { position: sticky; left: 120px; z-index: 2; }
+
+table.cases-list th:nth-child(4),
+table.cases-list td:nth-child(4) { position: sticky; left: 210px; z-index: 2; }
+
+table.cases-list th:nth-child(5),
+table.cases-list td:nth-child(5) {
+    position: sticky;
+    left: 530px;
+    z-index: 2;
+    box-shadow: 3px 0 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Header cells need to win over both the frozen body columns above (z-index 2) and any
+   scrolling body cell sliding beneath them. */
+table.cases-list thead th:nth-child(-n+5) {
+    z-index: 3;
 }
 
 table.cases-list td > * {
