@@ -2,8 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using F8Urgentes.Data;
 using F8Urgentes.Domain;
-using System.Security.Cryptography;
-using System.Text;
+using F8Urgentes.Services;
 
 namespace F8Urgentes.Dashboard.Pages;
 
@@ -47,15 +46,8 @@ public class RegistroModel : PageModel
             return Page();
         }
 
-        using var sha256 = SHA256.Create();
-        
-        // Hash Password
-        var pwdBytes = Encoding.UTF8.GetBytes(Password);
-        var pwdHash = Convert.ToBase64String(sha256.ComputeHash(pwdBytes));
-
-        // Hash Respuesta Secreta
-        var respBytes = Encoding.UTF8.GetBytes(RespuestaSecreta.Trim().ToLower()); // normalized
-        var respHash = Convert.ToBase64String(sha256.ComputeHash(respBytes));
+        var pwdHash = PasswordHasher.Hash(Password);
+        var respHash = PasswordHasher.Hash(RespuestaSecreta.Trim().ToLowerInvariant());
 
         var nuevoUsuario = new Usuario
         {

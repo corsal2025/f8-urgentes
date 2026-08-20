@@ -1,4 +1,5 @@
 using F8Urgentes.Data;
+using F8Urgentes.Domain;
 using F8Urgentes.Services;
 using Microsoft.AspNetCore.DataProtection;
 
@@ -39,6 +40,7 @@ public static class HostingExtensions
                 options.LoginPath = "/Login";
                 options.LogoutPath = "/Logout";
                 options.ExpireTimeSpan = TimeSpan.FromHours(8);
+                options.SlidingExpiration = true;
             });
 
         builder.Services.AddRazorPages(options => 
@@ -46,6 +48,8 @@ public static class HostingExtensions
             options.RootDirectory = "/Dashboard/Pages";
             options.Conventions.AuthorizeFolder("/");
             options.Conventions.AllowAnonymousToPage("/Login");
+            options.Conventions.AllowAnonymousToPage("/Recuperar");
+            options.Conventions.AllowAnonymousToPage("/Registro");
         });
 
         return builder;
@@ -54,6 +58,20 @@ public static class HostingExtensions
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
         app.Services.GetRequiredService<IUrgentRequestRepository>().EnsureSchema();
+
+        var options = app.Services.GetRequiredService<F8Options>();
+        if (!string.IsNullOrWhiteSpace(options.AdminPassword))
+        {
+            var repository = app.Services.GetRequiredService<IUrgentRequestRepository>();
+            if (repository.FindUserByUsername(options.AdminUsername) is null)
+            {
+                repository.InsertUser(new Usuario
+                {
+                    Username = options.AdminUsername,
+                    PasswordHash = PasswordHasher.Hash(options.AdminPassword),
+                });
+            }
+        }
 
         app.UseStaticFiles();
         

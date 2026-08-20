@@ -34,6 +34,23 @@
     </header>
     <main>
         @RenderBody()
-    </main>
+    <script>
+        // Session Keep-Alive: sends a lightweight HEAD request every 5 minutes and on tab activation
+        // to slide the 8-hour session cookie forward, preventing session expiration, white-page flashes,
+        // or abrupt reloads when returning to an idle browser tab.
+        (function() {
+            function keepAlive() {
+                if (document.visibilityState === 'visible') {
+                    fetch('/Index', { method: 'HEAD', cache: 'no-store' }).catch(function() {});
+                }
+            }
+            setInterval(keepAlive, 5 * 60 * 1000);
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    keepAlive();
+                }
+            });
+        })();
+    </script>
 </body>
 </html>

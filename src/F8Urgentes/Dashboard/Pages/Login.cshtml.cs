@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using F8Urgentes.Configuration;
+using F8Urgentes.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
@@ -39,24 +40,19 @@ public class LoginModel : PageModel
         // Verify password
         if (user != null)
         {
-            // By default we inserted an admin with a BCrypt hash, but since we didn't add the BCrypt nuget yet, 
-            // for now let's just check if it's the default admin password we put in appsettings or if we can use a basic hash.
-            // Actually, let's just do a plain text check or a simple hash check for this demo, or we can use BCrypt.Net-Next.
-            // Wait, we can't verify the BCrypt hash without the package.
-            // Let's just fallback to F8Options for 'admin' if it matches, to prevent breaking the flow while we install BCrypt.
-            
-            if (user.Username == "admin" && Password == _options.AdminPassword)
+            if (user.Username == _options.AdminUsername &&
+                !string.IsNullOrEmpty(_options.AdminPassword) &&
+                Password == _options.AdminPassword)
             {
                 isValid = true;
             }
             else
             {
-                // Simple SHA256 verification
-                using var sha256 = System.Security.Cryptography.SHA256.Create();
-                var bytes = System.Text.Encoding.UTF8.GetBytes(Password);
-                var hash = Convert.ToBase64String(sha256.ComputeHash(bytes));
-                if (user.PasswordHash == hash)
+                isValid = PasswordHasher.Verify(Password, user.PasswordHash);
+                if (!isValid && VerifyLegacySha256(Password, user.PasswordHash))
                 {
+                    // Migrate accounts created by previous releases after successful login.
+                    repo.UpdateUserPassword(user.Id, PasswordHasher.Hash(Password));
                     isValid = true;
                 }
             }
@@ -66,8 +62,8 @@ public class LoginModel : PageModel
         {
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, Username),
-                new Claim(ClaimTypes.Role, Username == "admin" ? "Admin" : "User")
+                new Claim(ClaimTypes.Name, user!.Username),
+                new Claim(ClaimTypes.Role, user.Username == _options.AdminUsername ? "Admin" : "User")
             };
 
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -77,7 +73,7 @@ public class LoginModel : PageModel
                 new ClaimsPrincipal(claimsIdentity),
                 new AuthenticationProperties
                 {
-                    IsPersistent = true,
+                    IsPersistent = false,
                     ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 });
 
@@ -86,5 +82,14 @@ public class LoginModel : PageModel
 
         ModelState.AddModelError(string.Empty, "Usuario o contraseña incorrectos.");
         return Page();
+    }
+
+    private static bool VerifyLegacySha256(string password, string storedHash)
+    {
+        using var sha256 = System.Security.Cryptography.SHA256.Create();
+        var actual = Convert.ToBase64String(sha256.ComputeHash(System.Text.Encoding.UTF8.GetBytes(password)));
+        return System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(
+            System.Text.Encoding.UTF8.GetBytes(actual),
+            System.Text.Encoding.UTF8.GetBytes(storedHash));
     }
 }

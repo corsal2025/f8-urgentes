@@ -43,11 +43,16 @@ public sealed class EditModel(IUrgentRequestRepository repository) : PageModel
         };
     }
 
-    public IActionResult? OnPost()
+    public IActionResult OnPost()
     {
+        if (!ModelState.IsValid)
+        {
+            return Page();
+        }
+
         if (!Rut.TryParse(Input.Rut, out var parsedRut) || !parsedRut.IsValid)
         {
-            ModelState.AddModelError(nameof(Input.Rut), "RUT inválido: verifique el dígito verificador.");
+            ModelState.AddModelError("Input.Rut", "RUT inválido: verifique el dígito verificador.");
             return Page();
         }
 

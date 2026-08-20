@@ -41,7 +41,7 @@ public sealed class EstadisticasModel(IUrgentRequestRepository repository) : Pag
         {
             FolderSector.Archivo => "Archivo",
             FolderSector.Oficina43 => "Oficina 43",
-            _ => "(sin fecha ultima carpeta)",
+            _ => "(sin fecha penúltima carpeta)",
         });
 
         PorOrigen = CountBy(all, r => r.Origin switch

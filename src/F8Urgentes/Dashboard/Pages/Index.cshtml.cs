@@ -14,6 +14,26 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     private const string EstadoActualCertificado = "CREAR CERTIFICADO";
     private const string CertificadoRecipient = "matias.villalobos@munivalpo.cl";
 
+    public static string CertificadoMailto(UrgentRequest request)
+    {
+        var nombre = request.NombreCompleto?.Trim() ?? string.Empty;
+        var rut = RutFormatter.WithDots(request.Rut);
+        var subject = $"Solicitud de certificado - {nombre}";
+        var body = $"""
+            Estimado Matías:
+
+            Junto con saludar, solicito gestionar ante el Director la emisión de certificado para el siguiente contribuyente, debido a que no se encontró carpeta en nuestra base de datos:
+
+            Nombre: {nombre}
+            RUT: {rut}
+
+            Saludos cordiales,
+            F8 Urgentes
+            """;
+
+        return $"mailto:{CertificadoRecipient}?subject={Uri.EscapeDataString(subject)}&body={Uri.EscapeDataString(body)}";
+    }
+
     [TempData]
     public string? SyncMessage { get; set; }
 
@@ -212,12 +232,58 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         return RedirectToPage(new { tab = "Certificados" });
     }
 
+    public async Task<IActionResult> OnPostEnviarCorreoCertificadoV2(long id)
+    {
+        var request = repository.FindById(id);
+        if (request is null)
+        {
+            return new JsonResult(new { message = "Solicitud no encontrada." }) { StatusCode = StatusCodes.Status404NotFound };
+        }
+
+        if (request.EstadoActual != EstadoActualCertificado)
+        {
+            return new JsonResult(new { message = "Esta solicitud no está marcada para crear certificado." }) { StatusCode = StatusCodes.Status400BadRequest };
+        }
+
+        var nombre = request.NombreCompleto?.Trim() ?? string.Empty;
+        var rut = RutFormatter.WithDots(request.Rut);
+        var subject = $"Solicitud de certificado - {nombre}";
+        var body = $"""
+            Estimado Matías:
+
+            Junto con saludar, solicito gestionar ante el Director la emisión de certificado para el siguiente contribuyente, debido a que no se encontró carpeta en nuestra base de datos:
+
+            Nombre: {nombre}
+            RUT: {rut}
+
+            Saludos cordiales,
+            F8 Urgentes
+            """;
+
+        try
+        {
+            await emailSender.SendAsync(CertificadoRecipient, subject, body);
+            return new JsonResult(new { message = $"Correo enviado a Matías Villalobos por {nombre}." });
+        }
+        catch
+        {
+            return new JsonResult(new { message = "No se pudo enviar correo. Falta configurar SMTP corporativo en el servidor." }) { StatusCode = StatusCodes.Status500InternalServerError };
+        }
+    }
+
     public IActionResult OnPostSincronizar()
     {
-        var result = MatrizSyncService.Sync(ResolveMatrizPath(), repository);
-        SyncMessage = result.NoOp
-            ? "Sincronizacion: configura F8:MatrizExcelPath en appsettings para habilitarla."
-            : result.Summary() + (result.Alerts.Count > 0 ? " Detalle: " + string.Join(" | ", result.Alerts) : string.Empty);
+        try
+        {
+            var result = MatrizSyncService.Sync(ResolveMatrizPath(), repository);
+            SyncMessage = result.NoOp
+                ? "Sincronizacion: configura F8:MatrizExcelPath en appsettings para habilitarla."
+                : result.Summary() + (result.Alerts.Count > 0 ? " Detalle: " + string.Join(" | ", result.Alerts) : string.Empty);
+        }
+        catch (Exception ex)
+        {
+            SyncMessage = $"Error al sincronizar: {ex.Message}";
+        }
         return RedirectToPage();
     }
 
@@ -307,7 +373,12 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
 
         // The field displays/expects the long Spanish form ("15 de mayo de 2024"), but dd/MM/yyyy
         // and FolderDate's ISO/serial forms are still accepted for whatever an operator pastes in.
-        if (SpanishDateFormatter.TryParseLongDate(fecha, out var longForm))
+        if (SpanishDateFormatter.TryParseSlashMonthDate(fecha, out var slashMonthForm))
+        {
+            request.FechaPenultimaCarpeta = slashMonthForm;
+            repository.Update(request);
+        }
+        else if (SpanishDateFormatter.TryParseLongDate(fecha, out var longForm))
         {
             request.FechaPenultimaCarpeta = longForm;
             repository.Update(request);
@@ -373,10 +444,12 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
 
             var rawEstado = estado[i];
             var normalizedEstado = EstadoCatalog.NormalizeForPersistence(rawEstado, isEstado: true);
+            var canonicalRut = Rut.TryParse(rutValue, out var parsedRut) ? parsedRut.ToString() : rutValue;
             var insertedId = repository.Insert(new UrgentRequest
             {
                 NombreCompleto = nombre,
-                Rut = rutValue,
+                Rut = canonicalRut,
+                RutRaw = rutValue,
                 Estado = normalizedEstado,
                 FechaPeticion = DateOnly.FromDateTime(DateTime.Today),
                 Origin = "Web",
@@ -390,5 +463,4 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         }
         return RedirectToPage();
     }
-
 }

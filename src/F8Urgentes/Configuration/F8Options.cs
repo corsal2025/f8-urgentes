@@ -13,5 +13,5 @@ public sealed class F8Options
     public string? MatrizExcelPath { get; set; }
 
     public string AdminUsername { get; set; } = "admin";
-    public string AdminPassword { get; set; } = "admin";
+    public string AdminPassword { get; set; } = string.Empty;
 }

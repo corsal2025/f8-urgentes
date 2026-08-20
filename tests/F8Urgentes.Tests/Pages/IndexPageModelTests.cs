@@ -6,6 +6,11 @@ namespace F8Urgentes.Tests.Pages;
 
 public sealed class IndexPageModelTests : IDisposable
 {
+    private sealed class TestEmailSender : F8Urgentes.Services.IEmailSender
+    {
+        public Task SendAsync(string to, string subject, string body, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
     private readonly string _dbPath;
     private readonly UrgentRequestRepository _repository;
 
@@ -45,7 +50,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert();
         Insert(rut: "7654321-K");
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnGet(null, null, null, null, null);
 
@@ -57,7 +62,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert(fecha: new DateOnly(2024, 6, 1));
         Insert(fecha: new DateOnly(2024, 7, 1), rut: "7654321-K");
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnGet("2024-06", null, null, null, null);
 
@@ -69,7 +74,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert(estado: "PRIMERA LICENCIA");
         Insert(estado: "CAMBIO DE DOMICILIO", rut: "7654321-K");
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnGet(null, "PRIMERA LICENCIA", null, null, null);
 
@@ -81,7 +86,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert(flagged: true);
         Insert(rut: "7654321-K");
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnGet(null, null, null, true, null);
 
@@ -94,7 +99,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert();
         Insert(rut: "7654321-K");
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnGet(null, null, null, null, "juan");
 
@@ -105,7 +110,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetEstado_PersistsChangeAndRedirects()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         var result = model.OnPostSetEstado(id, "CARPETA SUBIDA");
 
@@ -121,7 +126,7 @@ public sealed class IndexPageModelTests : IDisposable
         var request = _repository.FindById(id)!;
         request.NeedsReview = true;
         _repository.Update(request);
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnPostSetEstado(id, "CARPETA SUBIDA");
 
@@ -135,7 +140,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetEstadoActual_PersistsChangeAndRedirects()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         var result = model.OnPostSetEstadoActual(id, "SUBIDA A CONASET");
 
@@ -147,7 +152,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetEstadoActual_SetsFechaDeSubidaWhenMarkedAsUploaded()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnPostSetEstadoActual(id, "SUBIDA A CONASET");
 
@@ -165,7 +170,7 @@ public sealed class IndexPageModelTests : IDisposable
         _repository.Update(request);
         _repository.AddFlag(id, "EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, "ESTADO ACTUAL INVENTADO");
 
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnPostSetEstadoActual(id, "PENDIENTE");
 
@@ -181,7 +186,7 @@ public sealed class IndexPageModelTests : IDisposable
         var pendingId = Insert();
         var uploadedId = Insert(rut: "7654321-K");
         _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnGet(null, null, null, null, null, "Pendientes");
 
@@ -195,7 +200,7 @@ public sealed class IndexPageModelTests : IDisposable
         Insert();
         var uploadedId = Insert(rut: "7654321-K");
         _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnGet(null, null, null, null, null, "Subidas");
 
@@ -207,7 +212,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetPersonData_PersistsNombreAndRut()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         var result = model.OnPostSetPersonData(id, "Maria Gonzalez", "7654321-K");
 
@@ -221,7 +226,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostMarkUploaded_SetsEstadoActualAndFechaDeSubida()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         var result = model.OnPostMarkUploaded(id);
 
@@ -241,7 +246,7 @@ public sealed class IndexPageModelTests : IDisposable
         request.SourceRowNumber = 12;
         _repository.Update(request);
 
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
         var result = model.OnPostMarkUploaded(id);
 
         var found = _repository.FindById(id)!;
@@ -255,7 +260,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostDeleteCase_RemovesRequest()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         var result = model.OnPostDeleteCase(id);
 
@@ -266,7 +271,7 @@ public sealed class IndexPageModelTests : IDisposable
     [Fact]
     public void OnPostAddManualCases_InsertsAllValidRows()
     {
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         var result = model.OnPostAddManualCases(
             new List<string> { "Pedro Soto", "Ana Diaz" },
@@ -295,7 +300,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetFechaPenultimaCarpeta_ParsesDate()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
 
         model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
 
@@ -306,7 +311,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetFechaPenultimaCarpeta_SinCarpeta_ClearsDate()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
         model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
 
         model.OnPostSetFechaPenultimaCarpeta(id, "S/C");
@@ -318,7 +323,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetFechaPenultimaCarpeta_Unparseable_LeavesDateUnchanged()
     {
         var id = Insert();
-        var model = new IndexModel(_repository);
+        var model = new IndexModel(_repository, new TestEmailSender());
         model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
 
         model.OnPostSetFechaPenultimaCarpeta(id, "no es una fecha");

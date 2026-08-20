@@ -209,8 +209,8 @@
                         </form>
                     </td>
                     <td class="text-cell">
-                        @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is { } fpc ? fpc.ToString("dd/MM/yyyy") : ""; }
-                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="off" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/03/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/03/2024 o S/C", 10, 48))ch" />
+                        @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is null ? "" : F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta); }
+                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="off" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/marzo/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/marzo/2024 o S/C", 10, 48))ch" />
                         <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
@@ -234,7 +234,13 @@
                         }
                         @if (request.EstadoActual == "CREAR CERTIFICADO")
                         {
-                            <form method="post" asp-page-handler="EnviarCorreoCertificado">
+                            <form method="post" asp-page-handler="EnviarCorreoCertificadoV2">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-sync" type="submit" title="Enviar correo a Matías solicitando el certificado">✉</button>
+                            </form>
+                        }
+                        <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
+                            <input type="hidden" name="id" value="@request.Id" />
                                 <input type="hidden" name="id" value="@request.Id" />
                                 <button class="btn-sync" type="submit" title="Enviar correo a Matías solicitando el certificado">✉</button>
                             </form>
@@ -282,20 +288,26 @@
         });
     });
 
-    function submitToggle(form) {
+    function submitToggle(form, onSuccess) {
         fetch(form.action || window.location.pathname + window.location.search, {
             method: 'POST',
             body: new FormData(form),
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        }).then(function (response) {
-            // A real full-page form.requestSubmit() fallback here used to kick the whole page
-            // back to /Login on any non-2xx response (stale antiforgery token, transient 4xx,
-            // etc.) — every single edit could end the session for the whole table, not just the
-            // one field that failed. Instead, only warn: the field keeps its edited value so the
-            // user can retry, and a real session expiry still surfaces normally on next navigation.
+        }).then(async function (response) {
+            if (response.redirected && response.url && response.url.indexOf('/Login') !== -1) {
+                alert('Tu sesión ha expirado por inactividad. Serás redirigido al acceso.');
+                window.location.href = '/Login';
+                return;
+            }
+            var payload = await response.json().catch(function () { return null; });
             if (!response.ok) {
                 console.error('Guardado en segundo plano falló con estado', response.status);
-                alert('No se pudo guardar el cambio. Intenta nuevamente; si el problema persiste, recarga la página.');
+                var msg = (payload && payload.message) ? payload.message : 'No se pudo guardar el cambio. Intenta nuevamente.';
+                alert(msg);
+                return;
+            }
+            if (onSuccess) {
+                onSuccess();
             }
         }).catch(function () {
             console.error('Guardado en segundo plano falló: error de red');
@@ -305,6 +317,31 @@
 
     // Each wiring block runs independently (own try/catch) — a bad selector or a missing
     // element in one block must not stop the others below it from ever registering.
+    // Keep case actions on current screen. Quick-add and sync keep normal navigation.
+    document.querySelectorAll('table.cases form[method="post"]').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var row = form.closest('tr');
+            var handler = new URL(form.action, window.location.href).searchParams.get('handler');
+            submitToggle(form, function () {
+                if (handler === 'DeleteCase' && row) {
+                    row.remove();
+                }
+                if (handler === 'MarkUploaded' && row) {
+                    row.classList.add('row-confirmed');
+                    var button = form.querySelector('button[type="submit"]');
+                    if (button) {
+                        button.disabled = true;
+                        button.textContent = 'Subido';
+                    }
+                }
+                if (handler === 'EnviarCorreoCertificadoV2') {
+                    alert('Correo enviado a Matías Villalobos.');
+                }
+            });
+        });
+    });
+
     try {
         // Toggle forms (Marcar / Pendiente Carpeta) post in the background instead of doing a
         // full-page navigation — a full RedirectToPage round trip on every checkbox click caused

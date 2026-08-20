@@ -75,19 +75,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
             """;
         command.ExecuteNonQuery();
 
-        // Insert default admin if table is empty
-        command.CommandText = "SELECT COUNT(*) FROM Usuarios";
-        var userCount = (long)(command.ExecuteScalar() ?? 0);
-        if (userCount == 0)
-        {
-            // Simple hash structure for fallback if needed, but we will use BCrypt in the UI.
-            // For now, let's insert a plain "admin" that will be forced to change or we just use it directly.
-            // Actually, we'll insert a pre-hashed admin so BCrypt.Verify doesn't fail.
-            // BCrypt hash of "admin" is: $2a$11$w1pQ8O/u5zXj/r.yXqN4ueGz2B.G.2cT/.uE8p5r/X5b7L9y3yJm.
-            command.CommandText = "INSERT INTO Usuarios (Username, PasswordHash) VALUES ('admin', '$2a$11$w1pQ8O/u5zXj/r.yXqN4ueGz2B.G.2cT/.uE8p5r/X5b7L9y3yJm.')";
-            command.ExecuteNonQuery();
-        }
-
         // CREATE TABLE IF NOT EXISTS above only shapes brand-new databases — existing ones
         // created before Marked/PendienteCarpeta/etc. were added need these columns backfilled.
         EnsureColumnExists(connection, "UrgentRequest", "Marked", "INTEGER NOT NULL DEFAULT 0");
