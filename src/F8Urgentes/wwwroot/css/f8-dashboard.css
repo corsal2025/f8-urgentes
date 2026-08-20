@@ -183,8 +183,8 @@ main {
    dark background. Without its own rules this fell back to default blue underlined links. */
 main > .nav-group {
     border-left: none;
-    padding: 4px 0 16px;
-    gap: 8px;
+    padding: 4px 0 10px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
@@ -192,8 +192,8 @@ main > .nav-group a {
     color: var(--color-text-muted);
     text-decoration: none;
     font-weight: 600;
-    font-size: 0.85rem;
-    padding: 8px 16px;
+    font-size: 0.72rem;
+    padding: 5px 12px;
     border-radius: 999px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -216,14 +216,21 @@ main > .nav-group a .badge {
 }
 
 .nav-search {
-    margin-bottom: 18px;
+    margin-bottom: 10px;
 }
 
 .nav-search input[type="text"] {
     background: var(--color-surface);
     color: var(--color-text);
     border: 1px solid var(--color-border);
-    min-width: 260px;
+    min-width: 220px;
+    font-size: 0.78rem;
+    padding: 5px 8px;
+}
+
+.nav-search button {
+    font-size: 0.78rem;
+    padding: 5px 10px;
 }
 
 .nav-search input[type="text"]::placeholder {
@@ -608,9 +615,39 @@ table.cases-index td.text-cell {
 .message-error { background: var(--color-review-bg); border-color: var(--color-review); color: var(--color-review); }
 
 .quick-add-card {
-    padding: 18px 20px;
+    padding: 0 20px;
     margin-bottom: 20px;
     border-top: 3px solid var(--color-accent);
+}
+
+.quick-add-card summary {
+    padding: 8px 0;
+    font-weight: 600;
+    font-size: 0.76rem;
+    color: var(--color-text);
+    cursor: pointer;
+    list-style: none;
+}
+
+.quick-add-card summary::-webkit-details-marker {
+    display: none;
+}
+
+.quick-add-card summary::before {
+    content: "▶";
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    transition: transform 0.15s ease;
+}
+
+.quick-add-card[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.quick-add-card[open] {
+    padding-bottom: 18px;
 }
 
 .quick-add-row {
@@ -644,8 +681,8 @@ button.btn-outline {
     color: var(--color-text);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 6px 14px;
-    font-size: 0.85rem;
+    padding: 5px 12px;
+    font-size: 0.72rem;
     cursor: pointer;
 }
 button.btn-outline:hover { background: var(--color-bg); }
@@ -663,19 +700,23 @@ table.cases-list {
        codes, dates etc. are never clipped. The card's overflow-x scrolls when the total
        exceeds the viewport instead of squeezing columns down to unreadable slivers. */
     table-layout: auto;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     width: auto;
     min-width: 2100px;
     border-collapse: collapse;
 }
 
-table.cases-list th,
+table.cases-list th {
+    font-size: 0.6rem;
+    padding: 5px 6px;
+}
+
 table.cases-list td {
     white-space: nowrap;
     width: auto;
     text-align: center;
-    padding: 4px 5px;
-    height: 34px;
+    padding: 3px 6px;
+    height: 26px;
 }
 
 /* Name inputs are still variable-width (sized to content), so left-aligning keeps every
@@ -822,8 +863,8 @@ table.cases-list .input-inline {
     width: 100%;
     min-width: 100%;
     box-sizing: border-box;
-    font-size: 0.72rem;
-    padding: 4px 8px;
+    font-size: 0.66rem;
+    padding: 2px 6px;
     background: #ffffff;
     border: 1px solid transparent;
     box-shadow: none;
@@ -846,9 +887,9 @@ table.cases-list .input-inline:focus {
 
 select.estado-select {
     background: transparent;
-    font-size: 0.72rem;
+    font-size: 0.64rem;
     font-weight: 600;
-    padding: 4px 18px 4px 6px;
+    padding: 2px 16px 2px 5px;
     width: 30ch !important;
     border: 1px solid transparent;
     border-radius: 4px;
@@ -883,8 +924,8 @@ select.estado-select option {
 select.estado-actual-select {
     border-radius: 999px;
     font-weight: 600;
-    font-size: 0.66rem;
-    padding: 3px 8px;
+    font-size: 0.6rem;
+    padding: 2px 8px;
     text-align: center;
     text-align-last: center;
     border: 1px solid transparent;
@@ -1208,9 +1249,9 @@ button.btn-outline-danger:hover { background: var(--color-review-bg); }
 }
 
 .pdf-chip {
-    padding: 6px 16px;
+    padding: 5px 12px;
     border-radius: 999px;
-    font-size: 0.82rem;
+    font-size: 0.72rem;
     font-weight: 700;
     text-decoration: none;
     color: #fff;

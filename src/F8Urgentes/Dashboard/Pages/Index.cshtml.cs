@@ -368,7 +368,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         var request = repository.FindById(id);
         if (request is null)
         {
-            return RedirectToPage();
+            return new JsonResult(new { message = "Solicitud no encontrada." }) { StatusCode = StatusCodes.Status404NotFound };
         }
 
         // The field displays/expects the long Spanish form ("15 de mayo de 2024"), but dd/MM/yyyy
@@ -396,9 +396,21 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
                 request.FechaPenultimaCarpeta = result.Value;
                 repository.Update(request);
             }
+            else
+            {
+                // Every other branch above failed too — the text genuinely doesn't parse as a
+                // date. Silently returning 200 here (the old behavior) told the operator the save
+                // worked when nothing was written, which is how rows end up stuck showing the
+                // placeholder instead of the date that was typed in.
+                return new JsonResult(new { message = $"Fecha no reconocida: \"{fecha}\". Usa formato 15/marzo/2024, 15 de marzo de 2024, dd/MM/yyyy o S/C." }) { StatusCode = StatusCodes.Status400BadRequest };
+            }
         }
 
-        return RedirectToPage();
+        // Whatever format the operator typed (dd/MM/yyyy, "15 de marzo de 2024", a pasted Excel
+        // serial, ...), hand back the canonical dd/mes/yyyy display so the input can show it
+        // immediately — the AJAX save has no page reload to pick up the reformatted value otherwise.
+        var display = request.FechaPenultimaCarpeta is null ? "" : SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta);
+        return new JsonResult(new { fecha = display, sector = request.Sector?.ToString() });
     }
 
     public IActionResult OnPostSetCodigoF8(long id, string? codigoF8)

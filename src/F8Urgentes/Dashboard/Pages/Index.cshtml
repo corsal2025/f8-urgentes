@@ -67,7 +67,8 @@
     }
 </form>
 
-<div class="card quick-add-card">
+<details class="card quick-add-card">
+    <summary>Agregar caso</summary>
     <form method="post" asp-page-handler="AddManualCases" id="quick-add-form">
         <div id="quick-add-rows">
             <div class="quick-add-row">
@@ -82,7 +83,7 @@
             <button class="btn-primary" type="submit">Agregar caso(s)</button>
         </div>
     </form>
-</div>
+</details>
 
 <script>
     // Full page reloads (like quick-add, Sincronizar, Eliminar) reset the scroll to the top —
@@ -215,7 +216,7 @@
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
                     </td>
-                    <td class="text-cell">
+                    <td class="text-cell sector-carpeta-cell">
                         @(request.Sector switch
                         {
                             F8Urgentes.Domain.FolderSector.Archivo => "Archivo",
@@ -235,12 +236,6 @@
                         @if (request.EstadoActual == "CREAR CERTIFICADO")
                         {
                             <form method="post" asp-page-handler="EnviarCorreoCertificadoV2">
-                                <input type="hidden" name="id" value="@request.Id" />
-                                <button class="btn-sync" type="submit" title="Enviar correo a Matías solicitando el certificado">✉</button>
-                            </form>
-                        }
-                        <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
-                            <input type="hidden" name="id" value="@request.Id" />
                                 <input type="hidden" name="id" value="@request.Id" />
                                 <button class="btn-sync" type="submit" title="Enviar correo a Matías solicitando el certificado">✉</button>
                             </form>
@@ -274,7 +269,21 @@
             if (input.value !== initial && input.form) {
                 // Background save — a full requestSubmit() here reloads the whole page and
                 // resets scroll position, which is jarring while editing several rows in a row.
-                submitToggle(input.form);
+                submitToggle(input.form, function (payload) {
+                    if (input.classList.contains('fecha-penultima-input') && payload) {
+                        // Operator can type "15/03/2024", "15 de marzo de 2024", an Excel serial,
+                        // etc. — echo back the canonical dd/mes/yyyy form instead of leaving
+                        // whatever raw text they typed sitting in the box.
+                        input.value = payload.fecha || '';
+                        input.dataset.serverValue = payload.fecha || '';
+                        var sectorCell = input.closest('tr').querySelector('.sector-carpeta-cell');
+                        if (sectorCell) {
+                            sectorCell.textContent = payload.sector === 'Oficina43' ? 'Oficina 43'
+                                : payload.sector === 'Archivo' ? 'Archivo'
+                                : '';
+                        }
+                    }
+                });
                 initial = input.value;
             }
         });
@@ -307,7 +316,7 @@
                 return;
             }
             if (onSuccess) {
-                onSuccess();
+                onSuccess(payload);
             }
         }).catch(function () {
             console.error('Guardado en segundo plano falló: error de red');
