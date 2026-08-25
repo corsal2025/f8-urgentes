@@ -1,4 +1,5 @@
 @echo off
-cd /d "%~dp0"
-start "F8 Urgentes" http://localhost:5209
-dotnet run --project src\F8Urgentes\F8Urgentes.csproj --launch-profile http
+cd /d "%~dp0src\F8Urgentes"
+start "" cmd /k dotnet run --urls "http://localhost:5080"
+timeout /t 5 /nobreak >nul
+start "" http://localhost:5080

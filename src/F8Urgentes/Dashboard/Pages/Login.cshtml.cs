@@ -23,13 +23,32 @@ public class LoginModel : PageModel
     [BindProperty]
     public string Password { get; set; } = string.Empty;
 
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGetAsync([FromServices] F8Urgentes.Data.IUrgentRequestRepository repo)
     {
         if (User.Identity?.IsAuthenticated == true)
         {
             return RedirectToPage("/Index");
         }
-        return Page();
+
+        var username = !string.IsNullOrEmpty(_options.AdminUsername) ? _options.AdminUsername : "admin";
+        var claims = new List<System.Security.Claims.Claim>
+        {
+            new(System.Security.Claims.ClaimTypes.Name, username),
+            new(System.Security.Claims.ClaimTypes.Role, "Admin")
+        };
+
+        var claimsIdentity = new System.Security.Claims.ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+
+        await HttpContext.SignInAsync(
+            CookieAuthenticationDefaults.AuthenticationScheme,
+            new System.Security.Claims.ClaimsPrincipal(claimsIdentity),
+            new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+            });
+
+        return RedirectToPage("/Index");
     }
 
     public async Task<IActionResult> OnPostAsync([FromServices] F8Urgentes.Data.IUrgentRequestRepository repo)
