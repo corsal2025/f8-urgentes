@@ -383,7 +383,12 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             request.FechaPenultimaCarpeta = longForm;
             repository.Update(request);
         }
-        else if (DateOnly.TryParseExact(fecha?.Trim(), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var typed))
+        else if (DateOnly.TryParseExact(
+            fecha?.Trim(),
+            ["dd/MM/yyyy", "d/M/yyyy", "d/MM/yyyy", "dd/M/yyyy"],
+            null,
+            System.Globalization.DateTimeStyles.None,
+            out var typed))
         {
             request.FechaPenultimaCarpeta = typed;
             repository.Update(request);

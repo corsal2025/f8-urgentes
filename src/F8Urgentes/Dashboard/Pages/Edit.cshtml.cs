@@ -78,9 +78,11 @@ public sealed class EditModel(IUrgentRequestRepository repository) : PageModel
         request.NombreCompleto = Input.NombreCompleto;
         request.Rut = parsedRut.ToString();
         request.RutRaw = Input.Rut;
-        request.FechaUltimaCarpeta = Input.FechaUltimaCarpeta;
         request.CodigoF8 = Input.CodigoF8;
-        request.FechaPenultimaCarpeta = Input.FechaPenultimaCarpeta;
+        // FechaUltimaCarpeta / FechaPenultimaCarpeta have no inputs on this form — they're
+        // edited only via their dedicated handlers (e.g. SetFechaPenultimaCarpeta on Index).
+        // Assigning Input's unbound (always-null) values here would wipe the saved date on
+        // every edit.
         var estadoValue = EstadoCatalog.NormalizeForPersistence(Input.Estado, isEstado: true);
         var estadoActualValue = EstadoCatalog.NormalizeForPersistence(Input.EstadoActual, isEstado: false);
         var unknownEstado = EstadoCatalog.IsUnknownEstado(Input.Estado);

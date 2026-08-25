@@ -211,7 +211,7 @@
                     </td>
                     <td class="text-cell">
                         @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is null ? "" : F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta); }
-                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="off" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/marzo/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/marzo/2024 o S/C", 10, 48))ch" />
+                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="fecha-penultima-@request.Id-no-autofill" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/marzo/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/marzo/2024 o S/C", 10, 48))ch" />
                         <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
