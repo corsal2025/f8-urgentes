@@ -159,6 +159,16 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
                 repository.ClearFlags(id);
             }
         }
+
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+        {
+            return new JsonResult(new
+            {
+                fechaDeSubida = request?.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—",
+                estadoActual = request?.EstadoActual
+            });
+        }
+
         return RedirectToPage();
     }
 
@@ -197,6 +207,16 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
                 repository.SetPendienteCarpeta(id, false);
             }
         }
+
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+        {
+            return new JsonResult(new
+            {
+                fechaDeSubida = request?.FechaDeSubida?.ToString("dd/MM/yyyy") ?? DateOnly.FromDateTime(DateTime.Today).ToString("dd/MM/yyyy"),
+                estadoActual = EstadoActualSubida
+            });
+        }
+
         return RedirectToPage();
     }
 

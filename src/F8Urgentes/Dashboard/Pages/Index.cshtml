@@ -224,7 +224,7 @@
                             _ => "",
                         })
                     </td>
-                    <td class="text-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
+                    <td class="text-cell fecha-subida-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
                     <td class="action-cell">
                         @if (request.EstadoActual != "SUBIDA A CONASET")
                         {
@@ -324,15 +324,19 @@
         });
     }
 
-    // Each wiring block runs independently (own try/catch) — a bad selector or a missing
-    // element in one block must not stop the others below it from ever registering.
-    // Keep case actions on current screen. Quick-add and sync keep normal navigation.
+    var estadoActualBadgeClasses = {
+        'SUBIDA A CONASET': 'badge-confirmed',
+        'CREAR CERTIFICADO': 'badge-uploaded',
+        'PENDIENTE': 'badge-pending',
+        '': 'badge-pending',
+    };
+
     document.querySelectorAll('table.cases form[method="post"]').forEach(function (form) {
         form.addEventListener('submit', function (event) {
             event.preventDefault();
             var row = form.closest('tr');
             var handler = new URL(form.action, window.location.href).searchParams.get('handler');
-            submitToggle(form, function () {
+            submitToggle(form, function (payload) {
                 if (handler === 'DeleteCase' && row) {
                     row.remove();
                 }
@@ -343,6 +347,24 @@
                         button.disabled = true;
                         button.textContent = 'Subido';
                     }
+                    var fechaCell = row.querySelector('.fecha-subida-cell');
+                    if (fechaCell) {
+                        var fechaVal = (payload && payload.fechaDeSubida) ? payload.fechaDeSubida : new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
+                        fechaCell.textContent = fechaVal;
+                    }
+                    var estadoActualSelect = row.querySelector('.estado-actual-select');
+                    if (estadoActualSelect) {
+                        estadoActualSelect.value = 'SUBIDA A CONASET';
+                        estadoActualSelect.disabled = true;
+                        Object.values(estadoActualBadgeClasses).forEach(function (cls) { estadoActualSelect.classList.remove(cls); });
+                        estadoActualSelect.classList.add('badge-confirmed');
+                    }
+                    var alertIcon = row.querySelector('.pendiente-alert');
+                    if (alertIcon) {
+                        alertIcon.style.display = 'none';
+                    }
+                    var checkboxes = row.querySelectorAll('form.toggle-form input[type="checkbox"]');
+                    checkboxes.forEach(function (cb) { cb.checked = false; });
                 }
                 if (handler === 'EnviarCorreoCertificadoV2') {
                     alert('Correo enviado a Matías Villalobos.');
@@ -352,17 +374,12 @@
     });
 
     try {
-        // Toggle forms (Marcar / Pendiente Carpeta) post in the background instead of doing a
-        // full-page navigation — a full RedirectToPage round trip on every checkbox click caused
-        // a visible white-page flash/flicker on every click.
         document.querySelectorAll('form.toggle-form').forEach(function (form) {
             var checkbox = form.querySelector('input[type="checkbox"]');
             if (!checkbox) {
                 return;
             }
             checkbox.addEventListener('change', function () {
-                // Marcar and Pendiente Carpeta are mutually exclusive per row — checking one
-                // clears the other (client-side for instant feedback, server-side via its form).
                 if (checkbox.checked) {
                     var row = form.closest('tr');
                     var otherCheckbox = Array.from(row.querySelectorAll('form.toggle-form input[type="checkbox"]'))
@@ -380,7 +397,6 @@
     }
 
     try {
-        // Estado dropdown: recolors the whole row instantly, then saves in the background.
         var estadoRowClasses = {
             'SUBIR CON F8': 'estado-row-f8',
             'PRIMERA LICENCIA': 'estado-row-licencia',
@@ -408,15 +424,6 @@
     }
 
     try {
-        // Estado actual dropdown: recolors its own badge pill and, when it becomes "SUBIDA A
-        // CONASET", turns the whole row blue (matching the original F8 project's finished-case
-        // color) since the deadline/marking workflow no longer applies once a case is uploaded.
-        var estadoActualBadgeClasses = {
-            'SUBIDA A CONASET': 'badge-confirmed',
-            'CREAR CERTIFICADO': 'badge-uploaded',
-            'PENDIENTE': 'badge-pending',
-            '': 'badge-pending',
-        };
         document.querySelectorAll('select.estado-actual-select').forEach(function (select) {
             select.addEventListener('change', function () {
                 Object.values(estadoActualBadgeClasses).forEach(function (cls) { select.classList.remove(cls); });
@@ -425,13 +432,26 @@
                 var row = select.closest('tr');
                 row.classList.toggle('row-confirmed', select.value === 'SUBIDA A CONASET');
 
+                var fechaCell = row ? row.querySelector('.fecha-subida-cell') : null;
+                if (fechaCell) {
+                    if (select.value === 'SUBIDA A CONASET') {
+                        fechaCell.textContent = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
+                    } else {
+                        fechaCell.textContent = '—';
+                    }
+                }
+
                 var alertIcon = select.parentElement.querySelector('.pendiente-alert');
                 if (alertIcon) {
                     alertIcon.style.display = select.value === 'PENDIENTE' ? '' : 'none';
                 }
 
                 if (select.form) {
-                    submitToggle(select.form);
+                    submitToggle(select.form, function (payload) {
+                        if (payload && payload.fechaDeSubida && fechaCell) {
+                            fechaCell.textContent = payload.fechaDeSubida;
+                        }
+                    });
                 }
             });
         });
@@ -440,8 +460,6 @@
     }
 
     try {
-        // RUT is displayed with dots for readability, but copying should hand over the plain
-        // "12345678-9" form (no dots) that gets pasted elsewhere (other systems, search boxes).
         document.querySelectorAll('input.rut-input').forEach(function (input) {
             input.addEventListener('copy', function (event) {
                 var selected = input.value.substring(input.selectionStart, input.selectionEnd);
