@@ -59,9 +59,50 @@ public static class MatrizSyncService
 
     // Entrada: opened read-only (isEditable: false) — the OpenXml SDK cannot alter the file
     // under a read-only open, so this pass is inherently non-destructive.
+    //
+    // Retries mirror RunSalida: the office keeps this file syncing via OneDrive/Drive, and a
+    // read that lands mid-sync sees a half-written zip package. The OpenXml SDK surfaces that
+    // as FileFormatException ("File contains corrupted data.") rather than IOException, so both
+    // are treated as transient here — the file is not actually corrupt, just momentarily
+    // inconsistent on disk.
     private static void RunEntrada(string workbookPath, IUrgentRequestRepository repository, MatrizSyncResult result)
     {
-        using var document = SpreadsheetDocument.Open(workbookPath, isEditable: false);
+        SpreadsheetDocument? document = null;
+        for (var attempt = 1; attempt <= MaxRetries && document is null; attempt++)
+        {
+            try
+            {
+                document = SpreadsheetDocument.Open(workbookPath, isEditable: false);
+            }
+            catch (IOException) when (attempt < MaxRetries)
+            {
+                Thread.Sleep(RetryDelay);
+            }
+            catch (FileFormatException) when (attempt < MaxRetries)
+            {
+                Thread.Sleep(RetryDelay);
+            }
+            catch (IOException)
+            {
+                result.ExcelLocked = true;
+                result.Alerts.Add("El Excel matriz no se pudo leer (sincronizacion de OneDrive/Drive en curso) — se reintentara en la proxima sincronizacion.");
+                return;
+            }
+            catch (FileFormatException)
+            {
+                result.ExcelLocked = true;
+                result.Alerts.Add("El Excel matriz no se pudo leer (sincronizacion de OneDrive/Drive en curso) — se reintentara en la proxima sincronizacion.");
+                return;
+            }
+        }
+
+        if (document is null)
+        {
+            result.ExcelLocked = true;
+            return;
+        }
+
+        using var _ = document;
         var workbookPart = document.WorkbookPart!;
         var sharedStrings = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
 
