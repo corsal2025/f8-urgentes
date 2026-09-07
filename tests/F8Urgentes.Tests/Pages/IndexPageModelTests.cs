@@ -45,12 +45,22 @@ public sealed class IndexPageModelTests : IDisposable
         return id;
     }
 
+    // Handlers that echo JSON for AJAX callers read Request.Headers, so the model needs a live
+    // HttpContext even in unit tests — without it PageModel.Request throws NullReferenceException.
+    private IndexModel CreateModel() => new(_repository, new TestEmailSender())
+    {
+        PageContext = new Microsoft.AspNetCore.Mvc.RazorPages.PageContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext(),
+        },
+    };
+
     [Fact]
     public void OnGet_NoFilters_ReturnsAllRequests()
     {
         Insert();
         Insert(rut: "7654321-K");
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnGet(null, null, null, null, null);
 
@@ -62,7 +72,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert(fecha: new DateOnly(2024, 6, 1));
         Insert(fecha: new DateOnly(2024, 7, 1), rut: "7654321-K");
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnGet("2024-06", null, null, null, null);
 
@@ -74,7 +84,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert(estado: "PRIMERA LICENCIA");
         Insert(estado: "CAMBIO DE DOMICILIO", rut: "7654321-K");
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnGet(null, "PRIMERA LICENCIA", null, null, null);
 
@@ -86,7 +96,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert(flagged: true);
         Insert(rut: "7654321-K");
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnGet(null, null, null, true, null);
 
@@ -99,7 +109,7 @@ public sealed class IndexPageModelTests : IDisposable
     {
         Insert();
         Insert(rut: "7654321-K");
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnGet(null, null, null, null, "juan");
 
@@ -110,7 +120,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetEstado_PersistsChangeAndRedirects()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         var result = model.OnPostSetEstado(id, "CARPETA SUBIDA");
 
@@ -126,7 +136,7 @@ public sealed class IndexPageModelTests : IDisposable
         var request = _repository.FindById(id)!;
         request.NeedsReview = true;
         _repository.Update(request);
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnPostSetEstado(id, "CARPETA SUBIDA");
 
@@ -140,7 +150,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetEstadoActual_PersistsChangeAndRedirects()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         var result = model.OnPostSetEstadoActual(id, "SUBIDA A CONASET");
 
@@ -152,7 +162,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetEstadoActual_SetsFechaDeSubidaWhenMarkedAsUploaded()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnPostSetEstadoActual(id, "SUBIDA A CONASET");
 
@@ -170,7 +180,7 @@ public sealed class IndexPageModelTests : IDisposable
         _repository.Update(request);
         _repository.AddFlag(id, "EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, "ESTADO ACTUAL INVENTADO");
 
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnPostSetEstadoActual(id, "PENDIENTE");
 
@@ -186,7 +196,7 @@ public sealed class IndexPageModelTests : IDisposable
         var pendingId = Insert();
         var uploadedId = Insert(rut: "7654321-K");
         _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnGet(null, null, null, null, null, "Pendientes");
 
@@ -200,7 +210,7 @@ public sealed class IndexPageModelTests : IDisposable
         Insert();
         var uploadedId = Insert(rut: "7654321-K");
         _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnGet(null, null, null, null, null, "Subidas");
 
@@ -212,7 +222,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetPersonData_PersistsNombreAndRut()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         var result = model.OnPostSetPersonData(id, "Maria Gonzalez", "7654321-K");
 
@@ -226,7 +236,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostMarkUploaded_SetsEstadoActualAndFechaDeSubida()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         var result = model.OnPostMarkUploaded(id);
 
@@ -246,7 +256,7 @@ public sealed class IndexPageModelTests : IDisposable
         request.SourceRowNumber = 12;
         _repository.Update(request);
 
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
         var result = model.OnPostMarkUploaded(id);
 
         var found = _repository.FindById(id)!;
@@ -260,7 +270,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostDeleteCase_RemovesRequest()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         var result = model.OnPostDeleteCase(id);
 
@@ -271,7 +281,7 @@ public sealed class IndexPageModelTests : IDisposable
     [Fact]
     public void OnPostAddManualCases_InsertsAllValidRows()
     {
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         var result = model.OnPostAddManualCases(
             new List<string> { "Pedro Soto", "Ana Diaz" },
@@ -300,7 +310,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetFechaPenultimaCarpeta_ParsesDate()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
 
         model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
 
@@ -311,7 +321,7 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetFechaPenultimaCarpeta_SinCarpeta_ClearsDate()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
         model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
 
         model.OnPostSetFechaPenultimaCarpeta(id, "S/C");
@@ -323,11 +333,88 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnPostSetFechaPenultimaCarpeta_Unparseable_LeavesDateUnchanged()
     {
         var id = Insert();
-        var model = new IndexModel(_repository, new TestEmailSender());
+        var model = CreateModel();
         model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
 
         model.OnPostSetFechaPenultimaCarpeta(id, "no es una fecha");
 
         Assert.Equal(new DateOnly(2024, 3, 15), _repository.FindById(id)!.FechaPenultimaCarpeta);
+    }
+
+    private static UrgentRequest CompletedCase(DateOnly fechaDeSubida, DateOnly? fechaPenultimaCarpeta, DateTimeOffset? impresoMensualAt = null) => new()
+    {
+        EstadoActual = "SUBIDA A CONASET",
+        FechaDeSubida = fechaDeSubida,
+        FechaPenultimaCarpeta = fechaPenultimaCarpeta,
+        ImpresoMensualAt = impresoMensualAt,
+        Origin = "Web",
+    };
+
+    [Fact]
+    public void ShouldRemindMonthlyPrint_ExcludesCompletedCasesWithoutPenultimateFolder()
+    {
+        var today = new DateOnly(2026, 9, 5);
+        var noFolder = CompletedCase(new DateOnly(2026, 8, 20), fechaPenultimaCarpeta: null);
+
+        Assert.False(IndexModel.ShouldRemindMonthlyPrint([noFolder], today));
+    }
+
+    [Fact]
+    public void ShouldRemindMonthlyPrint_TrueWhenUnprintedCaseWithFolderExists()
+    {
+        var today = new DateOnly(2026, 9, 5);
+        var pending = CompletedCase(new DateOnly(2026, 8, 20), new DateOnly(2026, 7, 1));
+
+        Assert.True(IndexModel.ShouldRemindMonthlyPrint([pending], today));
+    }
+
+    [Fact]
+    public void ShouldRemindMonthlyPrint_FalseAfterBatchMarkedPrinted()
+    {
+        var today = new DateOnly(2026, 9, 5);
+        var printed = CompletedCase(new DateOnly(2026, 8, 20), new DateOnly(2026, 7, 1), DateTimeOffset.UtcNow);
+
+        Assert.False(IndexModel.ShouldRemindMonthlyPrint([printed], today));
+    }
+
+    [Fact]
+    public void ShouldRemindMonthlyPrint_FalseAfterDay10()
+    {
+        var afterWindow = new DateOnly(2026, 9, 15);
+        var pending = CompletedCase(new DateOnly(2026, 8, 20), new DateOnly(2026, 7, 1));
+
+        Assert.False(IndexModel.ShouldRemindMonthlyPrint([pending], afterWindow));
+    }
+
+    [Fact]
+    public void MonthlyReminder_ClearsAfterMarkingBatchPrinted_EvenWhenSomeCasesLackPenultimateFolder()
+    {
+        // In the batch: prev-month completed case WITH a penultimate-folder date.
+        _repository.Insert(new UrgentRequest
+        {
+            EstadoActual = "SUBIDA A CONASET",
+            FechaDeSubida = new DateOnly(2026, 8, 10),
+            FechaPenultimaCarpeta = new DateOnly(2026, 7, 1),
+            Rut = "15949558-2",
+            NombreCompleto = "Con carpeta",
+            Origin = "Web",
+            CreatedAt = DateTimeOffset.UtcNow,
+        });
+        // Excluded from the batch: prev-month completed case with NO penultimate-folder date —
+        // "marcar impreso" never touches it, so it must not keep the banner alive.
+        _repository.Insert(new UrgentRequest
+        {
+            EstadoActual = "SUBIDA A CONASET",
+            FechaDeSubida = new DateOnly(2026, 8, 11),
+            FechaPenultimaCarpeta = null,
+            Rut = "7654321-K",
+            NombreCompleto = "Sin carpeta",
+            Origin = "Web",
+            CreatedAt = DateTimeOffset.UtcNow,
+        });
+
+        new ImpresionMensualModel(_repository).OnPostMarkPrinted("2026-08");
+
+        Assert.False(IndexModel.ShouldRemindMonthlyPrint(_repository.GetAll(), new DateOnly(2026, 9, 5)));
     }
 }

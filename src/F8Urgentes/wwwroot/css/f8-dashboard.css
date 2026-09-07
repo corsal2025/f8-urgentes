@@ -1631,6 +1631,12 @@ main > .nav-group a.pdf-chip-stats:hover {
     border-collapse: collapse;
 }
 
+/* Monthly list uses the page's own vertical scrollbar — the wrapper only guards
+   against a wide table forcing horizontal page scroll. */
+.print-table-scroll {
+    overflow-x: auto;
+}
+
 .print-table tbody tr:nth-child(even) {
     background: #f7f9fb;
 }
@@ -1638,6 +1644,22 @@ main > .nav-group a.pdf-chip-stats:hover {
 @media print {
     .no-print {
         display: none !important;
+    }
+
+    /* Screen layout locks the page to one viewport (height:100vh; overflow:hidden)
+       and scrolls the report inside <main>. That clips printing to a single screen,
+       so release the height/overflow constraints on paper. */
+    body.cases-page {
+        height: auto;
+        overflow: visible;
+        display: block;
+    }
+
+    body.cases-page main {
+        display: block;
+        overflow: visible;
+        min-height: 0;
+        flex: none;
     }
 
     .print-report {
@@ -1648,5 +1670,9 @@ main > .nav-group a.pdf-chip-stats:hover {
         max-width: none;
         border: none;
         padding: 0;
+    }
+
+    .print-table-scroll {
+        overflow: visible;
     }
 }

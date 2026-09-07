@@ -86,7 +86,9 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             .ThenBy(r => r.Id)
             .ToList();
 
-        DuplicateRuts = repository.GetAll()
+        var all = repository.GetAll();
+
+        DuplicateRuts = all
             .Where(r => !string.IsNullOrWhiteSpace(r.Rut))
             .GroupBy(r => r.Rut!)
             .Where(g => g.Count() > 1)
@@ -97,11 +99,24 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         PreviousMonthKey = ImpresionMensualModel.PreviousMonthKey(today);
-        ShowMonthlyPrintReminder = today.Day <= 10 && repository.GetAll().Any(r =>
-            r.EstadoActual == EstadoActualSubida &&
+        ShowMonthlyPrintReminder = ShouldRemindMonthlyPrint(all, today);
+    }
+
+    // The banner and the actual print batch (ImpresionMensualModel.BelongsToMonthlyBatch) must
+    // agree on which cases count — otherwise a case that the batch excludes (e.g. no penultimate-
+    // folder date) can never get ImpresoMensualAt set by "marcar impreso", so the reminder never
+    // clears no matter how many times the list is printed.
+    public static bool ShouldRemindMonthlyPrint(IEnumerable<UrgentRequest> all, DateOnly today)
+    {
+        if (today.Day > 10)
+        {
+            return false;
+        }
+
+        var previousMonth = ImpresionMensualModel.PreviousMonthKey(today);
+        return all.Any(r =>
             r.ImpresoMensualAt is null &&
-            r.FechaDeSubida is not null &&
-            r.FechaDeSubida.Value.ToString("yyyy-MM") == PreviousMonthKey);
+            ImpresionMensualModel.BelongsToMonthlyBatch(r, previousMonth));
     }
 
     public IActionResult OnPostSetEstado(long id, string estado)
