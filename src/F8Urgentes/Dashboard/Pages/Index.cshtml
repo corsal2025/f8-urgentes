@@ -5,105 +5,189 @@
     var currentTab = Model.Tab ?? "Todos";
 }
 
-<div class="nav-group">
-    <a href="/Index?tab=Todos" class="@(currentTab == "Todos" ? "active" : "")">Todos</a>
-    <a href="/Index?tab=Pendientes" class="@(currentTab == "Pendientes" ? "active" : "")">Pendientes</a>
-    <a href="/Index?tab=Subidas" class="@(currentTab == "Subidas" ? "active" : "")">Subidas</a>
-    <a href="/Index?tab=Certificados" class="@(currentTab == "Certificados" ? "active" : "")">Solicitud de certificado</a>
-    <a href="/Index?flagged=true" class="@(Model.Flagged == true ? "active" : "")">
-        Requiere revisión
-        @if (Model.FlaggedCount > 0)
-        {
-            <span class="badge badge-review">@Model.FlaggedCount</span>
-        }
-    </a>
-    <a href="/SectorF8?sector=Archivo" class="pdf-chip pdf-chip-archivo">PDF Archivo</a>
-    <a href="/SectorF8?sector=Oficina43" class="pdf-chip pdf-chip-oficina43">PDF Oficina 43</a>
-    <a href="/Estadisticas" class="pdf-chip pdf-chip-stats">Estadísticas</a>
-    <a href="/ImpresionMensual" class="pdf-chip pdf-chip-stats">Impresión mensual</a>
-    <form method="post" asp-page-handler="Sincronizar" style="display:inline-block; margin-left:8px;">
-        <button class="btn-outline btn-sync" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
-            Sincronizar datos
-        </button>
-    </form>
+<div class="dashboard-controls">
+    <div class="controls-row-main">
+        <div class="filter-tabs-group">
+            <a href="/Index?tab=Todos" class="tab-pill @(currentTab == "Todos" ? "active" : "")">Todos</a>
+            <a href="/Index?tab=Pendientes" class="tab-pill @(currentTab == "Pendientes" ? "active" : "")">Pendientes</a>
+            <a href="/Index?tab=Subidas" class="tab-pill @(currentTab == "Subidas" ? "active" : "")">Subidas</a>
+            <a href="/Index?tab=Certificados" class="tab-pill @(currentTab == "Certificados" ? "active" : "")">Solicitud de certificado</a>
+            <a href="/Index?flagged=true" class="tab-pill @(Model.Flagged == true ? "active" : "")">
+                Requiere revisión
+                @if (Model.FlaggedCount > 0)
+                {
+                    <span class="badge badge-review">@Model.FlaggedCount</span>
+                }
+            </a>
+        </div>
+
+        <div class="tools-group">
+            <a href="/SectorF8?sector=Archivo" class="tool-btn tool-archivo" title="PDF Archivo">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                Archivo
+            </a>
+            <a href="/SectorF8?sector=Oficina43" class="tool-btn tool-oficina43" title="PDF Oficina 43">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                Oficina 43
+            </a>
+            <a href="/Estadisticas" class="tool-btn tool-stats" title="Estadísticas">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                Estadísticas
+            </a>
+            <a href="/ImpresionMensual" class="tool-btn tool-print" title="Impresión mensual">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                Impresión mensual
+            </a>
+            <form method="post" asp-page-handler="Sincronizar" class="sync-form" style="display:inline-block; margin:0;">
+                <button class="tool-btn tool-sync" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    Sincronizar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    @if (Model.ShowMonthlyPrintReminder)
+    {
+        <div class="card alert-banner alert-warning">
+            <span>⚠ Recuerda imprimir las penúltimas carpetas de @Model.PreviousMonthKey.</span>
+            <a href="/ImpresionMensual?month=@Model.PreviousMonthKey">Ir a impresión mensual</a>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.SyncMessage))
+    {
+        <div class="card alert-banner alert-success">
+            @Model.SyncMessage
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.CertificadoMessage))
+    {
+        <div class="card alert-banner alert-success">
+            @Model.CertificadoMessage
+        </div>
+    }
+
+    @if (Model.DuplicateRuts.Count > 0)
+    {
+        <div class="card alert-banner alert-danger">
+            ⚠ RUT duplicado(s), hay más de un caso con el mismo RUT: @string.Join(", ", Model.DuplicateRuts.Select(F8Urgentes.Domain.RutFormatter.WithDots))
+        </div>
+    }
+
+    <div class="controls-row-actions">
+        <form class="modern-search-form" method="get" action="/Index">
+            <input type="hidden" name="tab" value="@currentTab" />
+            <div class="search-input-wrapper">
+                <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" name="search" value="@Model.Search" placeholder="Buscar por RUT o nombre..." autocomplete="off" />
+                @if (!string.IsNullOrEmpty(Model.Search))
+                {
+                    <a class="search-clear-btn" href="/Index?tab=@currentTab" title="Limpiar búsqueda">✕</a>
+                }
+            </div>
+            <button type="submit" class="btn-search">Buscar</button>
+        </form>
+
+        <div class="action-items-right">
+            <span class="cases-count-badge">@Model.Requests.Count caso(s)</span>
+            <button type="button" class="btn-primary btn-open-modal" id="open-quick-add-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Agregar caso
+            </button>
+        </div>
+    </div>
 </div>
 
-@if (Model.ShowMonthlyPrintReminder)
-{
-    <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#fff4d6; border-left:4px solid #b8860b; font-size:0.85rem;">
-        ⚠ Recuerda imprimir las penúltimas carpetas de @Model.PreviousMonthKey.
-        <a href="/ImpresionMensual?month=@Model.PreviousMonthKey">Ir a impresión mensual</a>
-    </div>
-}
-
-@if (!string.IsNullOrEmpty(Model.SyncMessage))
-{
-    <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#eef6ec; border-left:4px solid #4a934a; font-size:0.85rem;">
-        @Model.SyncMessage
-    </div>
-}
-
-@if (!string.IsNullOrEmpty(Model.CertificadoMessage))
-{
-    <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#eef6ec; border-left:4px solid #4a934a; font-size:0.85rem;">
-        @Model.CertificadoMessage
-    </div>
-}
-
-@if (Model.DuplicateRuts.Count > 0)
-{
-    <div class="card" style="margin-bottom:12px; padding:10px 14px; background:#fdecea; border-left:4px solid #c0392b; font-size:0.85rem;">
-        ⚠ RUT duplicado(s), hay más de un caso con el mismo RUT: @string.Join(", ", Model.DuplicateRuts.Select(F8Urgentes.Domain.RutFormatter.WithDots))
-    </div>
-}
-
-<form class="nav-search" method="get" action="/Index">
-    <input type="hidden" name="tab" value="@currentTab" />
-    <input type="text" name="search" value="@Model.Search" placeholder="Buscar por RUT o nombre" />
-    <button type="submit">Buscar</button>
-    @if (!string.IsNullOrEmpty(Model.Search))
-    {
-        <a class="nav-search-clear" href="/Index?tab=@currentTab">Limpiar búsqueda</a>
-    }
-</form>
-
-<details class="card quick-add-card">
-    <summary>Agregar caso</summary>
-    <form method="post" asp-page-handler="AddManualCases" id="quick-add-form">
-        <div id="quick-add-rows">
-            <div class="quick-add-row">
-                <label>Nombre completo<input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" /></label>
-                <label>RUT<input class="input-block" name="rut" placeholder="ej: 18.785.387-7" /></label>
-                <label>Estado<input class="input-block" name="estado" placeholder="ej: Pendiente" /></label>
-                <button type="button" class="btn-danger remove-row-btn" title="Quitar fila" hidden>×</button>
+<dialog id="quick-add-modal" class="modern-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div class="modal-title-wrap">
+                <h3 class="modal-title">Agregar casos manuales</h3>
+                <span class="modal-subtitle">Ingrese contribuyente(s) para registrar en el sistema</span>
             </div>
+            <button type="button" class="modal-close-btn" id="close-quick-add-btn" title="Cerrar modal">✕</button>
         </div>
-        <div class="quick-add-actions">
-            <button type="button" id="add-row-btn" class="btn-outline">+ Agregar otro</button>
-            <button class="btn-primary" type="submit">Agregar caso(s)</button>
-        </div>
-    </form>
-</details>
+        <form method="post" asp-page-handler="AddManualCases" id="quick-add-form" class="modal-body">
+            <div id="quick-add-rows" class="modal-rows-container">
+                <div class="quick-add-row modern-modal-row">
+                    <div class="modal-field">
+                        <label>Nombre completo</label>
+                        <input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" required />
+                    </div>
+                    <div class="modal-field modal-field-rut">
+                        <label>RUT</label>
+                        <input class="input-block" name="rut" placeholder="ej: 18.785.387-7" required />
+                    </div>
+                    <div class="modal-field modal-field-estado">
+                        <label>Estado</label>
+                        <input class="input-block" name="estado" placeholder="ej: Pendiente" />
+                    </div>
+                    <button type="button" class="btn-danger remove-row-btn" title="Quitar fila" hidden>×</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="add-row-btn" class="btn-outline">+ Agregar otro</button>
+                <div class="modal-footer-actions">
+                    <button type="button" class="btn-secondary" id="cancel-quick-add-btn">Cancelar</button>
+                    <button class="btn-primary" type="submit">Guardar caso(s)</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</dialog>
 
 <script>
-    // Full page reloads (like quick-add, Sincronizar, Eliminar) reset the scroll to the top —
-    // jarring after actioning a case down the list. Stash the scroll position before any normal
-    // submit and restore it once the reloaded page settles.
     (function () {
         var scrollKey = 'f8-index-scroll';
         var restore = sessionStorage.getItem(scrollKey);
         if (restore !== null) {
             sessionStorage.removeItem(scrollKey);
-            // Use setTimeout to ensure the table has fully rendered its height before restoring scroll
             setTimeout(function () {
                 window.scrollTo(0, parseInt(restore, 10) || 0);
             }, 60);
         }
         document.addEventListener('submit', function (event) {
-            // Only stash scroll if it's a normal form submission, not our fetch-based submitToggle
-            // which doesn't reload the page.
             sessionStorage.setItem(scrollKey, String(window.scrollY));
         });
+    })();
+
+    // Modal behavior for Agregar Caso
+    (function () {
+        var modal = document.getElementById('quick-add-modal');
+        var openBtn = document.getElementById('open-quick-add-btn');
+        var closeBtn = document.getElementById('close-quick-add-btn');
+        var cancelBtn = document.getElementById('cancel-quick-add-btn');
+
+        function openModal() {
+            if (!modal) return;
+            if (typeof modal.showModal === 'function') {
+                modal.showModal();
+            } else {
+                modal.setAttribute('open', '');
+            }
+            var firstInput = modal.querySelector('input[name="nombreCompleto"]');
+            if (firstInput) setTimeout(function () { firstInput.focus(); }, 50);
+        }
+
+        function closeModal() {
+            if (!modal) return;
+            if (typeof modal.close === 'function') {
+                modal.close();
+            } else {
+                modal.removeAttribute('open');
+            }
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closeModal();
+            });
+        }
     })();
 
     document.getElementById('quick-add-rows').addEventListener('click', function (event) {
@@ -115,10 +199,10 @@
     document.getElementById('add-row-btn').addEventListener('click', function () {
         var rows = document.getElementById('quick-add-rows');
         var row = document.createElement('div');
-        row.className = 'quick-add-row';
-        row.innerHTML = '<label>Nombre completo<input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" /></label>' +
-            '<label>RUT<input class="input-block" name="rut" placeholder="ej: 18.785.387-7" /></label>' +
-            '<label>Estado<input class="input-block" name="estado" placeholder="ej: Pendiente" /></label>' +
+        row.className = 'quick-add-row modern-modal-row';
+        row.innerHTML = '<div class="modal-field"><label>Nombre completo</label><input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" required /></div>' +
+            '<div class="modal-field modal-field-rut"><label>RUT</label><input class="input-block" name="rut" placeholder="ej: 18.785.387-7" required /></div>' +
+            '<div class="modal-field modal-field-estado"><label>Estado</label><input class="input-block" name="estado" placeholder="ej: Pendiente" /></div>' +
             '<button type="button" class="btn-danger remove-row-btn" title="Quitar fila">×</button>';
         rows.appendChild(row);
     });
@@ -128,18 +212,18 @@
     <table class="cases cases-list">
         <thead>
             <tr>
-                <th>Marcar</th>
-                <th class="th-wrap">Pend.<br />carpeta</th>
-                <th class="th-wrap">Fecha de<br />citación</th>
-                <th>Nombre contribuyente</th>
+                <th class="th-wrap">Nombre<br />contribuyente</th>
                 <th>RUT</th>
-                <th>Sector oficina</th>
+                <th>Marcar</th>
+                <th class="th-wrap">Pendiente<br />carpeta</th>
+                <th class="th-wrap">Fecha<br />citación</th>
+                <th class="th-wrap">Sector<br />oficina</th>
                 <th>Estado</th>
-                <th>Estado actual</th>
-                <th>Código F8</th>
-                <th class="th-wrap">Fecha<br />penúltima<br />carpeta</th>
+                <th class="th-wrap">Estado<br />actual</th>
+                <th class="th-wrap">Código<br />F8</th>
+                <th class="th-wrap">Fecha penúltima<br />carpeta</th>
                 <th class="th-wrap">Sector<br />carpeta</th>
-                <th>Fecha subida F8</th>
+                <th class="th-wrap">Fecha subida<br />F8</th>
                 <th>Acción</th>
             </tr>
         </thead>
@@ -147,6 +231,16 @@
             @foreach (var request in Model.Requests)
             {
                 <tr class="@(request.NeedsReview ? "row-needs-review" : "") @F8Urgentes.Dashboard.Pages.IndexModel.EstadoRowClass(request.Estado) @(request.EstadoActual == "SUBIDA A CONASET" ? "row-confirmed" : "")">
+                    <td class="name-cell">
+                        <input class="input-inline autosave" form="person-@request.Id" name="nombreCompleto" value="@request.NombreCompleto" placeholder="Nombre completo" />
+                    </td>
+                    <td class="rut-cell">
+                        @{ var rutDisplay = F8Urgentes.Domain.RutFormatter.WithDots(request.Rut); }
+                        <input class="input-inline autosave rut-input" form="person-@request.Id" name="rut" value="@rutDisplay" />
+                        <form id="person-@request.Id" method="post" asp-page-handler="SetPersonData">
+                            <input type="hidden" name="id" value="@request.Id" />
+                        </form>
+                    </td>
                     <td class="text-cell">
                         <form class="toggle-form" method="post" asp-page-handler="ToggleMarked">
                             <input type="hidden" name="id" value="@request.Id" />
@@ -160,16 +254,6 @@
                         </form>
                     </td>
                     <td class="text-cell">@request.FechaPeticion</td>
-                    <td class="name-cell">
-                        <input class="input-inline autosave" form="person-@request.Id" name="nombreCompleto" value="@request.NombreCompleto" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(request.NombreCompleto, "Nombre completo", 10, 70))ch" />
-                    </td>
-                    <td class="rut-cell">
-                        @{ var rutDisplay = F8Urgentes.Domain.RutFormatter.WithDots(request.Rut); }
-                        <input class="input-inline autosave rut-input" form="person-@request.Id" name="rut" value="@rutDisplay" style="width:13ch" />
-                        <form id="person-@request.Id" method="post" asp-page-handler="SetPersonData">
-                            <input type="hidden" name="id" value="@request.Id" />
-                        </form>
-                    </td>
                     <td class="text-cell">@(request.MatrizSector ?? "—")</td>
                     <td class="text-cell">
                         <select class="input-inline estado-select" form="estado-@request.Id" name="estado">
@@ -185,9 +269,6 @@
                     </td>
                     <td class="text-cell">
                         @{
-                            // PENDIENTE (default) and SUBIDA A CONASET (set only via the Subir
-                            // button) are automatic states, not manual choices — CREAR
-                            // CERTIFICADO is the only thing an operator picks from this dropdown.
                             var currentEstadoActual = string.IsNullOrEmpty(request.EstadoActual) ? "PENDIENTE" : request.EstadoActual;
                             var isLocked = currentEstadoActual == "SUBIDA A CONASET";
                         }
@@ -204,14 +285,14 @@
                         </form>
                     </td>
                     <td class="text-cell">
-                        <input class="input-inline autosave" form="codigof8-@request.Id" name="codigoF8" value="@request.CodigoF8" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(request.CodigoF8, "Código F8", 8, 40))ch" />
+                        <input class="input-inline autosave" form="codigof8-@request.Id" name="codigoF8" value="@request.CodigoF8" placeholder="Código F8" />
                         <form id="codigof8-@request.Id" method="post" asp-page-handler="SetCodigoF8">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
                     </td>
                     <td class="text-cell">
                         @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is null ? "" : F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta); }
-                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="fecha-penultima-@request.Id-no-autofill" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/marzo/2024 o S/C" style="width:@(F8Urgentes.Dashboard.Pages.IndexModel.InputWidthCh(fechaPenultimaDisplay, "ej: 15/marzo/2024 o S/C", 10, 48))ch" />
+                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="fecha-penultima-@request.Id-no-autofill" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/marzo/2024 o S/C" />
                         <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
@@ -226,24 +307,43 @@
                     </td>
                     <td class="text-cell fecha-subida-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
                     <td class="action-cell">
-                        @if (request.EstadoActual != "SUBIDA A CONASET")
-                        {
-                            <form method="post" asp-page-handler="MarkUploaded">
+                        <div class="action-group">
+                            @if (request.EstadoActual != "SUBIDA A CONASET")
+                            {
+                                <form method="post" asp-page-handler="MarkUploaded">
+                                    <input type="hidden" name="id" value="@request.Id" />
+                                    <button class="btn-primary" type="submit" title="Marcar subida">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="m18 15-6-6-6 6"/>
+                                        </svg>
+                                        <span>Subir</span>
+                                    </button>
+                                </form>
+                            }
+                            @if (request.EstadoActual == "CREAR CERTIFICADO")
+                            {
+                                <form method="post" asp-page-handler="EnviarCorreoCertificadoV2">
+                                    <input type="hidden" name="id" value="@request.Id" />
+                                    <button class="btn-sync" type="submit" title="Enviar correo a Matías solicitando el certificado">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                        </svg>
+                                    </button>
+                                </form>
+                            }
+                            <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
                                 <input type="hidden" name="id" value="@request.Id" />
-                                <button class="btn-primary" type="submit" title="Marcar subida">Subir</button>
+                                <button class="btn-danger" type="submit" title="Eliminar">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
                             </form>
-                        }
-                        @if (request.EstadoActual == "CREAR CERTIFICADO")
-                        {
-                            <form method="post" asp-page-handler="EnviarCorreoCertificadoV2">
-                                <input type="hidden" name="id" value="@request.Id" />
-                                <button class="btn-sync" type="submit" title="Enviar correo a Matías solicitando el certificado">✉</button>
-                            </form>
-                        }
-                        <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">
-                            <input type="hidden" name="id" value="@request.Id" />
-                            <button class="btn-danger" type="submit" title="Eliminar">🗑</button>
-                        </form>
+                        </div>
                     </td>
                 </tr>
             }
@@ -252,144 +352,117 @@
 </div>
 
 <script>
-    // Chrome ignores autocomplete="off" on plain text inputs and will autofill these date
-    // boxes with whatever was typed there before the display format changed to dd/MM/yyyy —
-    // showing stale, unpadded values ("14/3/2019") mixed in with the correct ones. Autofill
-    // runs after the initial render (sometimes even after DOMContentLoaded), so force each
-    // box back to the value the server actually sent once the page has settled.
-    window.addEventListener('load', function () {
-        document.querySelectorAll('.fecha-penultima-input[data-server-value]').forEach(function (input) {
-            input.value = input.dataset.serverValue;
+    (function () {
+        document.querySelectorAll('input.fecha-penultima-input').forEach(function (input) {
+            input.name = 'fecha';
         });
+    })();
+
+    (function () {
+        var scrollKey = 'cases_list_scroll_y';
+        var savedY = sessionStorage.getItem(scrollKey);
+        if (savedY !== null) {
+            sessionStorage.removeItem(scrollKey);
+            window.scrollTo(0, parseInt(savedY, 10));
+        }
+        document.addEventListener('submit', function (event) {
+            sessionStorage.setItem(scrollKey, String(window.scrollY));
+        });
+    })();
+
+    // Modal behavior for Agregar Caso
+    (function () {
+        var modal = document.getElementById('quick-add-modal');
+        var openBtn = document.getElementById('open-quick-add-btn');
+        var closeBtn = document.getElementById('close-quick-add-btn');
+        var cancelBtn = document.getElementById('cancel-quick-add-btn');
+
+        function openModal() {
+            if (!modal) return;
+            if (typeof modal.showModal === 'function') {
+                modal.showModal();
+            } else {
+                modal.setAttribute('open', '');
+            }
+            var firstInput = modal.querySelector('input[name="nombreCompleto"]');
+            if (firstInput) setTimeout(function () { firstInput.focus(); }, 50);
+        }
+
+        function closeModal() {
+            if (!modal) return;
+            if (typeof modal.close === 'function') {
+                modal.close();
+            } else {
+                modal.removeAttribute('open');
+            }
+        }
+
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) closeModal();
+            });
+        }
+    })();
+
+    document.getElementById('quick-add-rows').addEventListener('click', function (event) {
+        if (event.target.classList.contains('remove-row-btn')) {
+            event.target.closest('.quick-add-row').remove();
+        }
     });
 
-    document.querySelectorAll('input.autosave').forEach(function (input) {
-        var initial = input.value;
-        input.addEventListener('blur', function () {
-            if (input.value !== initial && input.form) {
-                // Background save — a full requestSubmit() here reloads the whole page and
-                // resets scroll position, which is jarring while editing several rows in a row.
-                submitToggle(input.form, function (payload) {
-                    if (input.classList.contains('fecha-penultima-input') && payload) {
-                        // Operator can type "15/03/2024", "15 de marzo de 2024", an Excel serial,
-                        // etc. — echo back the canonical dd/mes/yyyy form instead of leaving
-                        // whatever raw text they typed sitting in the box.
-                        input.value = payload.fecha || '';
-                        input.dataset.serverValue = payload.fecha || '';
-                        var sectorCell = input.closest('tr').querySelector('.sector-carpeta-cell');
-                        if (sectorCell) {
-                            sectorCell.textContent = payload.sector === 'Oficina43' ? 'Oficina 43'
-                                : payload.sector === 'Archivo' ? 'Archivo'
-                                : '';
-                        }
-                    }
-                });
-                initial = input.value;
-            }
-        });
-        // Prevent hitting 'Enter' from doing a full postback which causes page jump.
-        // Instead, just blur the input to trigger the background save above.
-        input.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                input.blur();
-            }
-        });
+    document.getElementById('add-row-btn').addEventListener('click', function () {
+        var rows = document.getElementById('quick-add-rows');
+        var row = document.createElement('div');
+        row.className = 'quick-add-row modern-modal-row';
+        row.innerHTML = '<div class="modal-field"><label>Nombre completo</label><input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" required /></div>' +
+            '<div class="modal-field modal-field-rut"><label>RUT</label><input class="input-block" name="rut" placeholder="ej: 18.785.387-7" required /></div>' +
+            '<div class="modal-field modal-field-estado"><label>Estado</label><input class="input-block" name="estado" placeholder="ej: Pendiente" /></div>' +
+            '<button type="button" class="btn-danger remove-row-btn" title="Quitar fila">×</button>';
+        rows.appendChild(row);
     });
 
     function submitToggle(form, onSuccess) {
-        fetch(form.action || window.location.pathname + window.location.search, {
+        var formData = new FormData(form);
+        fetch(form.action, {
             method: 'POST',
-            body: new FormData(form),
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        }).then(async function (response) {
-            if (response.redirected && response.url && response.url.indexOf('/Login') !== -1) {
-                alert('Tu sesión ha expirado por inactividad. Serás redirigido al acceso.');
-                window.location.href = '/Login';
-                return;
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
             }
-            var payload = await response.json().catch(function () { return null; });
+        })
+        .then(function (response) {
             if (!response.ok) {
-                console.error('Guardado en segundo plano falló con estado', response.status);
-                var msg = (payload && payload.message) ? payload.message : 'No se pudo guardar el cambio. Intenta nuevamente.';
-                alert(msg);
-                return;
+                console.error('Toggle submit failed:', response.status);
             }
+            return response.json().catch(function () { return null; });
+        })
+        .then(function (data) {
             if (onSuccess) {
-                onSuccess(payload);
+                onSuccess(data);
             }
-        }).catch(function () {
-            console.error('Guardado en segundo plano falló: error de red');
-            alert('No se pudo guardar el cambio por un problema de conexión. Intenta nuevamente.');
+        })
+        .catch(function (err) {
+            console.error('Toggle submit error:', err);
         });
     }
 
-    var estadoActualBadgeClasses = {
-        'SUBIDA A CONASET': 'badge-confirmed',
-        'CREAR CERTIFICADO': 'badge-uploaded',
-        'PENDIENTE': 'badge-pending',
-        '': 'badge-pending',
-    };
-
-    document.querySelectorAll('table.cases form[method="post"]').forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            event.preventDefault();
-            var row = form.closest('tr');
-            var handler = new URL(form.action, window.location.href).searchParams.get('handler');
-            submitToggle(form, function (payload) {
-                if (handler === 'DeleteCase' && row) {
-                    row.remove();
-                }
-                if (handler === 'MarkUploaded' && row) {
-                    row.classList.add('row-confirmed');
-                    var button = form.querySelector('button[type="submit"]');
-                    if (button) {
-                        button.disabled = true;
-                        button.textContent = 'Subido';
-                    }
-                    var fechaCell = row.querySelector('.fecha-subida-cell');
-                    if (fechaCell) {
-                        var fechaVal = (payload && payload.fechaDeSubida) ? payload.fechaDeSubida : new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
-                        fechaCell.textContent = fechaVal;
-                    }
-                    var estadoActualSelect = row.querySelector('.estado-actual-select');
-                    if (estadoActualSelect) {
-                        estadoActualSelect.value = 'SUBIDA A CONASET';
-                        estadoActualSelect.disabled = true;
-                        Object.values(estadoActualBadgeClasses).forEach(function (cls) { estadoActualSelect.classList.remove(cls); });
-                        estadoActualSelect.classList.add('badge-confirmed');
-                    }
-                    var alertIcon = row.querySelector('.pendiente-alert');
-                    if (alertIcon) {
-                        alertIcon.style.display = 'none';
-                    }
-                    var checkboxes = row.querySelectorAll('form.toggle-form input[type="checkbox"]');
-                    checkboxes.forEach(function (cb) { cb.checked = false; });
-                }
-                if (handler === 'EnviarCorreoCertificadoV2') {
-                    alert('Correo enviado a Matías Villalobos.');
+    try {
+        document.querySelectorAll('input.marked-checkbox').forEach(function (checkbox) {
+            checkbox.addEventListener('change', function () {
+                if (checkbox.form) {
+                    submitToggle(checkbox.form);
                 }
             });
         });
-    });
 
-    try {
-        document.querySelectorAll('form.toggle-form').forEach(function (form) {
-            var checkbox = form.querySelector('input[type="checkbox"]');
-            if (!checkbox) {
-                return;
-            }
+        document.querySelectorAll('input.pendiente-checkbox').forEach(function (checkbox) {
             checkbox.addEventListener('change', function () {
-                if (checkbox.checked) {
-                    var row = form.closest('tr');
-                    var otherCheckbox = Array.from(row.querySelectorAll('form.toggle-form input[type="checkbox"]'))
-                        .find(function (cb) { return cb !== checkbox; });
-                    if (otherCheckbox && otherCheckbox.checked) {
-                        otherCheckbox.checked = false;
-                        submitToggle(otherCheckbox.closest('form'));
-                    }
+                if (checkbox.form) {
+                    submitToggle(checkbox.form);
                 }
-                submitToggle(form);
             });
         });
     } catch (err) {
@@ -404,15 +477,23 @@
             'CREAR CERTIFICADO': 'estado-row-certificado',
             'CARPETA SUBIDA': 'estado-row-subida',
             'PENDIENTE': 'estado-row-pendiente',
-            'DENEGADA': 'estado-row-denegada',
+            'SOLICITUD DENEGADA': 'estado-row-denegada'
         };
+
+        var estadoActualBadgeClasses = {
+            'PENDIENTE': 'badge-pending',
+            'SUBIDA A CONASET': 'badge-confirmed',
+            'CREAR CERTIFICADO': 'badge-review'
+        };
+
         document.querySelectorAll('select.estado-select').forEach(function (select) {
             select.addEventListener('change', function () {
                 var row = select.closest('tr');
-                Object.values(estadoRowClasses).forEach(function (cls) { row.classList.remove(cls); });
-                var cls = estadoRowClasses[select.value];
-                if (cls) {
-                    row.classList.add(cls);
+                if (row) {
+                    Object.values(estadoRowClasses).forEach(function (cls) { row.classList.remove(cls); });
+                    if (estadoRowClasses[select.value]) {
+                        row.classList.add(estadoRowClasses[select.value]);
+                    }
                 }
                 if (select.form) {
                     submitToggle(select.form);
@@ -430,7 +511,9 @@
                 select.classList.add(estadoActualBadgeClasses[select.value] || 'badge-review');
 
                 var row = select.closest('tr');
-                row.classList.toggle('row-confirmed', select.value === 'SUBIDA A CONASET');
+                if (row) {
+                    row.classList.toggle('row-confirmed', select.value === 'SUBIDA A CONASET');
+                }
 
                 var fechaCell = row ? row.querySelector('.fecha-subida-cell') : null;
                 if (fechaCell) {
@@ -441,7 +524,7 @@
                     }
                 }
 
-                var alertIcon = select.parentElement.querySelector('.pendiente-alert');
+                var alertIcon = select.parentElement ? select.parentElement.querySelector('.pendiente-alert') : null;
                 if (alertIcon) {
                     alertIcon.style.display = select.value === 'PENDIENTE' ? '' : 'none';
                 }
@@ -472,5 +555,38 @@
         });
     } catch (err) {
         console.error('RUT copy wiring failed', err);
+    }
+
+    try {
+        function updateStickyOffsets() {
+            var table = document.querySelector('table.cases-list');
+            if (!table) return;
+            var ths = table.querySelectorAll('thead th');
+            if (ths.length < 2) return;
+
+            var wNombre = Math.round(ths[0].getBoundingClientRect().width);
+
+            table.style.setProperty('--sticky-rut', wNombre + 'px');
+
+            var styleEl = document.getElementById('sticky-offsets-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'sticky-offsets-style';
+                document.head.appendChild(styleEl);
+            }
+            styleEl.textContent =
+                'table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { left: 0px !important; position: sticky !important; z-index: 6 !important; }\n' +
+                'table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { left: ' + wNombre + 'px !important; position: sticky !important; z-index: 6 !important; border-right: 2px solid #94a3b8 !important; box-shadow: 4px 0 8px -2px rgba(15,23,42,0.18) !important; }\n' +
+                'table.cases-list thead th:nth-child(1), table.cases-list thead th:nth-child(2) { z-index: 25 !important; background-color: #f8fafc !important; }';
+        }
+        window.addEventListener('DOMContentLoaded', updateStickyOffsets);
+        window.addEventListener('load', updateStickyOffsets);
+        window.addEventListener('resize', updateStickyOffsets);
+        if (document.fonts) document.fonts.ready.then(updateStickyOffsets);
+        setTimeout(updateStickyOffsets, 0);
+        setTimeout(updateStickyOffsets, 80);
+        setTimeout(updateStickyOffsets, 400);
+    } catch (err) {
+        console.error('Sticky offset calculation failed', err);
     }
 </script>
