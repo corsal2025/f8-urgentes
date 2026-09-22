@@ -117,6 +117,44 @@ public sealed class IndexPageModelTests : IDisposable
     }
 
     [Fact]
+    public void OnGet_SortPenultimaAsc_OrdersByFechaPenultimaCarpetaWithNullsLast()
+    {
+        var noFolderId = InsertWithPenultimaCarpeta(null, "11111111-1");
+        var laterId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 20), "22222222-2");
+        var earlierId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 5), "33333333-3");
+        var model = CreateModel();
+
+        model.OnGet(null, null, null, null, null, sort: "penultima-asc");
+
+        Assert.Equal([earlierId, laterId, noFolderId], model.Requests.Select(r => r.Id));
+    }
+
+    [Fact]
+    public void OnGet_SortPenultimaDesc_OrdersByFechaPenultimaCarpetaDescendingWithNullsLast()
+    {
+        var noFolderId = InsertWithPenultimaCarpeta(null, "11111111-1");
+        var laterId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 20), "22222222-2");
+        var earlierId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 5), "33333333-3");
+        var model = CreateModel();
+
+        model.OnGet(null, null, null, null, null, sort: "penultima-desc");
+
+        Assert.Equal([laterId, earlierId, noFolderId], model.Requests.Select(r => r.Id));
+    }
+
+    private long InsertWithPenultimaCarpeta(DateOnly? fechaPenultimaCarpeta, string rut) =>
+        _repository.Insert(new UrgentRequest
+        {
+            Estado = "PRIMERA LICENCIA",
+            FechaPeticion = new DateOnly(2024, 6, 1),
+            FechaPenultimaCarpeta = fechaPenultimaCarpeta,
+            NombreCompleto = "Juan Perez",
+            Rut = rut,
+            Origin = "Web",
+            CreatedAt = DateTimeOffset.UtcNow,
+        });
+
+    [Fact]
     public void OnPostSetEstadoActual_PersistsChangeAndRedirects()
     {
         var id = Insert();

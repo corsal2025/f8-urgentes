@@ -16,7 +16,7 @@
 {
     <div class="nav-group no-print" style="align-items:center;">
         <button type="button" class="btn-primary" onclick="window.print()">Imprimir / Guardar como PDF</button>
-        <form method="post" asp-page-handler="MarkPrinted" style="display:inline-block;" onsubmit="return confirm('¿Vaciar el listado del mes @Model.Month? Se marcara como impreso.');">
+        <form id="mark-printed-form" method="post" asp-page-handler="MarkPrinted" style="display:inline-block;" onsubmit="return confirm('¿Vaciar el listado del mes @Model.Month? Se marcara como impreso.');">
             <input type="hidden" name="month" value="@Model.Month" />
             <button type="submit" class="btn-danger">Vaciar listado</button>
         </form>
@@ -35,6 +35,18 @@
     function setPageSize(size) {
         document.getElementById('page-size-style').textContent = '\x40page { size: ' + size + '; margin: 12mm; }';
     }
+
+    // Vacía el listado (apaga el aviso del dashboard) automáticamente después de imprimir, para no
+    // depender de que alguien se acuerde de tocar "Vaciar listado" a mano. form.submit() no dispara
+    // el evento 'submit' del form (así funciona el DOM), así que salta el confirm() — correcto acá,
+    // porque esto ya es la confirmación implícita: imprimir dijo "ya terminé con este mes".
+    // afterprint dispara también si se cancela el diálogo de impresión en algunos navegadores; el
+    // costo de ese falso positivo es bajo (hay que volver a generar el listado del mes) comparado
+    // con el aviso quedando pegado semanas.
+    window.addEventListener('afterprint', function () {
+        var form = document.getElementById('mark-printed-form');
+        if (form) form.submit();
+    });
 </script>
 
 <div class="print-report print-report-visible">

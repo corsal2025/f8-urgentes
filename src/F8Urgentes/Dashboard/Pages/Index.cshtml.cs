@@ -48,6 +48,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public bool? Flagged { get; private set; }
     public string? Search { get; private set; }
     public string? Tab { get; private set; }
+    public string? Sort { get; private set; }
     public int FlaggedCount { get; private set; }
 
     // Shown during the first 10 days of the month as a nudge to run the previous month's
@@ -56,7 +57,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public bool ShowMonthlyPrintReminder { get; private set; }
     public string PreviousMonthKey { get; private set; } = string.Empty;
 
-    public void OnGet(string? month, string? estado, string? estadoActual, bool? flagged, string? search, string? tab = null)
+    public void OnGet(string? month, string? estado, string? estadoActual, bool? flagged, string? search, string? tab = null, string? sort = null)
     {
         Month = month;
         Estado = estado;
@@ -64,6 +65,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         Flagged = flagged;
         Search = search;
         Tab = tab;
+        Sort = sort;
 
         var allMatching = repository.Query(new UrgentRequestFilter(month, estado, estadoActual, flagged), search);
 
@@ -75,16 +77,33 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             _ => allMatching,
         };
 
-        // Completed cases (SUBIDA A CONASET) drop to the bottom, everything still in progress
-        // stays on top in the order it arrived — so newly loaded/pending cases are always the
-        // first thing the operator sees instead of mixed in among finished ones. Within the
-        // completed group, sort by FechaDeSubida so the monthly print workflow can walk them
-        // in the order they were closed out.
-        Requests = filtered
-            .OrderBy(r => r.EstadoActual == EstadoActualSubida ? 1 : 0)
-            .ThenBy(r => r.EstadoActual == EstadoActualSubida ? r.FechaDeSubida : null)
-            .ThenBy(r => r.Id)
-            .ToList();
+        // "Ordenar por fecha penúltima carpeta" lets the operator walk a specific month's physical
+        // folders in one pass (pick them all, mark Pendiente carpeta) instead of hunting them across
+        // the default status-grouped order. Explicit opt-in via ?sort=...; nulls (no folder date yet)
+        // always sort last regardless of direction, since there's nothing to walk there.
+        Requests = sort switch
+        {
+            "penultima-asc" => filtered
+                .OrderBy(r => r.FechaPenultimaCarpeta is null)
+                .ThenBy(r => r.FechaPenultimaCarpeta)
+                .ThenBy(r => r.Id)
+                .ToList(),
+            "penultima-desc" => filtered
+                .OrderBy(r => r.FechaPenultimaCarpeta is null)
+                .ThenByDescending(r => r.FechaPenultimaCarpeta)
+                .ThenBy(r => r.Id)
+                .ToList(),
+            // Completed cases (SUBIDA A CONASET) drop to the bottom, everything still in progress
+            // stays on top in the order it arrived — so newly loaded/pending cases are always the
+            // first thing the operator sees instead of mixed in among finished ones. Within the
+            // completed group, sort by FechaDeSubida so the monthly print workflow can walk them
+            // in the order they were closed out.
+            _ => filtered
+                .OrderBy(r => r.EstadoActual == EstadoActualSubida ? 1 : 0)
+                .ThenBy(r => r.EstadoActual == EstadoActualSubida ? r.FechaDeSubida : null)
+                .ThenBy(r => r.Id)
+                .ToList(),
+        };
 
         var all = repository.GetAll();
 

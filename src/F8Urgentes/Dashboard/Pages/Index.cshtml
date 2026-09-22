@@ -206,7 +206,11 @@
                 <th class="th-wrap">Sector<br />oficina</th>
                 <th class="th-wrap">Estado<br />actual</th>
                 <th class="th-wrap">Código<br />F8</th>
-                <th class="th-wrap">Fecha penúltima<br />carpeta</th>
+                <th class="th-wrap">
+                    <a asp-page="/Index" asp-route-tab="@currentTab" asp-route-search="@Model.Search" asp-route-flagged="@(Model.Flagged == true ? "true" : null)" asp-route-sort="@(Model.Sort == "penultima-asc" ? "penultima-desc" : "penultima-asc")" class="th-sort-link" title="Ordenar filas por fecha penúltima carpeta, para elegir carpetas de un mes seguidas">
+                        Fecha penúltima<br />carpeta@(Model.Sort == "penultima-asc" ? " ▲" : Model.Sort == "penultima-desc" ? " ▼" : "")
+                    </a>
+                </th>
                 <th class="th-wrap">Sector<br />carpeta</th>
                 <th class="th-wrap">Fecha subida<br />F8</th>
                 <th>Acción</th>
