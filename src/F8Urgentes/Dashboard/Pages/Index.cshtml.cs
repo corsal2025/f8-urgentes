@@ -455,12 +455,26 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public IActionResult OnPostToggleMarked(long id, string? markedValue)
     {
         repository.SetMarked(id, markedValue == "on");
-        return RedirectToPage();
+        return ToggleMarkedResult(id);
     }
 
     public IActionResult OnPostTogglePendienteCarpeta(long id, string? pendienteCarpetaValue)
     {
         repository.SetPendienteCarpeta(id, pendienteCarpetaValue == "on");
+        return ToggleMarkedResult(id);
+    }
+
+    // Marked and PendienteCarpeta clear each other at the repository level (SetMarked/
+    // SetPendienteCarpeta). The client checks the other box's state optimistically on click, but
+    // hands back the real values here so it can correct itself if that guess was ever wrong.
+    private IActionResult ToggleMarkedResult(long id)
+    {
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+        {
+            var request = repository.FindById(id);
+            return new JsonResult(new { marked = request?.Marked ?? false, pendienteCarpeta = request?.PendienteCarpeta ?? false });
+        }
+
         return RedirectToPage();
     }
 

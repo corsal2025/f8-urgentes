@@ -792,6 +792,12 @@ table.cases-list tbody tr.estado-row-pendiente:hover { background: #f1f5f9; }
 table.cases-list tbody tr.estado-row-denegada { background: #fef2f2 !important; }
 table.cases-list tbody tr.estado-row-denegada:hover { background: #fee2e2 !important; }
 
+/* Marcar (amarillo) / Pendiente carpeta (morado) — reacciona al checked nativo, no a una clase */
+table.cases-list tbody tr:has(input.marked-checkbox:checked) { background: #fef08a !important; }
+table.cases-list tbody tr:has(input.marked-checkbox:checked):hover { background: #fde047 !important; }
+table.cases-list tbody tr:has(input.pendiente-checkbox:checked) { background: #ddd6fe !important; }
+table.cases-list tbody tr:has(input.pendiente-checkbox:checked):hover { background: #c4b5fd !important; }
+
 table.cases-list td:has(select.estado-actual-select) {
     display: flex;
     align-items: center;
@@ -1124,6 +1130,10 @@ table.cases-list tbody tr.row-confirmed td:nth-child(1),
 table.cases-list tbody tr.row-confirmed td:nth-child(2) { background-color: #dbeafe !important; }
 table.cases-list tbody tr.row-needs-review td:nth-child(1),
 table.cases-list tbody tr.row-needs-review td:nth-child(2) { background-color: #fff1f2 !important; }
+table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(1),
+table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(2) { background-color: #fef08a !important; }
+table.cases-list tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(1),
+table.cases-list tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(2) { background-color: #ddd6fe !important; }
 
 table.cases-list tbody tr:hover td:nth-child(1),
 table.cases-list tbody tr:hover td:nth-child(2) { background-color: #f1f5f9 !important; }
@@ -1139,6 +1149,10 @@ table.cases-list tbody tr.estado-row-subida:hover td:nth-child(1),
 table.cases-list tbody tr.estado-row-subida:hover td:nth-child(2) { background-color: #f3e8ff !important; }
 table.cases-list tbody tr.estado-row-pendiente:hover td:nth-child(1),
 table.cases-list tbody tr.estado-row-pendiente:hover td:nth-child(2) { background-color: #e2e8f0 !important; }
+table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(1),
+table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(2) { background-color: #fde047 !important; }
+table.cases-list tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(1),
+table.cases-list tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(2) { background-color: #c4b5fd !important; }
 
 table.cases-list td > * {
     vertical-align: middle;

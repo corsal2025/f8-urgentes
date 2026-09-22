@@ -438,21 +438,39 @@
         });
     }
 
+    // Marcar (amarillo) y Pendiente carpeta (morado) son mutuamente excluyentes. El color de fila
+    // es puro CSS (:has(.marked-checkbox:checked)), reacciona solo con el checked nativo — lo único
+    // que hace falta acá es desmarcar la otra casilla al tocar una, para que el CSS reaccione al
+    // toque en vez de esperar el reload; el servidor ya lo garantiza igual (SetMarked/
+    // SetPendienteCarpeta se limpian entre sí), esto solo evita que la casilla vieja se vea marcada
+    // hasta que vuelva la respuesta.
     try {
-        document.querySelectorAll('input.marked-checkbox').forEach(function (checkbox) {
+        function wireExclusiveCheckbox(checkbox, siblingSelector) {
             checkbox.addEventListener('change', function () {
+                var row = checkbox.closest('tr');
+                var sibling = row ? row.querySelector(siblingSelector) : null;
+                if (checkbox.checked && sibling) {
+                    sibling.checked = false;
+                }
+
                 if (checkbox.form) {
-                    submitToggle(checkbox.form);
+                    submitToggle(checkbox.form, function (data, ok) {
+                        if (!ok || !data || !row) return;
+                        var markedBox = row.querySelector('input.marked-checkbox');
+                        var pendienteBox = row.querySelector('input.pendiente-checkbox');
+                        if (markedBox) markedBox.checked = !!data.marked;
+                        if (pendienteBox) pendienteBox.checked = !!data.pendienteCarpeta;
+                    });
                 }
             });
+        }
+
+        document.querySelectorAll('input.marked-checkbox').forEach(function (checkbox) {
+            wireExclusiveCheckbox(checkbox, 'input.pendiente-checkbox');
         });
 
         document.querySelectorAll('input.pendiente-checkbox').forEach(function (checkbox) {
-            checkbox.addEventListener('change', function () {
-                if (checkbox.form) {
-                    submitToggle(checkbox.form);
-                }
-            });
+            wireExclusiveCheckbox(checkbox, 'input.marked-checkbox');
         });
     } catch (err) {
         console.error('Marcar/Pendiente Carpeta wiring failed', err);
