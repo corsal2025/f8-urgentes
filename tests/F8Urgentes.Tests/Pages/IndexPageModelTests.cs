@@ -117,36 +117,6 @@ public sealed class IndexPageModelTests : IDisposable
     }
 
     [Fact]
-    public void OnPostSetEstado_PersistsChangeAndRedirects()
-    {
-        var id = Insert();
-        var model = CreateModel();
-
-        var result = model.OnPostSetEstado(id, "CARPETA SUBIDA");
-
-        Assert.Equal("CARPETA SUBIDA", _repository.FindById(id)!.Estado);
-        Assert.NotNull(result);
-    }
-
-    [Fact]
-    public void OnPostSetEstado_ClearsReviewWhenUnknownValueBecomesValid()
-    {
-        var id = Insert(estado: "ESTADO INVENTADO");
-        _repository.AddFlag(id, "Estado", ImportFlag.ReasonCodes.UnknownEstado, "ESTADO INVENTADO");
-        var request = _repository.FindById(id)!;
-        request.NeedsReview = true;
-        _repository.Update(request);
-        var model = CreateModel();
-
-        model.OnPostSetEstado(id, "CARPETA SUBIDA");
-
-        var updated = _repository.FindById(id)!;
-        Assert.Equal("CARPETA SUBIDA", updated.Estado);
-        Assert.False(updated.NeedsReview);
-        Assert.Empty(_repository.GetFlagsFor(id));
-    }
-
-    [Fact]
     public void OnPostSetEstadoActual_PersistsChangeAndRedirects()
     {
         var id = Insert();

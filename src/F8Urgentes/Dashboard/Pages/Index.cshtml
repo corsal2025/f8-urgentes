@@ -139,20 +139,6 @@
 </dialog>
 
 <script>
-    (function () {
-        var scrollKey = 'f8-index-scroll';
-        var restore = sessionStorage.getItem(scrollKey);
-        if (restore !== null) {
-            sessionStorage.removeItem(scrollKey);
-            setTimeout(function () {
-                window.scrollTo(0, parseInt(restore, 10) || 0);
-            }, 60);
-        }
-        document.addEventListener('submit', function (event) {
-            sessionStorage.setItem(scrollKey, String(window.scrollY));
-        });
-    })();
-
     // Modal behavior for Agregar Caso
     (function () {
         var modal = document.getElementById('quick-add-modal');
@@ -218,7 +204,6 @@
                 <th class="th-wrap">Pendiente<br />carpeta</th>
                 <th class="th-wrap">Fecha<br />citación</th>
                 <th class="th-wrap">Sector<br />oficina</th>
-                <th>Estado</th>
                 <th class="th-wrap">Estado<br />actual</th>
                 <th class="th-wrap">Código<br />F8</th>
                 <th class="th-wrap">Fecha penúltima<br />carpeta</th>
@@ -255,18 +240,6 @@
                     </td>
                     <td class="text-cell">@request.FechaPeticion</td>
                     <td class="text-cell">@(request.MatrizSector ?? "—")</td>
-                    <td class="text-cell">
-                        <select class="input-inline estado-select" form="estado-@request.Id" name="estado">
-                            <option value="" selected="@string.IsNullOrEmpty(request.Estado)"></option>
-                            @foreach (var option in F8Urgentes.Domain.EstadoCatalog.KnownEstados)
-                            {
-                                <option value="@option" selected="@(option == request.Estado)">@option</option>
-                            }
-                        </select>
-                        <form class="toggle-form" id="estado-@request.Id" method="post" asp-page-handler="SetEstado">
-                            <input type="hidden" name="id" value="@request.Id" />
-                        </form>
-                    </td>
                     <td class="text-cell">
                         @{
                             var currentEstadoActual = string.IsNullOrEmpty(request.EstadoActual) ? "PENDIENTE" : request.EstadoActual;
@@ -359,14 +332,28 @@
     })();
 
     (function () {
-        var scrollKey = 'cases_list_scroll_y';
-        var savedY = sessionStorage.getItem(scrollKey);
-        if (savedY !== null) {
+        var scrollKey = 'f8-index-scroll';
+        var table = document.querySelector('.card.table-card');
+        var saved = sessionStorage.getItem(scrollKey);
+        if (saved !== null) {
             sessionStorage.removeItem(scrollKey);
-            window.scrollTo(0, parseInt(savedY, 10));
+            try {
+                var pos = JSON.parse(saved);
+                setTimeout(function () {
+                    window.scrollTo(0, pos.y || 0);
+                    if (table) {
+                        table.scrollLeft = pos.x || 0;
+                        table.scrollTop = pos.ty || 0;
+                    }
+                }, 60);
+            } catch (err) { /* malformed value, skip restore */ }
         }
-        document.addEventListener('submit', function (event) {
-            sessionStorage.setItem(scrollKey, String(window.scrollY));
+        document.addEventListener('submit', function () {
+            sessionStorage.setItem(scrollKey, JSON.stringify({
+                y: window.scrollY,
+                x: table ? table.scrollLeft : 0,
+                ty: table ? table.scrollTop : 0
+            }));
         });
     })();
 
@@ -434,14 +421,16 @@
             }
         })
         .then(function (response) {
-            if (!response.ok) {
-                console.error('Toggle submit failed:', response.status);
-            }
-            return response.json().catch(function () { return null; });
+            return response.json().catch(function () { return null; }).then(function (data) {
+                return { ok: response.ok, status: response.status, data: data };
+            });
         })
-        .then(function (data) {
+        .then(function (result) {
+            if (!result.ok) {
+                console.error('Toggle submit failed:', result.status);
+            }
             if (onSuccess) {
-                onSuccess(data);
+                onSuccess(result.data, result.ok);
             }
         })
         .catch(function (err) {
@@ -470,41 +459,12 @@
     }
 
     try {
-        var estadoRowClasses = {
-            'SUBIR CON F8': 'estado-row-f8',
-            'PRIMERA LICENCIA': 'estado-row-licencia',
-            'CAMBIO DE DOMICILIO': 'estado-row-domicilio',
-            'CREAR CERTIFICADO': 'estado-row-certificado',
-            'CARPETA SUBIDA': 'estado-row-subida',
-            'PENDIENTE': 'estado-row-pendiente',
-            'SOLICITUD DENEGADA': 'estado-row-denegada'
-        };
-
         var estadoActualBadgeClasses = {
             'PENDIENTE': 'badge-pending',
             'SUBIDA A CONASET': 'badge-confirmed',
             'CREAR CERTIFICADO': 'badge-review'
         };
 
-        document.querySelectorAll('select.estado-select').forEach(function (select) {
-            select.addEventListener('change', function () {
-                var row = select.closest('tr');
-                if (row) {
-                    Object.values(estadoRowClasses).forEach(function (cls) { row.classList.remove(cls); });
-                    if (estadoRowClasses[select.value]) {
-                        row.classList.add(estadoRowClasses[select.value]);
-                    }
-                }
-                if (select.form) {
-                    submitToggle(select.form);
-                }
-            });
-        });
-    } catch (err) {
-        console.error('Estado dropdown wiring failed', err);
-    }
-
-    try {
         document.querySelectorAll('select.estado-actual-select').forEach(function (select) {
             select.addEventListener('change', function () {
                 Object.values(estadoActualBadgeClasses).forEach(function (cls) { select.classList.remove(cls); });
@@ -555,6 +515,61 @@
         });
     } catch (err) {
         console.error('RUT copy wiring failed', err);
+    }
+
+    // Nombre, RUT, Código F8 y Fecha penúltima carpeta save via fetch on blur, plus 'submit' as a
+    // backstop in case a browser does implicit-submit the form. Enter is wired explicitly (not left
+    // to rely on implicit submission): these inputs are associated to their <form> via the `form`
+    // attribute rather than being DOM descendants of it, and confirmed live that some engines never
+    // fire implicit submission for that case — Enter would silently do nothing. Forcing a blur()
+    // reuses the already-working save path instead of duplicating it.
+    try {
+        function autosaveOnSuccess(input) {
+            return function (data, ok) {
+                if (!input.classList.contains('fecha-penultima-input')) return;
+                if (!ok) {
+                    alert(data && data.message ? data.message : 'No se pudo guardar la fecha.');
+                    return;
+                }
+                if (data && typeof data.fecha === 'string') {
+                    input.value = data.fecha;
+                }
+                var row = input.closest('tr');
+                var sectorCell = row ? row.querySelector('.sector-carpeta-cell') : null;
+                if (sectorCell) {
+                    sectorCell.textContent = data && data.sector === 'Archivo' ? 'Archivo'
+                        : data && data.sector === 'Oficina43' ? 'Oficina 43'
+                        : '';
+                }
+            };
+        }
+
+        var autosaveWiredForms = new WeakSet();
+        document.querySelectorAll('input.autosave').forEach(function (input) {
+            var form = input.form;
+            if (!form) return;
+
+            input.addEventListener('blur', function () {
+                submitToggle(form, autosaveOnSuccess(input));
+            });
+
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    input.blur();
+                }
+            });
+
+            if (!autosaveWiredForms.has(form)) {
+                autosaveWiredForms.add(form);
+                form.addEventListener('submit', function (event) {
+                    event.preventDefault();
+                    submitToggle(form, autosaveOnSuccess(input));
+                });
+            }
+        });
+    } catch (err) {
+        console.error('Autosave inputs wiring failed', err);
     }
 
     try {

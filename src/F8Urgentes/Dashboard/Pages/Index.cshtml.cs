@@ -119,31 +119,6 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             ImpresionMensualModel.BelongsToMonthlyBatch(r, previousMonth));
     }
 
-    public IActionResult OnPostSetEstado(long id, string estado)
-    {
-        var request = repository.FindById(id);
-        if (request is not null)
-        {
-            var normalized = EstadoCatalog.NormalizeForPersistence(estado, isEstado: true);
-            var unknown = EstadoCatalog.IsUnknownEstado(estado);
-            request.Estado = normalized;
-
-            if (unknown)
-            {
-                request.NeedsReview = true;
-                repository.Update(request);
-                repository.AddFlag(id, "Estado", ImportFlag.ReasonCodes.UnknownEstado, estado);
-            }
-            else
-            {
-                request.NeedsReview = false;
-                repository.Update(request);
-                repository.ClearFlags(id);
-            }
-        }
-        return RedirectToPage();
-    }
-
     public IActionResult OnPostSetEstadoActual(long id, string estadoActual)
     {
         var request = repository.FindById(id);
@@ -450,6 +425,15 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         // serial, ...), hand back the canonical dd/mes/yyyy display so the input can show it
         // immediately — the AJAX save has no page reload to pick up the reformatted value otherwise.
         var display = request.FechaPenultimaCarpeta is null ? "" : SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta);
+
+        // If the browser ever submits this natively (JS didn't attach — old cached script, JS
+        // disabled, a row added without rewiring), fall back to a real page instead of dumping
+        // raw JSON as the whole document, same guard OnPostSetEstadoActual/OnPostMarkUploaded use.
+        if (Request.Headers.XRequestedWith != "XMLHttpRequest")
+        {
+            return RedirectToPage();
+        }
+
         return new JsonResult(new { fecha = display, sector = request.Sector?.ToString() });
     }
 

@@ -830,12 +830,12 @@ table.cases-index tbody tr:has(.marked-checkbox:checked):hover {
 /* Confirmed status */
 table.cases-index tbody tr.row-confirmed,
 table.cases-list tbody tr.row-confirmed {
-    background: #ecfdf5 !important;
+    background: #dbeafe !important;
 }
 
 table.cases-index tbody tr.row-confirmed:hover,
 table.cases-list tbody tr.row-confirmed:hover {
-    background: #d1fae5 !important;
+    background: #bfdbfe !important;
 }
 
 /* Needs-review status */
@@ -1055,7 +1055,7 @@ table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { min-width: 
 table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { min-width: 95px; }  /* RUT */
 table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { width: 1%; white-space: nowrap; } /* Marcar */
 table.cases-list th:nth-child(4), table.cases-list td:nth-child(4) { width: 1%; white-space: nowrap; } /* Pend. Carpeta */
-table.cases-list th:nth-child(13), table.cases-list td:nth-child(13) { min-width: 85px; white-space: nowrap; text-align: center; } /* Acción */
+table.cases-list th:nth-child(12), table.cases-list td:nth-child(12) { min-width: 85px; white-space: nowrap; text-align: center; } /* Acción */
 
 table.cases-list th.th-wrap {
     white-space: normal;
@@ -1121,7 +1121,7 @@ table.cases-list tbody tr.estado-row-pendiente td:nth-child(2) { background-colo
 table.cases-list tbody tr.estado-row-denegada td:nth-child(1),
 table.cases-list tbody tr.estado-row-denegada td:nth-child(2) { background-color: #fef2f2 !important; }
 table.cases-list tbody tr.row-confirmed td:nth-child(1),
-table.cases-list tbody tr.row-confirmed td:nth-child(2) { background-color: #ecfdf5 !important; }
+table.cases-list tbody tr.row-confirmed td:nth-child(2) { background-color: #dbeafe !important; }
 table.cases-list tbody tr.row-needs-review td:nth-child(1),
 table.cases-list tbody tr.row-needs-review td:nth-child(2) { background-color: #fff1f2 !important; }
 
@@ -1285,45 +1285,6 @@ table.cases-list .input-inline:focus {
     border-color: var(--color-accent) !important;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
     color: var(--color-text) !important;
-}
-
-select.estado-select {
-    field-sizing: content;
-    width: auto;
-    max-width: 100%;
-    background: transparent;
-    font-size: 0.72rem;
-    font-weight: 700 !important;
-    padding: 2px 18px 2px 6px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='none' stroke='%23475569' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 6px center;
-    background-size: 8px;
-    transition: background 0.15s, border-color 0.15s;
-    color: var(--color-text);
-}
-
-select.estado-select:hover {
-    background-color: rgba(255, 255, 255, 0.75);
-    border-color: #cbd5e1;
-}
-
-select.estado-select:focus {
-    background-color: #ffffff;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-    outline: none;
-}
-
-select.estado-select option {
-    font-weight: 700;
-    background-color: #ffffff;
-    color: var(--color-text);
 }
 
 select.estado-actual-select {
