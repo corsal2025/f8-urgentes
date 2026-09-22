@@ -833,15 +833,15 @@ table.cases-index tbody tr:has(.marked-checkbox:checked):hover {
     background: #bbf7d0;
 }
 
-/* Confirmed status */
+/* Confirmed status — plomo, no azul/violeta, para no confundirse con Pendiente carpeta (morado) */
 table.cases-index tbody tr.row-confirmed,
 table.cases-list tbody tr.row-confirmed {
-    background: #dbeafe !important;
+    background: #e5e7eb !important;
 }
 
 table.cases-index tbody tr.row-confirmed:hover,
 table.cases-list tbody tr.row-confirmed:hover {
-    background: #bfdbfe !important;
+    background: #d1d5db !important;
 }
 
 /* Needs-review status */
@@ -1127,7 +1127,7 @@ table.cases-list tbody tr.estado-row-pendiente td:nth-child(2) { background-colo
 table.cases-list tbody tr.estado-row-denegada td:nth-child(1),
 table.cases-list tbody tr.estado-row-denegada td:nth-child(2) { background-color: #fef2f2 !important; }
 table.cases-list tbody tr.row-confirmed td:nth-child(1),
-table.cases-list tbody tr.row-confirmed td:nth-child(2) { background-color: #dbeafe !important; }
+table.cases-list tbody tr.row-confirmed td:nth-child(2) { background-color: #e5e7eb !important; }
 table.cases-list tbody tr.row-needs-review td:nth-child(1),
 table.cases-list tbody tr.row-needs-review td:nth-child(2) { background-color: #fff1f2 !important; }
 table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(1),
