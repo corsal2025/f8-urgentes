@@ -424,7 +424,11 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         // Whatever format the operator typed (dd/MM/yyyy, "15 de marzo de 2024", a pasted Excel
         // serial, ...), hand back the canonical dd/mes/yyyy display so the input can show it
         // immediately — the AJAX save has no page reload to pick up the reformatted value otherwise.
-        var display = request.FechaPenultimaCarpeta is null ? "" : SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta);
+        // Every branch above either sets a real date or, via FolderDate.Parse's SinCarpeta outcome,
+        // leaves it null — so a null here always means the operator typed "S/C" (or cleared the
+        // field, its synonym). SlashMonthDate already renders null as "S/C"; forcing "" instead
+        // (the old behavior) echoed back a blank field right after the save it just confirmed.
+        var display = SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta);
 
         // If the browser ever submits this natively (JS didn't attach — old cached script, JS
         // disabled, a row added without rewiring), fall back to a real page instead of dumping
