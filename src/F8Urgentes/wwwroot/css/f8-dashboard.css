@@ -1812,6 +1812,15 @@ main > .nav-group a.pdf-chip-stats:hover {
     fill: var(--color-text-muted);
 }
 
+.hist-bar {
+    fill: var(--color-accent);
+    rx: 2;
+}
+
+.hist-bar-alert {
+    fill: var(--color-review);
+}
+
 .empty-hint {
     color: var(--color-text-muted);
     font-size: 0.82rem;

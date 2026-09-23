@@ -107,6 +107,143 @@
     </div>
 }
 
+@{
+    var plazoTotal = Model.PlazoDentro + Model.PlazoFuera;
+    var plazoPct = plazoTotal > 0 ? Model.PlazoDentro * 100.0 / plazoTotal : 0;
+}
+<div class="card donut-card">
+    <h3>Cumplimiento plazo legal (15 días hábiles)</h3>
+    @if (plazoTotal == 0)
+    {
+        <p class="empty-hint">Sin casos subidos con fecha de citación y fecha de subida todavía.</p>
+    }
+    else
+    {
+        <div class="donut-chart" style="background: conic-gradient(var(--color-confirmed) 0% @(plazoPct.ToString("0.##", ic))%, var(--color-review) @(plazoPct.ToString("0.##", ic))% 100%);">
+            <div class="donut-hole">@(plazoPct.ToString("0"))%</div>
+        </div>
+        <div class="donut-legend">
+            <span><i style="background:var(--color-confirmed)"></i> Dentro de plazo (@Model.PlazoDentro)</span>
+            <span><i style="background:var(--color-review)"></i> Fuera de plazo (@Model.PlazoFuera)</span>
+        </div>
+    }
+</div>
+
+@{
+    var histTotal = Model.HistogramaDiasConfirmacion.Sum(b => b.Count);
+    var histMax = Math.Max(1, Model.HistogramaDiasConfirmacion.Count > 0 ? Model.HistogramaDiasConfirmacion.Max(b => b.Count) : 1);
+    var hChartW = 620.0; var hChartH = 170.0;
+    var hPadL = 34.0; var hPadR = 14.0; var hPadT = 10.0; var hPadB = 30.0;
+    var hN = Model.HistogramaDiasConfirmacion.Count;
+    var hBarSlot = hN > 0 ? (hChartW - hPadL - hPadR) / hN : 0;
+    var hBarW = hBarSlot * 0.6;
+}
+<div class="card line-card">
+    <h3>Distribución de días a confirmación</h3>
+    @if (histTotal == 0)
+    {
+        <p class="empty-hint">Sin casos subidos con fecha de citación y fecha de subida todavía.</p>
+    }
+    else
+    {
+        <svg viewBox="0 0 @(hChartW.ToString(ic)) @(hChartH.ToString(ic))" class="line-chart" preserveAspectRatio="xMidYMid meet">
+            @for (var g = 0; g <= 4; g++)
+            {
+                var gy = hPadT + (hChartH - hPadT - hPadB) * g / 4;
+                <line x1="@hPadL.ToString(ic)" x2="@((hChartW - hPadR).ToString(ic))" y1="@gy.ToString(ic)" y2="@gy.ToString(ic)" class="chart-gridline" />
+            }
+            @for (var i = 0; i < hN; i++)
+            {
+                var b = Model.HistogramaDiasConfirmacion[i];
+                var barH = (hChartH - hPadT - hPadB) * (b.Count / (double)histMax);
+                var x = hPadL + hBarSlot * i + (hBarSlot - hBarW) / 2;
+                var y = hChartH - hPadB - barH;
+                <rect x="@x.ToString(ic)" y="@y.ToString(ic)" width="@hBarW.ToString(ic)" height="@barH.ToString(ic)" class="hist-bar">
+                    <title>@b.BucketLabel: @b.Count caso(s)</title>
+                </rect>
+                @Html.Raw($"<text x=\"{(x + hBarW / 2).ToString(ic)}\" y=\"{(hChartH - 8).ToString(ic)}\" class=\"chart-axis-label\" text-anchor=\"middle\">{System.Net.WebUtility.HtmlEncode(b.BucketLabel)}</text>")
+            }
+        </svg>
+    }
+</div>
+
+@{
+    var envTotal = Model.EnvejecimientoPendientes.Sum(b => b.Count);
+    var envMax = Math.Max(1, Model.EnvejecimientoPendientes.Count > 0 ? Model.EnvejecimientoPendientes.Max(b => b.Count) : 1);
+    var eChartW = 620.0; var eChartH = 170.0;
+    var ePadL = 34.0; var ePadR = 14.0; var ePadT = 10.0; var ePadB = 30.0;
+    var eN = Model.EnvejecimientoPendientes.Count;
+    var eBarSlot = eN > 0 ? (eChartW - ePadL - ePadR) / eN : 0;
+    var eBarW = eBarSlot * 0.6;
+}
+<div class="card line-card">
+    <h3>Antigüedad de pendientes (días hábiles desde la citación)</h3>
+    @if (envTotal == 0)
+    {
+        <p class="empty-hint">No hay casos pendientes todavía.</p>
+    }
+    else
+    {
+        <svg viewBox="0 0 @(eChartW.ToString(ic)) @(eChartH.ToString(ic))" class="line-chart" preserveAspectRatio="xMidYMid meet">
+            @for (var g = 0; g <= 4; g++)
+            {
+                var gy = ePadT + (eChartH - ePadT - ePadB) * g / 4;
+                <line x1="@ePadL.ToString(ic)" x2="@((eChartW - ePadR).ToString(ic))" y1="@gy.ToString(ic)" y2="@gy.ToString(ic)" class="chart-gridline" />
+            }
+            @for (var i = 0; i < eN; i++)
+            {
+                var b = Model.EnvejecimientoPendientes[i];
+                var barH = (eChartH - ePadT - ePadB) * (b.Count / (double)envMax);
+                var x = ePadL + eBarSlot * i + (eBarSlot - eBarW) / 2;
+                var y = eChartH - ePadB - barH;
+                <rect x="@x.ToString(ic)" y="@y.ToString(ic)" width="@eBarW.ToString(ic)" height="@barH.ToString(ic)" class="@(b.Alert ? "hist-bar hist-bar-alert" : "hist-bar")">
+                    <title>@b.BucketLabel: @b.Count caso(s)</title>
+                </rect>
+                @Html.Raw($"<text x=\"{(x + eBarW / 2).ToString(ic)}\" y=\"{(eChartH - 8).ToString(ic)}\" class=\"chart-axis-label\" text-anchor=\"middle\">{System.Net.WebUtility.HtmlEncode(b.BucketLabel)}</text>")
+            }
+        </svg>
+    }
+</div>
+
+@{
+    string[] sectorPalette = ["#059669", "#2563eb", "#d97706", "#7c3aed", "#db2777", "#0891b2", "#65a30d", "#dc2626"];
+    var sectorTotal = Model.PorSectorOficina.Sum(s => s.Count);
+    var sectorAcc = 0.0;
+    var sectorStopsList = new List<string>();
+    var sectorSlices = new List<(string Label, int Count, string Color)>();
+    for (var i = 0; i < Model.PorSectorOficina.Count; i++)
+    {
+        var slice = Model.PorSectorOficina[i];
+        var color = sectorPalette[i % sectorPalette.Length];
+        var pct = sectorTotal > 0 ? slice.Count * 100.0 / sectorTotal : 0;
+        var start = sectorAcc;
+        var end = sectorAcc + pct;
+        sectorStopsList.Add($"{color} {start.ToString(ic)}% {end.ToString(ic)}%");
+        sectorAcc = end;
+        sectorSlices.Add((slice.Label, slice.Count, color));
+    }
+    var sectorGradient = string.Join(", ", sectorStopsList);
+}
+<div class="card donut-card">
+    <h3>Por sector oficina</h3>
+    @if (sectorTotal == 0)
+    {
+        <p class="empty-hint">Sin datos de sector todavía.</p>
+    }
+    else
+    {
+        <div class="donut-chart" style="background: conic-gradient(@sectorGradient);">
+            <div class="donut-hole">@sectorTotal</div>
+        </div>
+        <div class="donut-legend">
+            @foreach (var s in sectorSlices)
+            {
+                <span><i style="background:@s.Color"></i> @s.Label (@s.Count)</span>
+            }
+        </div>
+    }
+</div>
+
 <div class="stats-breakdowns">
     <div class="card breakdown-card">
         <h3>Por estado</h3>

@@ -17,9 +17,19 @@ public sealed class EstadisticasModel(IUrgentRequestRepository repository) : Pag
     public IReadOnlyList<(string Label, int Count)> PorEstado { get; private set; } = [];
     public IReadOnlyList<(string Label, int Count)> PorEstadoActual { get; private set; } = [];
     public IReadOnlyList<(string Label, int Count)> PorSector { get; private set; } = [];
+    public IReadOnlyList<(string Label, int Count)> PorSectorOficina { get; private set; } = [];
     public IReadOnlyList<(string Label, int Count)> PorOrigen { get; private set; } = [];
     public IReadOnlyList<(string WeekLabel, int Count)> IngresosPorSemana { get; private set; } = [];
     public double? TiempoPromedioConfirmacionDias { get; private set; }
+
+    // Legal deadline is 15 business days from FechaPeticion (DeadlineCalculator, same math as the
+    // per-row deadline chip on Index). Only judged over cases that are actually done — a still-open
+    // case isn't "on time" or "late" yet, that's what EnvejecimientoPendientes is for.
+    public int PlazoDentro { get; private set; }
+    public int PlazoFuera { get; private set; }
+
+    public IReadOnlyList<(string BucketLabel, int Count)> HistogramaDiasConfirmacion { get; private set; } = [];
+    public IReadOnlyList<(string BucketLabel, int Count, bool Alert)> EnvejecimientoPendientes { get; private set; } = [];
 
     public void OnGet()
     {
@@ -44,6 +54,9 @@ public sealed class EstadisticasModel(IUrgentRequestRepository repository) : Pag
             _ => "(sin fecha penúltima carpeta)",
         });
 
+        PorSectorOficina = CountBy(all, r =>
+            string.IsNullOrWhiteSpace(r.MatrizSector) ? "(sin sector)" : r.MatrizSector!);
+
         PorOrigen = CountBy(all, r => r.Origin switch
         {
             "Matriz" => "Matriz (automatico)",
@@ -61,9 +74,48 @@ public sealed class EstadisticasModel(IUrgentRequestRepository repository) : Pag
 
         var confirmados = all
             .Where(r => r.FechaPeticion is not null && r.FechaDeSubida is not null && r.FechaDeSubida >= r.FechaPeticion)
-            .Select(r => r.FechaDeSubida!.Value.DayNumber - r.FechaPeticion!.Value.DayNumber)
+            .Select(r => (Dias: r.FechaDeSubida!.Value.DayNumber - r.FechaPeticion!.Value.DayNumber, r.FechaPeticion, r.FechaDeSubida))
             .ToList();
-        TiempoPromedioConfirmacionDias = confirmados.Count > 0 ? confirmados.Average() : null;
+        TiempoPromedioConfirmacionDias = confirmados.Count > 0 ? confirmados.Average(c => c.Dias) : null;
+
+        HistogramaDiasConfirmacion = BucketCounts(confirmados.Select(c => c.Dias), DiasBuckets);
+
+        foreach (var c in confirmados)
+        {
+            var deadline = DeadlineCalculator.AddBusinessDays(c.FechaPeticion!.Value, 15);
+            if (c.FechaDeSubida!.Value <= deadline) PlazoDentro++; else PlazoFuera++;
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var diasPendientes = all
+            .Where(r => r.EstadoActual != EstadoActualSubida && r.FechaPeticion is not null)
+            .Select(r => DeadlineCalculator.BusinessDaysRemaining(r.FechaPeticion!.Value, today))
+            .ToList();
+        EnvejecimientoPendientes = BucketCounts(diasPendientes, PendientesBuckets)
+            .Select(b => (b.BucketLabel, b.Count, Alert: b.BucketLabel == "+15 días hábiles"))
+            .ToList();
+    }
+
+    // (upper bound inclusive, label) — last entry's bound is ignored, it catches everything above.
+    private static readonly (int Upper, string Label)[] DiasBuckets =
+    [
+        (5, "0-5 días"), (10, "6-10 días"), (15, "11-15 días"), (20, "16-20 días"), (int.MaxValue, "21+ días"),
+    ];
+
+    private static readonly (int Upper, string Label)[] PendientesBuckets =
+    [
+        (5, "0-5 días hábiles"), (10, "6-10 días hábiles"), (15, "11-15 días hábiles"), (int.MaxValue, "+15 días hábiles"),
+    ];
+
+    private static IReadOnlyList<(string BucketLabel, int Count)> BucketCounts(IEnumerable<int> values, (int Upper, string Label)[] buckets)
+    {
+        var counts = new int[buckets.Length];
+        foreach (var v in values)
+        {
+            var i = Array.FindIndex(buckets, b => v <= b.Upper);
+            counts[i < 0 ? buckets.Length - 1 : i]++;
+        }
+        return buckets.Select((b, i) => (b.Label, counts[i])).ToList();
     }
 
     // Monday-start ISO week bucket for the "ingresos por semana" trend.
