@@ -47,5 +47,7 @@ public sealed class SectorF8Model(IUrgentRequestRepository repository) : PageMod
     }
 
     private IEnumerable<UrgentRequest> Pending(FolderSector sector) =>
-        repository.GetAll().Where(c => c.Sector == sector && (c.Marked || c.PendienteCarpeta) && c.SectorPdfGeneratedAt is null);
+        // Caja cases (queued or boxed) are excluded from the print queue: their physical folder is
+        // already being handled through the Caja workflow, not the sector-print workflow.
+        repository.GetAll().Where(c => c.Sector == sector && (c.Marked || c.PendienteCarpeta) && c.SectorPdfGeneratedAt is null && c.CajaTransferredAt is null);
 }

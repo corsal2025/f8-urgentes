@@ -51,5 +51,27 @@ public sealed class UrgentRequest
     // the previous month still need printing.
     public DateTimeOffset? ImpresoMensualAt { get; set; }
 
+    // "Sin carpeta" (point 2 of the Caja module): operator-ticked flag meaning the case is closed
+    // but stays visible in Casos (Index), rendered gray like a confirmed row. Independent of
+    // EstadoActual — does not change routing/confirmation flow. Reversible via "Revertir".
+    public bool SinCarpeta { get; set; }
+
+    // Caja module (points 3-6): once TransferredAt is set the case leaves Casos (Index) and lives
+    // on /Caja — either in the open queue (CajaBoxId is null) or packed into a closed Box
+    // (CajaBoxId set). Independent of EstadoActual, mirroring SinCarpeta above.
+    public DateTimeOffset? CajaTransferredAt { get; set; }
+    public long? CajaBoxId { get; set; }
+
     public FolderSector? Sector => FolderSectorCalculator.For(FechaPenultimaCarpeta);
+}
+
+/// <summary>A closed batch of Caja cases, in the physical order they were packed — see
+/// IUrgentRequestRepository.CloseBox. Numbered sequentially; once closed a box's membership
+/// never changes except via ReopenBox/RemoveCaseFromClosedBox.</summary>
+public sealed class Box
+{
+    public long Id { get; set; }
+    public int Number { get; set; }
+    public string Code { get; set; } = string.Empty;
+    public DateTimeOffset ClosedAt { get; set; }
 }

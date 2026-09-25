@@ -11,13 +11,12 @@ public sealed class UrgentRequestRepositoryTests : IDisposable
     public UrgentRequestRepositoryTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"f8urgentes-tests-{Guid.NewGuid():N}.db");
-        _repository = new UrgentRequestRepository($"Data Source={_dbPath}");
+        _repository = new UrgentRequestRepository($"Data Source={_dbPath};Pooling=False");
         _repository.EnsureSchema();
     }
 
     public void Dispose()
     {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (File.Exists(_dbPath))
         {
             File.Delete(_dbPath);
@@ -41,7 +40,7 @@ public sealed class UrgentRequestRepositoryTests : IDisposable
     [Fact]
     public void EnsureSchema_CreatesExpectedTables()
     {
-        using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={_dbPath}");
+        using var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={_dbPath};Pooling=False");
         connection.Open();
         using var command = connection.CreateCommand();
         command.CommandText = "SELECT name FROM sqlite_master WHERE type='table'";

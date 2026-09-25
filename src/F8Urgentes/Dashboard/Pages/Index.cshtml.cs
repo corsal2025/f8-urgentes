@@ -67,7 +67,13 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         Tab = tab;
         Sort = sort;
 
-        var allMatching = repository.Query(new UrgentRequestFilter(month, estado, estadoActual, flagged), search);
+        // Caja cases (queued or boxed) live on the /Caja screen, not here — they still count in
+        // Estadisticas (still real cases) but must not appear in the day-to-day Casos list.
+        // Sin-carpeta cases are the opposite: they stay here (grayed via row-confirmed) since
+        // point 2 of the Caja module keeps them visible and reversible from Index itself.
+        var allMatching = repository.Query(new UrgentRequestFilter(month, estado, estadoActual, flagged), search)
+            .Where(r => r.CajaTransferredAt is null)
+            .ToList();
 
         var filtered = tab switch
         {
@@ -494,6 +500,28 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             return new JsonResult(new { marked = request?.Marked ?? false, pendienteCarpeta = request?.PendienteCarpeta ?? false });
         }
 
+        return RedirectToPage();
+    }
+
+    /// <summary>"Sin carpeta" action (Caja module point 2): closes the case but keeps it visible in
+    /// Casos, grayed like a confirmed row. Reversible with OnPostRevertSinCarpeta.</summary>
+    public IActionResult OnPostSetSinCarpeta(long id)
+    {
+        repository.SetSinCarpeta(id, true);
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostRevertSinCarpeta(long id)
+    {
+        repository.SetSinCarpeta(id, false);
+        return RedirectToPage();
+    }
+
+    /// <summary>"Caja" action (Caja module point 3): sends the case to the Caja open queue —
+    /// it disappears from Casos until removed from the queue or from a closed box.</summary>
+    public IActionResult OnPostSendToCaja(long id)
+    {
+        repository.SendToCaja(id, DateTimeOffset.UtcNow);
         return RedirectToPage();
     }
 

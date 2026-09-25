@@ -13,13 +13,12 @@ public sealed class RecuperarPageModelTests : IDisposable
     public RecuperarPageModelTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"f8urgentes-recuperar-tests-{Guid.NewGuid():N}.db");
-        _repository = new UrgentRequestRepository($"Data Source={_dbPath}");
+        _repository = new UrgentRequestRepository($"Data Source={_dbPath};Pooling=False");
         _repository.EnsureSchema();
     }
 
     public void Dispose()
     {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (File.Exists(_dbPath)) File.Delete(_dbPath);
     }
 

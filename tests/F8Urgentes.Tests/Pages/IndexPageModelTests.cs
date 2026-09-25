@@ -17,13 +17,12 @@ public sealed class IndexPageModelTests : IDisposable
     public IndexPageModelTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"f8urgentes-index-tests-{Guid.NewGuid():N}.db");
-        _repository = new UrgentRequestRepository($"Data Source={_dbPath}");
+        _repository = new UrgentRequestRepository($"Data Source={_dbPath};Pooling=False");
         _repository.EnsureSchema();
     }
 
     public void Dispose()
     {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (File.Exists(_dbPath)) File.Delete(_dbPath);
     }
 
@@ -424,5 +423,67 @@ public sealed class IndexPageModelTests : IDisposable
         new ImpresionMensualModel(_repository).OnPostMarkPrinted("2026-08");
 
         Assert.False(IndexModel.ShouldRemindMonthlyPrint(_repository.GetAll(), new DateOnly(2026, 9, 5)));
+    }
+
+    [Fact]
+    public void OnGet_ExcludesCasesSentToCaja()
+    {
+        var keptId = Insert(rut: "11111111-1");
+        var cajaId = Insert(rut: "22222222-2");
+        _repository.SendToCaja(cajaId, DateTimeOffset.UtcNow);
+        var model = CreateModel();
+
+        model.OnGet(null, null, null, null, null);
+
+        Assert.Equal([keptId], model.Requests.Select(r => r.Id));
+    }
+
+    [Fact]
+    public void OnGet_StillShowsSinCarpetaCases()
+    {
+        var id = Insert(rut: "11111111-1");
+        _repository.SetSinCarpeta(id, true);
+        var model = CreateModel();
+
+        model.OnGet(null, null, null, null, null);
+
+        Assert.Single(model.Requests);
+        Assert.True(model.Requests[0].SinCarpeta);
+    }
+
+    [Fact]
+    public void OnPostSetSinCarpeta_MarksCase()
+    {
+        var id = Insert();
+        var model = CreateModel();
+
+        model.OnPostSetSinCarpeta(id);
+
+        Assert.True(_repository.FindById(id)!.SinCarpeta);
+    }
+
+    [Fact]
+    public void OnPostRevertSinCarpeta_UnmarksCase()
+    {
+        var id = Insert();
+        _repository.SetSinCarpeta(id, true);
+        var model = CreateModel();
+
+        model.OnPostRevertSinCarpeta(id);
+
+        Assert.False(_repository.FindById(id)!.SinCarpeta);
+    }
+
+    [Fact]
+    public void OnPostSendToCaja_SendsCaseToQueueAndRemovesFromIndex()
+    {
+        var id = Insert();
+        var model = CreateModel();
+
+        model.OnPostSendToCaja(id);
+
+        Assert.NotNull(_repository.FindById(id)!.CajaTransferredAt);
+        model.OnGet(null, null, null, null, null);
+        Assert.Empty(model.Requests);
     }
 }

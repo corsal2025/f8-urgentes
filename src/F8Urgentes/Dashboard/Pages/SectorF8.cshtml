@@ -5,9 +5,9 @@
     var sectorTitle = Model.SelectedSector == F8Urgentes.Domain.FolderSector.Archivo ? "ARCHIVO" : "OFICINA 43";
 }
 
+<partial name="_ToolNav" />
+
 <div class="nav-group no-print">
-    <a href="/SectorF8?sector=Archivo" class="@(Model.SelectedSector == F8Urgentes.Domain.FolderSector.Archivo ? "active" : "")">Archivo</a>
-    <a href="/SectorF8?sector=Oficina43" class="@(Model.SelectedSector == F8Urgentes.Domain.FolderSector.Oficina43 ? "active" : "")">Oficina 43</a>
     @if (Model.Cases.Count > 0)
     {
         <button type="button" class="btn-outline" style="margin-left:auto;" onclick="window.print()">Imprimir informe (PDF)</button>

@@ -13,14 +13,13 @@ public sealed class ExcelUrgentImporterTests : IDisposable
     public ExcelUrgentImporterTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"f8urgentes-import-tests-{Guid.NewGuid():N}.db");
-        _repository = new UrgentRequestRepository($"Data Source={_dbPath}");
+        _repository = new UrgentRequestRepository($"Data Source={_dbPath};Pooling=False");
         _repository.EnsureSchema();
         _workbookPath = WorkbookFixtures.BuildPinnedWorkbook();
     }
 
     public void Dispose()
     {
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         if (File.Exists(_dbPath)) File.Delete(_dbPath);
         if (File.Exists(_workbookPath)) File.Delete(_workbookPath);
     }
@@ -106,7 +105,7 @@ public sealed class ExcelUrgentImporterTests : IDisposable
     {
         var dbPath = Path.Combine(Path.GetTempPath(), $"f8urgentes-import-casing-{Guid.NewGuid():N}.db");
         var workbookPath = WorkbookFixtures.BuildPinnedWorkbook();
-        var repo = new UrgentRequestRepository($"Data Source={dbPath}");
+        var repo = new UrgentRequestRepository($"Data Source={dbPath};Pooling=False");
         repo.EnsureSchema();
 
         try
@@ -125,7 +124,6 @@ public sealed class ExcelUrgentImporterTests : IDisposable
         }
         finally
         {
-            Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
             if (File.Exists(workbookPath)) File.Delete(workbookPath);
             if (File.Exists(dbPath)) File.Delete(dbPath);
         }
