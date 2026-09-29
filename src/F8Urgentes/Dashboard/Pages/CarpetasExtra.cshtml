@@ -1,0 +1,139 @@
+@page
+@model F8Urgentes.Dashboard.Pages.CarpetasExtraModel
+@{
+    ViewData["Title"] = "Carpetas Extras";
+}
+
+<div class="dashboard-controls" style="margin-bottom:16px;">
+    <div class="controls-row-main">
+        <h2 style="margin:0; font-size:1.15rem; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
+            Carpetas Extras y Penúltimas Antiguas
+        </h2>
+        <span class="cases-count-badge">@Model.ExtraCases.Count carpeta(s) registrada(s)</span>
+    </div>
+</div>
+
+<div class="card" style="padding:16px; margin-bottom:20px; border-top:3px solid var(--color-accent);">
+    <form method="post" style="display:flex; flex-direction:column; gap:12px;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+            <div class="modal-field">
+                <label asp-for="Input.nombreCompleto">Nombre completo</label>
+                <input asp-for="Input.nombreCompleto" class="input-block" placeholder="ej: Juan Pérez Soto" required />
+                <span asp-validation-for="Input.nombreCompleto" class="review-hint" style="color:var(--color-review);"></span>
+            </div>
+            <div class="modal-field">
+                <label asp-for="Input.Rut">RUT</label>
+                <input asp-for="Input.Rut" class="input-block rut-input" placeholder="ej: 12.345.678-9" required />
+                <span asp-validation-for="Input.Rut" class="review-hint" style="color:var(--color-review);"></span>
+            </div>
+            <div class="modal-field">
+                <label asp-for="Input.CodigoF8">Código F8</label>
+                <input asp-for="Input.CodigoF8" class="input-block" placeholder="ej: F8-2024-001" />
+            </div>
+            <div class="modal-field">
+                <label asp-for="Input.fechaPenultimaCarpeta">Fecha de última carpeta</label>
+                <input asp-for="Input.fechaPenultimaCarpeta" type="date" class="input-block" />
+            </div>
+            <div class="modal-field">
+                <label asp-for="Input.Estado">Estado</label>
+                <input asp-for="Input.Estado" class="input-block" placeholder="ej: PRIMERA LICENCIA" />
+            </div>
+            <div class="modal-field">
+                <label asp-for="Input.EstadoActual">Estado actual</label>
+                <input asp-for="Input.EstadoActual" class="input-block" placeholder="ej: PENDIENTE" />
+            </div>
+        </div>
+            <div style="display:flex; justify-content:flex-end;">
+                <button type="submit" class="btn-primary" style="padding:8px 18px; font-weight:700;">+ Guardar Carpeta Extra</button>
+            </div>
+        </form>
+</div>
+
+<div class="card table-card">
+    <table class="cases cases-list">
+        <thead>
+            <tr>
+                <th class="th-wrap">Nombre<br />contribuyente</th>
+                <th>RUT</th>
+                <th class="th-wrap">Código<br />F8</th>
+                <th class="th-wrap">Fecha penúltima<br />carpeta</th>
+                <th class="th-wrap">Estado</th>
+                <th class="th-wrap">Estado<br />actual</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.ExtraCases.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:24px; color:var(--color-text-muted);">
+                        No hay carpetas extras registradas aún. Ingresa una arriba.
+                    </td>
+                </tr>
+            }
+            @foreach (var request in Model.ExtraCases)
+            {
+                <tr class="@(request.NeedsReview ? "row-needs-review" : "")">
+                    <td class="name-cell" style="text-align:left; font-weight:700;">@request.NombreCompleto</td>
+                    <td class="rut-cell">@F8Urgentes.Domain.RutFormatter.WithDots(request.Rut)</td>
+                    <td class="text-cell">@(request.CodigoF8 ?? "—")</td>
+                    <td class="text-cell">@(request.FechaPenultimaCarpeta is { } f ? F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(f) : "S/C")</td>
+                    <td class="text-cell">@(request.Estado ?? "—")</td>
+                    <td class="text-cell">@(request.EstadoActual ?? "PENDIENTE")</td>
+                    <td class="action-cell">
+                        <div class="action-group">
+                            <form method="post" asp-page-handler="SendToCaja" onsubmit="return confirm('¿Enviar a Caja? El caso pasará a la cola de Caja y desaparecerá de esta lista.');">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-folder btn-folder-box" type="submit" title="Enviar a Caja">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><line x1="10" y1="12" x2="14" y2="12"></line></svg>
+                                    <span>Caja</span>
+                                </button>
+                            </form>
+                            <form method="post" asp-page-handler="Delete" onsubmit="return confirm('¿Eliminar esta carpeta extra?');">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-danger" type="submit" title="Eliminar">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // RUT mask for the Rut input: when the text looks like a RUT (digits, dots, dash, K),
+    // reformat as 12.345.678-9 while typing. Names are left untouched.
+    (function () {
+        var input = document.querySelector('input.rut-input');
+        if (!input) return;
+        function formatRut(value) {
+            var clean = value.replace(/[.\-\s]/g, '').toUpperCase();
+            if (clean.length < 2) return clean;
+            var body = clean.slice(0, -1), dv = clean.slice(-1);
+            return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+        }
+        function looksLikeRut(value) {
+            return /^[\d.\-\s]*[\dkK]?$/.test(value) && /\d/.test(value);
+        }
+        input.addEventListener('input', function () {
+            var v = input.value;
+            if (!looksLikeRut(v)) return;
+            var f = formatRut(v);
+            if (f !== v) {
+                input.value = f;
+                input.setSelectionRange(f.length, f.length);
+            }
+        });
+        if (looksLikeRut(input.value)) input.value = formatRut(input.value);
+    })();
+</script>
+

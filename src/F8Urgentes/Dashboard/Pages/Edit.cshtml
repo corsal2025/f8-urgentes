@@ -14,7 +14,7 @@
         <span asp-validation-for="Input.NombreCompleto" class="message-error"></span>
 
         <label class="form-label">RUT</label>
-        <input class="input-block" asp-for="Input.Rut" />
+        <input class="input-block rut-input" asp-for="Input.Rut" />
         <span asp-validation-for="Input.Rut" class="message-error"></span>
 
         <label class="form-label">Fecha petición</label>
@@ -47,3 +47,31 @@
         <button class="btn-primary" type="submit">Guardar</button>
     </form>
 </div>
+
+<script>
+    // RUT mask for the Rut input: when the text looks like a RUT (digits, dots, dash, K),
+    // reformat as 12.345.678-9 while typing. Names are left untouched.
+    (function () {
+        var input = document.querySelector('input.rut-input');
+        if (!input) return;
+        function formatRut(value) {
+            var clean = value.replace(/[.\-\s]/g, '').toUpperCase();
+            if (clean.length < 2) return clean;
+            var body = clean.slice(0, -1), dv = clean.slice(-1);
+            return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + dv;
+        }
+        function looksLikeRut(value) {
+            return /^[\d.\-\s]*[\dkK]?$/.test(value) && /\d/.test(value);
+        }
+        input.addEventListener('input', function () {
+            var v = input.value;
+            if (!looksLikeRut(v)) return;
+            var f = formatRut(v);
+            if (f !== v) {
+                input.value = f;
+                input.setSelectionRange(f.length, f.length);
+            }
+        });
+        if (looksLikeRut(input.value)) input.value = formatRut(input.value);
+    })();
+</script>

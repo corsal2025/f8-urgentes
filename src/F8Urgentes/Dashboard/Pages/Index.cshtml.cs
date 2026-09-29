@@ -50,6 +50,8 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public string? Tab { get; private set; }
     public string? Sort { get; private set; }
     public int FlaggedCount { get; private set; }
+    public int ExtraCasesCount { get; private set; }
+    public int PenultimasCount { get; private set; }
 
     // Shown during the first 10 days of the month as a nudge to run the previous month's
     // monthly print batch before it's forgotten — only fires if unprinted completed cases
@@ -80,6 +82,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             "Pendientes" => allMatching.Where(r => r.EstadoActual != EstadoActualSubida).ToList(),
             "Subidas" => allMatching.Where(r => r.EstadoActual == EstadoActualSubida).ToList(),
             "Certificados" => allMatching.Where(r => r.EstadoActual == EstadoActualCertificado).ToList(),
+            "Penultimas" => allMatching.Where(r => r.FechaPenultimaCarpeta is not null).ToList(),
             _ => allMatching,
         };
 
@@ -121,6 +124,8 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             .ToList();
 
         FlaggedCount = repository.GetFlagged().Count;
+        ExtraCasesCount = all.Count(r => r.Origin == "Extra");
+        PenultimasCount = allMatching.Count(r => r.FechaPenultimaCarpeta is not null);
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         PreviousMonthKey = ImpresionMensualModel.PreviousMonthKey(today);
@@ -531,7 +536,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         return RedirectToPage();
     }
 
-    public IActionResult OnPostAddManualCases(List<string> nombreCompleto, List<string> rut, List<string> estado)
+    public IActionResult OnPostAddManualCases(List<string> nombreCompleto, List<string> rut, List<string> estado, List<string?>? fechaPenultimaCarpeta = null)
     {
         var count = Math.Min(nombreCompleto.Count, Math.Min(rut.Count, estado.Count));
         for (var i = 0; i < count; i++)
@@ -546,12 +551,40 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             var rawEstado = estado[i];
             var normalizedEstado = EstadoCatalog.NormalizeForPersistence(rawEstado, isEstado: true);
             var canonicalRut = Rut.TryParse(rutValue, out var parsedRut) ? parsedRut.ToString() : rutValue;
+
+            DateOnly? parsedPenultimaDate = null;
+            if (fechaPenultimaCarpeta is not null && i < fechaPenultimaCarpeta.Count && !string.IsNullOrWhiteSpace(fechaPenultimaCarpeta[i]))
+            {
+                var rawFecha = fechaPenultimaCarpeta[i]?.Trim();
+                if (DateOnly.TryParseExact(rawFecha, ["yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy", "d/MM/yyyy", "dd/M/yyyy"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var d))
+                {
+                    parsedPenultimaDate = d;
+                }
+                else if (SpanishDateFormatter.TryParseSlashMonthDate(rawFecha, out var sm))
+                {
+                    parsedPenultimaDate = sm;
+                }
+                else if (SpanishDateFormatter.TryParseLongDate(rawFecha, out var ld))
+                {
+                    parsedPenultimaDate = ld;
+                }
+                else
+                {
+                    var fRes = FolderDate.Parse(rawFecha);
+                    if (fRes.Outcome is FolderDateOutcome.Ok or FolderDateOutcome.SinCarpeta)
+                    {
+                        parsedPenultimaDate = fRes.Value;
+                    }
+                }
+            }
+
             var insertedId = repository.Insert(new UrgentRequest
             {
                 NombreCompleto = nombre,
                 Rut = canonicalRut,
                 RutRaw = rutValue,
                 Estado = normalizedEstado,
+                FechaPenultimaCarpeta = parsedPenultimaDate,
                 FechaPeticion = DateOnly.FromDateTime(DateTime.Today),
                 Origin = "Web",
                 CreatedAt = DateTimeOffset.UtcNow,

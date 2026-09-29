@@ -109,10 +109,7 @@
                         <th>N°</th>
                         <th style="text-align:left;">Nombre completo</th>
                         <th>RUT</th>
-                        <th>Código F8</th>
                         <th>Fecha penúltima carpeta</th>
-                        <th class="no-print">Sector</th>
-                        <th class="no-print" style="width:85px;">Acción</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,22 +121,12 @@
                         <td class="n">@correlativo</td>
                         <td class="nom">@item.NombreCompleto</td>
                         <td class="mono">@F8Urgentes.Domain.RutFormatter.WithDots(item.Rut)</td>
-                        <td class="mono">@item.CodigoF8</td>
                         <td>@(item.FechaPenultimaCarpeta is { } f ? F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(f) : "S/C")</td>
-                        <td class="no-print">@(item.Sector switch { F8Urgentes.Domain.FolderSector.Archivo => "Archivo", F8Urgentes.Domain.FolderSector.Oficina43 => "Oficina 43", _ => "" })</td>
-                        <td class="no-print">
-                            <form method="post" asp-page-handler="RemoveFromClosedBox" style="display:inline;"
-                                      onsubmit="return confirm('¿Quitar a @item.NombreCompleto de esta caja y devolverlo a Casos?');">
-                                    <input type="hidden" name="id" value="@item.Id" />
-                                    <input type="hidden" name="boxId" value="@box.Id" />
-                                    <button type="submit" class="btn-danger" title="Quitar de esta caja y devolver a Casos" style="padding:3px 8px; font-size:0.75rem;">Quitar</button>
-                                </form>
-                        </td>
                     </tr>
                 }
                 </tbody>
                 <tfoot>
-                    <tr><td colspan="5">Total de carpetas: @Model.SelectedBoxCases.Count</td><td class="no-print" colspan="2"></td></tr>
+                    <tr><td colspan="4">Total de carpetas: @Model.SelectedBoxCases.Count</td></tr>
                 </tfoot>
             </table>
         }

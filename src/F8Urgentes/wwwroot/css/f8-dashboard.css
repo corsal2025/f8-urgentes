@@ -103,6 +103,108 @@ header.app-header .brand-subtitle {
     letter-spacing: 0.02em;
 }
 
+/* Header search box: sits between the main nav links and the user/admin pill on the right. */
+.header-search {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    margin-right: 10px;
+    flex: 0 0 auto;
+}
+
+/* Sync button lives in the header between the search box and the user pill, so it must
+   read against the dark header background instead of the light .tool-btn default. */
+.header-sync-form {
+    display: flex;
+    align-items: center;
+    margin: 0 14px 0 0;
+    flex: 0 0 auto;
+}
+
+.header-sync-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #e2e8f0;
+    font-size: 0.72rem;
+    padding: 5px 10px;
+}
+
+.header-sync-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.35);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.header-search-form {
+    display: flex;
+    align-items: center;
+}
+
+.header-search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.header-search-icon {
+    position: absolute;
+    left: 10px;
+    color: #94a3b8;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.header-search-wrapper input {
+    padding: 6px 30px 6px 30px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    width: 220px;
+    transition: all 0.15s ease;
+    outline: none;
+}
+
+.header-search-wrapper input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.header-search-wrapper input:focus {
+    background: #ffffff;
+    color: #0f172a;
+    width: 260px;
+    border-color: #ffffff;
+}
+
+.header-search-wrapper input:focus + .header-search-icon {
+    color: #94a3b8;
+}
+
+.header-search-clear {
+    position: absolute;
+    right: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    transition: background 0.15s ease, color 0.15s ease;
+    z-index: 1;
+}
+
+.header-search-clear:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+}
+
 nav.app-nav {
     display: flex;
     align-items: center;
