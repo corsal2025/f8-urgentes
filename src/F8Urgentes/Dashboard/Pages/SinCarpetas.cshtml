@@ -1,0 +1,90 @@
+@page
+@model F8Urgentes.Dashboard.Pages.SinCarpetasModel
+@{
+    ViewData["Title"] = "Sin Carpetas";
+}
+
+<div class="dashboard-controls" style="margin-bottom:16px;">
+    <div class="controls-row-main">
+        <h2 style="margin:0; font-size:1.15rem; color:var(--color-primary); display:flex; align-items:center; gap:8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="9" y1="11" x2="15" y2="17"/><line x1="15" y1="11" x2="9" y2="17"/></svg>
+            Módulo Sin Carpetas
+        </h2>
+        <span class="cases-count-badge">@Model.SinCarpetasCases.Count persona(s) sin carpeta</span>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="card alert-banner alert-success" style="margin-bottom:14px;">
+        @Model.Message
+    </div>
+}
+
+<div class="card table-card">
+    <table class="cases cases-list">
+        <thead>
+            <tr>
+                <th class="th-wrap">Nombre<br />contribuyente</th>
+                <th>RUT</th>
+                <th class="th-wrap">Código<br />F8</th>
+                <th class="th-wrap">Fecha penúltima<br />carpeta</th>
+                <th class="th-wrap">Sector<br />oficina</th>
+                <th class="th-wrap">Estado</th>
+                <th class="th-wrap">Estado<br />actual</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.SinCarpetasCases.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" style="text-align:center; padding:28px; color:var(--color-text-muted);">
+                        No hay solicitudes marcadas como "Sin carpeta".
+                    </td>
+                </tr>
+            }
+            @foreach (var request in Model.SinCarpetasCases)
+            {
+                <tr class="row-confirmed">
+                    <td class="name-cell" style="text-align:left; font-weight:700;">@request.NombreCompleto</td>
+                    <td class="rut-cell">@F8Urgentes.Domain.RutFormatter.WithDots(request.Rut)</td>
+                    <td class="text-cell">@(request.CodigoF8 ?? "—")</td>
+                    <td class="text-cell">@(request.FechaPenultimaCarpeta is { } f ? F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(f) : "S/C")</td>
+                    <td class="text-cell">@(request.MatrizSector ?? "—")</td>
+                    <td class="text-cell">@(request.Estado ?? "—")</td>
+                    <td class="text-cell">@(request.EstadoActual ?? "PENDIENTE")</td>
+                    <td class="action-cell">
+                        <div class="action-group">
+                            <form method="post" asp-page-handler="RevertSinCarpeta">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-folder btn-folder-revert" type="submit" title="Revertir Sin carpeta">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                    <span>Revertir</span>
+                                </button>
+                            </form>
+                            <form method="post" asp-page-handler="SendToCaja" onsubmit="return confirm('¿Enviar a Caja?');">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-folder btn-folder-box" type="submit" title="Enviar a Caja">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                                    <span>Caja</span>
+                                </button>
+                            </form>
+                            <form method="post" asp-page-handler="Delete" onsubmit="return confirm('¿Eliminar esta solicitud?');">
+                                <input type="hidden" name="id" value="@request.Id" />
+                                <button class="btn-danger" type="submit" title="Eliminar">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

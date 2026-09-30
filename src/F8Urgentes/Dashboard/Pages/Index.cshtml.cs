@@ -52,6 +52,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public int FlaggedCount { get; private set; }
     public int ExtraCasesCount { get; private set; }
     public int PenultimasCount { get; private set; }
+    public int SinAgregarCount { get; private set; }
 
     // Shown during the first 10 days of the month as a nudge to run the previous month's
     // monthly print batch before it's forgotten — only fires if unprinted completed cases
@@ -83,6 +84,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             "Subidas" => allMatching.Where(r => r.EstadoActual == EstadoActualSubida).ToList(),
             "Certificados" => allMatching.Where(r => r.EstadoActual == EstadoActualCertificado).ToList(),
             "Penultimas" => allMatching.Where(r => r.FechaPenultimaCarpeta is not null).ToList(),
+            "SinAgregar" => allMatching.Where(r => r.Origin == "SinAgregar").ToList(),
             _ => allMatching,
         };
 
@@ -126,6 +128,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         FlaggedCount = repository.GetFlagged().Count;
         ExtraCasesCount = all.Count(r => r.Origin == "Extra");
         PenultimasCount = allMatching.Count(r => r.FechaPenultimaCarpeta is not null);
+        SinAgregarCount = allMatching.Count(r => r.Origin == "SinAgregar");
 
         var today = DateOnly.FromDateTime(DateTime.Today);
         PreviousMonthKey = ImpresionMensualModel.PreviousMonthKey(today);
@@ -586,7 +589,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
                 Estado = normalizedEstado,
                 FechaPenultimaCarpeta = parsedPenultimaDate,
                 FechaPeticion = DateOnly.FromDateTime(DateTime.Today),
-                Origin = "Web",
+                Origin = "SinAgregar",
                 CreatedAt = DateTimeOffset.UtcNow,
                 NeedsReview = EstadoCatalog.IsUnknownEstado(rawEstado),
             });
