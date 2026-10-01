@@ -231,7 +231,7 @@
                     </div>
                     <div class="modal-field modal-field-rut">
                         <label>RUT</label>
-                        <input class="input-block" name="rut" placeholder="ej: 18.785.387-7" required />
+                        <input class="input-block rut-input" name="rut" placeholder="ej: 18.785.387-7" required />
                     </div>
                     <div class="modal-field modal-field-estado">
                         <label>Estado</label>
@@ -317,7 +317,6 @@
                             }
                             <option value="CREAR CERTIFICADO" selected="@(currentEstadoActual == "CREAR CERTIFICADO")">CREAR CERTIFICADO</option>
                         </select>
-                        <span class="pendiente-alert" title="Pendiente" style="@(string.IsNullOrEmpty(request.EstadoActual) || request.EstadoActual == "PENDIENTE" ? "" : "display:none")">⚠</span>
                         <form class="toggle-form" id="estadoactual-@request.Id" method="post" asp-page-handler="SetEstadoActual">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
@@ -329,8 +328,8 @@
                         </form>
                     </td>
                     <td class="text-cell">
-                        @{ var fechaPenultimaDisplay = request.FechaPenultimaCarpeta is null ? "" : F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta); }
-                        <input class="input-inline autosave fecha-penultima-input" form="fechapenultima-@request.Id" name="fecha" autocomplete="fecha-penultima-@request.Id-no-autofill" data-server-value="@fechaPenultimaDisplay" value="@fechaPenultimaDisplay" placeholder="ej: 15/marzo/2024 o S/C" />
+                        @{ var fechaPenultimaValue = request.FechaPenultimaCarpeta?.ToString("yyyy-MM-dd") ?? ""; }
+                        <input class="input-inline autosave fecha-penultima-input" type="date" form="fechapenultima-@request.Id" name="fecha" autocomplete="fecha-penultima-@request.Id-no-autofill" value="@fechaPenultimaValue" />
                         <form class="toggle-form" id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
@@ -425,13 +424,11 @@
             sessionStorage.removeItem(scrollKey);
             try {
                 var pos = JSON.parse(saved);
-                setTimeout(function () {
-                    window.scrollTo(0, pos.y || 0);
-                    if (table) {
-                        table.scrollLeft = pos.x || 0;
-                        table.scrollTop = pos.ty || 0;
-                    }
-                }, 60);
+                window.scrollTo(0, pos.y || 0);
+                if (table) {
+                    table.scrollLeft = pos.x || 0;
+                    table.scrollTop = pos.ty || 0;
+                }
             } catch (err) { /* malformed value, skip restore */ }
         }
         document.addEventListener('submit', function () {
@@ -491,7 +488,7 @@
         var row = document.createElement('div');
         row.className = 'quick-add-row modern-modal-row';
         row.innerHTML = '<div class="modal-field"><label>Nombre completo</label><input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" required /></div>' +
-            '<div class="modal-field modal-field-rut"><label>RUT</label><input class="input-block" name="rut" placeholder="ej: 18.785.387-7" required /></div>' +
+            '<div class="modal-field modal-field-rut"><label>RUT</label><input class="input-block rut-input" name="rut" placeholder="ej: 18.785.387-7" required /></div>' +
             '<div class="modal-field modal-field-estado"><label>Estado</label><input class="input-block" name="estado" placeholder="ej: Pendiente" /></div>' +
             '<div class="modal-field modal-field-penultima"><label>Penúltima carpeta</label><input class="input-block" type="date" name="fechaPenultimaCarpeta" /></div>' +
             '<button type="button" class="btn-danger remove-row-btn" title="Quitar fila">×</button>';
@@ -589,11 +586,6 @@
                     }
                 }
 
-                var alertIcon = select.parentElement ? select.parentElement.querySelector('.pendiente-alert') : null;
-                if (alertIcon) {
-                    alertIcon.style.display = select.value === 'PENDIENTE' ? '' : 'none';
-                }
-
                 if (select.form) {
                     submitToggle(select.form, function (payload) {
                         if (payload && payload.fechaDeSubida && fechaCell) {
@@ -608,7 +600,47 @@
     }
 
     try {
+        function formatRutInput(input) {
+            function format(value) {
+                var clean = value.replace(/[^0-9kK]/g, '').toUpperCase();
+                if (clean.indexOf('K') >= 0) {
+                    clean = clean.replace(/K/g, '') + (/[kK]\s*$/.test(value) ? 'K' : '');
+                }
+                clean = clean.slice(0, 9);
+                if (clean.length < 7) {
+                    return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                }
+                var body = clean.slice(0, -1);
+                var verifier = clean.slice(-1);
+                return body.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + '-' + verifier;
+            }
+
+            function formattedPosition(value, rawPosition) {
+                if (rawPosition === 0) return 0;
+                var seen = 0;
+                for (var i = 0; i < value.length; i++) {
+                    if (/[0-9K]/.test(value[i]) && ++seen === rawPosition) return i + 1;
+                }
+                return value.length;
+            }
+
+            var start = input.selectionStart;
+            var end = input.selectionEnd;
+            var rawStart = input.value.slice(0, start).replace(/[^0-9kK]/g, '').length;
+            var rawEnd = input.value.slice(0, end).replace(/[^0-9kK]/g, '').length;
+            var formatted = format(input.value);
+            if (formatted !== input.value) {
+                input.value = formatted;
+                input.setSelectionRange(formattedPosition(formatted, rawStart), formattedPosition(formatted, rawEnd));
+            }
+        }
+
+        document.addEventListener('input', function (event) {
+            if (event.target.matches('input.rut-input')) formatRutInput(event.target);
+        });
+
         document.querySelectorAll('input.rut-input').forEach(function (input) {
+            formatRutInput(input);
             input.addEventListener('copy', function (event) {
                 var selected = input.value.substring(input.selectionStart, input.selectionEnd);
                 if (!selected) {
@@ -654,9 +686,15 @@
             var form = input.form;
             if (!form) return;
 
-            input.addEventListener('blur', function () {
-                submitToggle(form, autosaveOnSuccess(input));
-            });
+            if (input.classList.contains('fecha-penultima-input')) {
+                input.addEventListener('change', function () {
+                    submitToggle(form, autosaveOnSuccess(input));
+                });
+            } else {
+                input.addEventListener('blur', function () {
+                    submitToggle(form, autosaveOnSuccess(input));
+                });
+            }
 
             input.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter') {

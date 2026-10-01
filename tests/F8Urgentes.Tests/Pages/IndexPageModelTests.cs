@@ -325,6 +325,20 @@ public sealed class IndexPageModelTests : IDisposable
     }
 
     [Fact]
+    public void OnPostSetFechaPenultimaCarpeta_ParsesNativeDateInputValue()
+    {
+        var id = Insert();
+        var model = CreateModel();
+        model.PageContext.HttpContext.Request.Headers["X-Requested-With"] = "XMLHttpRequest";
+
+        var result = model.OnPostSetFechaPenultimaCarpeta(id, "2024-03-15");
+
+        var json = Assert.IsType<Microsoft.AspNetCore.Mvc.JsonResult>(result);
+        Assert.Equal("2024-03-15", json.Value!.GetType().GetProperty("fecha")!.GetValue(json.Value));
+        Assert.Equal(new DateOnly(2024, 3, 15), _repository.FindById(id)!.FechaPenultimaCarpeta);
+    }
+
+    [Fact]
     public void OnPostSetFechaPenultimaCarpeta_SinCarpeta_ClearsDate()
     {
         var id = Insert();

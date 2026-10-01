@@ -414,8 +414,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             return new JsonResult(new { message = "Solicitud no encontrada." }) { StatusCode = StatusCodes.Status404NotFound };
         }
 
-        // The field displays/expects the long Spanish form ("15 de mayo de 2024"), but dd/MM/yyyy
-        // and FolderDate's ISO/serial forms are still accepted for whatever an operator pastes in.
+        // Accept the native date input's ISO value and legacy manually entered date formats.
         if (SpanishDateFormatter.TryParseSlashMonthDate(fecha, out var slashMonthForm))
         {
             request.FechaPenultimaCarpeta = slashMonthForm;
@@ -424,6 +423,16 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         else if (SpanishDateFormatter.TryParseLongDate(fecha, out var longForm))
         {
             request.FechaPenultimaCarpeta = longForm;
+            repository.Update(request);
+        }
+        else if (DateOnly.TryParseExact(
+            fecha?.Trim(),
+            "yyyy-MM-dd",
+            System.Globalization.CultureInfo.InvariantCulture,
+            System.Globalization.DateTimeStyles.None,
+            out var isoDate))
+        {
+            request.FechaPenultimaCarpeta = isoDate;
             repository.Update(request);
         }
         else if (DateOnly.TryParseExact(
@@ -454,14 +463,9 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
             }
         }
 
-        // Whatever format the operator typed (dd/MM/yyyy, "15 de marzo de 2024", a pasted Excel
-        // serial, ...), hand back the canonical dd/mes/yyyy display so the input can show it
-        // immediately — the AJAX save has no page reload to pick up the reformatted value otherwise.
-        // Every branch above either sets a real date or, via FolderDate.Parse's SinCarpeta outcome,
-        // leaves it null — so a null here always means the operator typed "S/C" (or cleared the
-        // field, its synonym). SlashMonthDate already renders null as "S/C"; forcing "" instead
-        // (the old behavior) echoed back a blank field right after the save it just confirmed.
-        var display = SpanishDateFormatter.SlashMonthDate(request.FechaPenultimaCarpeta);
+        // Return an ISO value so the native date input can update immediately after autosave.
+        // A null date is returned as an empty value, matching a cleared native date input.
+        var display = request.FechaPenultimaCarpeta?.ToString("yyyy-MM-dd") ?? "";
 
         // If the browser ever submits this natively (JS didn't attach — old cached script, JS
         // disabled, a row added without rewiring), fall back to a real page instead of dumping
