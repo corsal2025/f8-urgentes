@@ -407,7 +407,7 @@ public static class MatrizSyncService
             {
                 nombreCol = colIndex;
             }
-            else if (header.Contains("ESTADO") && header.Contains("CARPETA"))
+            else if ((header.Contains("ESTADO") && header.Contains("CARPETA")) || header.Contains("ESTADO") || header.StartsWith("COLUMNA 10") || header == "COLUMNA10")
             {
                 estadoCol = colIndex;
             }
@@ -419,6 +419,22 @@ public static class MatrizSyncService
             {
                 fechaCitacionCol = colIndex;
             }
+        }
+
+        // Resilient fallback: in standard 11-column template, Col 10 (J) is Estado, Col 1 is FechaCitacion, Col 2 is FechaSubio
+        if (estadoCol == 0 && rutCol == 7 && nombreCol == 6)
+        {
+            estadoCol = 10;
+        }
+
+        if (fechaCitacionCol == 0 && rutCol == 7)
+        {
+            fechaCitacionCol = 1;
+        }
+
+        if (fechaSubioCol == 0 && rutCol == 7)
+        {
+            fechaSubioCol = 2;
         }
 
         if (rutCol == 0 || nombreCol == 0 || estadoCol == 0)

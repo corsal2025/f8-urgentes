@@ -189,7 +189,7 @@ else
                             <td style="text-align:center;">@F8Urgentes.Domain.RutFormatter.WithDots(item.Rut)</td>
                             <td style="text-align:center;">@item.CodigoF8</td>
                             <td style="text-align:center;">@(item.FechaPenultimaCarpeta is { } f ? F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(f) : "S/C")</td>
-                            <td class="no-print" style="text-align:center;">@(item.Sector switch { F8Urgentes.Domain.FolderSector.Archivo => "Archivo", F8Urgentes.Domain.FolderSector.Oficina43 => "Oficina 43", _ => "" })</td>
+                            <td class="no-print" style="text-align:center;">@(item.Sector switch { F8Urgentes.Domain.FolderSector.Archivo => "Archivo", F8Urgentes.Domain.FolderSector.Oficina43 => "Oficina 43", _ => "S/C" })</td>
                             <td style="text-align:center;">
                                 <form method="post" asp-page-handler="UndoSingle" style="display:inline;"
                                       onsubmit="return confirm('¿Quitar a @item.NombreCompleto de la cola de caja y devolverlo a Casos?');">

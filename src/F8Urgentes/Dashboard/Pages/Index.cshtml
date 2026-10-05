@@ -335,7 +335,7 @@
                         {
                             F8Urgentes.Domain.FolderSector.Archivo => "Archivo",
                             F8Urgentes.Domain.FolderSector.Oficina43 => "Oficina 43",
-                            _ => "",
+                            _ => "S/C",
                         })
                     </td>
                     <td class="text-cell fecha-subida-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
@@ -671,7 +671,7 @@
                 if (sectorCell) {
                     sectorCell.textContent = data && data.sector === 'Archivo' ? 'Archivo'
                         : data && data.sector === 'Oficina43' ? 'Oficina 43'
-                        : '';
+                        : 'S/C';
                 }
             };
         }
