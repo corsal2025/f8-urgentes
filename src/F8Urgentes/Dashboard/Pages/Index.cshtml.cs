@@ -1,4 +1,4 @@
-using F8Urgentes.Configuration;
+   using F8Urgentes.Configuration;
 using F8Urgentes.Data;
 using F8Urgentes.Domain;
 using F8Urgentes.Matriz;
@@ -543,9 +543,9 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         return RedirectToPage();
     }
 
-    public IActionResult OnPostAddManualCases(List<string> nombreCompleto, List<string> rut, List<string> estado, List<string?>? fechaPenultimaCarpeta = null)
+    public IActionResult OnPostAddManualCases(List<string> nombreCompleto, List<string> rut, List<string>? estado = null, List<string?>? fechaPenultimaCarpeta = null)
     {
-        var count = Math.Min(nombreCompleto.Count, Math.Min(rut.Count, estado.Count));
+        var count = Math.Min(nombreCompleto.Count, rut.Count);
         for (var i = 0; i < count; i++)
         {
             var nombre = nombreCompleto[i];
@@ -555,8 +555,8 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
                 continue;
             }
 
-            var rawEstado = estado[i];
-            var normalizedEstado = EstadoCatalog.NormalizeForPersistence(rawEstado, isEstado: true);
+            var rawEstado = (estado is not null && i < estado.Count) ? estado[i] : null;
+            var normalizedEstado = string.IsNullOrWhiteSpace(rawEstado) ? null : EstadoCatalog.NormalizeForPersistence(rawEstado, isEstado: true);
             var canonicalRut = Rut.TryParse(rutValue, out var parsedRut) ? parsedRut.ToString() : rutValue;
 
             DateOnly? parsedPenultimaDate = null;

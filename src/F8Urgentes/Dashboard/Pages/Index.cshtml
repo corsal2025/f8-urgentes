@@ -233,10 +233,6 @@
                         <label>RUT</label>
                         <input class="input-block rut-input" name="rut" placeholder="ej: 18.785.387-7" required />
                     </div>
-                    <div class="modal-field modal-field-estado">
-                        <label>Estado</label>
-                        <input class="input-block" name="estado" placeholder="ej: Pendiente" />
-                    </div>
                     <div class="modal-field modal-field-penultima">
                         <label>Penúltima carpeta</label>
                         <input class="input-block" type="date" name="fechaPenultimaCarpeta" />
@@ -489,7 +485,6 @@
         row.className = 'quick-add-row modern-modal-row';
         row.innerHTML = '<div class="modal-field"><label>Nombre completo</label><input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" required /></div>' +
             '<div class="modal-field modal-field-rut"><label>RUT</label><input class="input-block rut-input" name="rut" placeholder="ej: 18.785.387-7" required /></div>' +
-            '<div class="modal-field modal-field-estado"><label>Estado</label><input class="input-block" name="estado" placeholder="ej: Pendiente" /></div>' +
             '<div class="modal-field modal-field-penultima"><label>Penúltima carpeta</label><input class="input-block" type="date" name="fechaPenultimaCarpeta" /></div>' +
             '<button type="button" class="btn-danger remove-row-btn" title="Quitar fila">×</button>';
         rows.appendChild(row);

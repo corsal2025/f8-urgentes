@@ -300,6 +300,22 @@ public sealed class IndexPageModelTests : IDisposable
     }
 
     [Fact]
+    public void OnPostAddManualCases_WithoutEstado_InsertsRowsWithNullEstado()
+    {
+        var model = CreateModel();
+
+        var result = model.OnPostAddManualCases(
+            new List<string> { "Pedro Soto", "Ana Diaz" },
+            new List<string> { "15949558-2", "7654321-K" },
+            fechaPenultimaCarpeta: new List<string?> { "2024-05-10", "2024-06-12" });
+
+        var cases = _repository.GetAll();
+        Assert.Equal(2, cases.Count);
+        Assert.All(cases, c => Assert.Null(c.Estado));
+        Assert.NotNull(result);
+    }
+
+    [Fact]
     public void DeadlineChipText_ShowsPositiveAndNegativeBusinessDays()
     {
         Assert.Equal("+15", IndexModel.DeadlineChipText(new DateOnly(2024, 6, 3), new DateOnly(2024, 6, 3)));

@@ -638,7 +638,7 @@ dialog.modern-modal::backdrop {
 }
 
 .modal-field-rut { flex: 0 0 140px; }
-.modal-field-estado { flex: 0 0 130px; }
+.modal-field-penultima { flex: 0 0 160px; }
 
 .modal-footer {
     display: flex;
