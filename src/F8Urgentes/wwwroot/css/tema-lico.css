@@ -849,9 +849,16 @@ body.login-shell::before {
 }
 .lico-mini svg { width: 34px; height: 34px; margin-bottom: -5px; }
 /* Con la cabecera en una fila, bajo 1366 px el texto no cabe junto al buscador: queda solo la cara de Lico */
-@media (max-width: 1365px) and (min-width: 901px) {
+/* Sintaxis de rango: sin huecos en anchos fraccionales (zoom del navegador) */
+@media (1100px < width < 1366px) {
   .btn-guia-accion { width: 36px; padding: 0; justify-content: center; }
   .btn-guia-txt { display: none; }
+}
+/* Entre 901 y 1100 px la cabecera no cabe en una fila (el buscador pisaba "Sincronizar"):
+   marca y buscador arriba, botones y sesión en una segunda fila, como bajo 900 px */
+@media (900px < width <= 1100px) {
+  .top-inner { grid-template-columns: 1fr; }
+  .top-right { justify-self: start; flex-wrap: wrap; }
 }
 
 /* Capa, resaltado y tarjeta */
