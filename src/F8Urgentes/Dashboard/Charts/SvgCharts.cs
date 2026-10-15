@@ -19,7 +19,7 @@ public static class SvgCharts
     private static readonly CultureInfo Ic = CultureInfo.InvariantCulture;
 
     public static readonly string[] Palette =
-        ["#2563eb", "#059669", "#d97706", "#7c3aed", "#db2777", "#0891b2", "#65a30d", "#dc2626", "#475569"];
+        ["#26388c", "#1fb5d9", "#2fb56a", "#5a3fae", "#e889c4", "#f0b429", "#e8503f", "#0e7c86", "#5b6b82"];
 
     private static string F(double v) => v.ToString("0.##", Ic);
     private static string E(string s) => WebUtility.HtmlEncode(s);
@@ -79,7 +79,7 @@ public static class SvgCharts
     }
 
     /// <summary>Vertical bar chart (also used as histogram with <paramref name="gapless"/>).</summary>
-    public static IHtmlContent Bars(IReadOnlyList<(string Label, double Value)> items, string color = "#2563eb",
+    public static IHtmlContent Bars(IReadOnlyList<(string Label, double Value)> items, string color = "#26388c",
         Func<int, string?>? colorAt = null, bool gapless = false, string unit = "caso(s)")
     {
         if (items.Count == 0 || items.All(i => i.Value <= 0)) return Empty("Sin datos todavía.");
@@ -152,7 +152,7 @@ public static class SvgCharts
     }
 
     /// <summary>Area + line trend with dots.</summary>
-    public static IHtmlContent Line(IReadOnlyList<(string Label, double Value)> points, string color = "#2563eb", string unit = "caso(s)", double w = 640)
+    public static IHtmlContent Line(IReadOnlyList<(string Label, double Value)> points, string color = "#26388c", string unit = "caso(s)", double w = 640)
     {
         var n = points.Count;
         if (n == 0) return Empty("Sin datos todavía.");

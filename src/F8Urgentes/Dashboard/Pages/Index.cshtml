@@ -8,15 +8,15 @@
 <style>
     .modern-modal {
         border: none;
-        border-radius: 12px;
-        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.35);
+        border-radius: 22px;
+        box-shadow: 0 16px 48px rgba(16, 24, 40, 0.25);
         padding: 0;
         max-width: 820px;
         width: 95vw;
-        background: #ffffff;
+        background: var(--papel);
     }
     .modern-modal::backdrop {
-        background: rgba(15, 23, 42, 0.6);
+        background: rgba(12, 17, 29, 0.5);
         backdrop-filter: blur(3px);
     }
     .modal-card {
@@ -29,31 +29,31 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--linea);
         padding-bottom: 12px;
     }
     .modal-title {
         margin: 0;
         font-size: 1.15rem;
         font-weight: 700;
-        color: #0f172a;
+        color: var(--azul-900);
     }
     .modal-subtitle {
         font-size: 0.8rem;
-        color: #64748b;
+        color: var(--tinta-2);
     }
     .modal-close-btn {
         background: transparent;
         border: none;
         font-size: 1.1rem;
-        color: #94a3b8;
+        color: var(--tinta-3);
         cursor: pointer;
         padding: 4px 8px;
         border-radius: 6px;
     }
     .modal-close-btn:hover {
-        background: #f1f5f9;
-        color: #0f172a;
+        background: var(--linea-2);
+        color: var(--tinta);
     }
     .modal-rows-container {
         display: flex;
@@ -68,9 +68,9 @@
         grid-template-columns: 2fr 1.3fr 1.1fr 1.2fr auto;
         gap: 10px;
         align-items: end;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
+        background: var(--elev);
+        border: 1px solid var(--linea);
+        border-radius: var(--r);
         padding: 10px;
     }
     .modern-modal-row .modal-field {
@@ -81,28 +81,29 @@
     .modern-modal-row .modal-field label {
         font-size: 0.72rem;
         font-weight: 600;
-        color: #475569;
+        color: var(--tinta-3);
         text-transform: uppercase;
         letter-spacing: 0.03em;
     }
     .modern-modal-row input {
         padding: 7px 10px;
-        border: 1px solid #cbd5e1;
-        border-radius: 6px;
+        border: 1px solid var(--linea);
+        border-radius: var(--r-sm);
         font-size: 0.82rem;
-        background: #ffffff;
-        color: #0f172a;
+        font-family: inherit;
+        background: var(--papel);
+        color: var(--tinta);
     }
     .modern-modal-row input:focus {
-        border-color: #2563eb;
+        border-color: var(--azul);
         outline: none;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+        box-shadow: 0 0 0 3px var(--ring);
     }
     .modal-footer {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-top: 1px solid #e2e8f0;
+        border-top: 1px solid var(--linea);
         padding-top: 14px;
         margin-top: 8px;
     }
@@ -118,7 +119,7 @@
         align-items: center;
         justify-content: center;
         font-size: 1.1rem;
-        border-radius: 6px;
+        border-radius: 50%;
         cursor: pointer;
     }
 </style>
@@ -729,8 +730,8 @@
             }
             styleEl.textContent =
                 'table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { left: 0px !important; position: sticky !important; z-index: 6 !important; }\n' +
-                'table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { left: ' + wNombre + 'px !important; position: sticky !important; z-index: 6 !important; border-right: 2px solid #94a3b8 !important; box-shadow: 4px 0 8px -2px rgba(15,23,42,0.18) !important; }\n' +
-                'table.cases-list thead th:nth-child(1), table.cases-list thead th:nth-child(2) { z-index: 25 !important; background-color: #f8fafc !important; }';
+                'table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { left: ' + wNombre + 'px !important; position: sticky !important; z-index: 6 !important; border-right: 2px solid var(--color-sticky-edge, #94a3b8) !important; box-shadow: 4px 0 8px -2px rgba(15,23,42,0.18) !important; }\n' +
+                'table.cases-list thead th:nth-child(1), table.cases-list thead th:nth-child(2) { z-index: 25 !important; background-color: var(--color-th-bg, #f8fafc) !important; }';
         }
         window.addEventListener('DOMContentLoaded', updateStickyOffsets);
         window.addEventListener('load', updateStickyOffsets);

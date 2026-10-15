@@ -29,7 +29,7 @@
                 <option value="letter">Letter</option>
             </select>
         </label>
-        <span style="font-size:0.8rem; color:#666;">Este listado muestra las carpetas completadas (SUBIDA A CONASET) de @Model.Month.</span>
+        <span style="font-size:0.8rem; color:var(--tinta-2);">Este listado muestra las carpetas completadas (SUBIDA A CONASET) de @Model.Month.</span>
     </div>
 }
 <style id="page-size-style">@@page { size: A4; margin: 12mm; }</style>
@@ -105,6 +105,6 @@
 
     @if (Model.Cases.Count == 0)
     {
-        <p style="text-align:center; color:#666; padding:20px;">No hay carpetas completadas para @Model.Month.</p>
+        <p style="text-align:center; color:var(--tinta-2); padding:20px;">No hay carpetas completadas para @Model.Month.</p>
     }
 </div>

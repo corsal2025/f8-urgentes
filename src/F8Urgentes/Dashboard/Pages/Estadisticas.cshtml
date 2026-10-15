@@ -4,10 +4,10 @@
 @{
     ViewData["Title"] = "Estadísticas";
 
-    const string cSubida = "#059669";
-    const string cPendiente = "#94a3b8";
-    const string cIngreso = "#2563eb";
-    const string cFuera = "#dc2626";
+    const string cSubida = "#2fb56a";
+    const string cPendiente = "#9aa6cf";
+    const string cIngreso = "#26388c";
+    const string cFuera = "#e8503f";
 
     var subidasPct = Model.Total > 0 ? Model.Subidas * 100.0 / Model.Total : 0;
     var plazoTotal = Model.PlazoDentro + Model.PlazoFuera;
@@ -100,10 +100,10 @@
     <div class="card chart-card">
         <h3>Clasificación de carpetas</h3>
         @SvgCharts.Pie(
-            [new("En caja cerrada", Model.ClasificacionCarpetas[0].Count, "#15803d"),
-             new("En cola de caja", Model.ClasificacionCarpetas[1].Count, "#86efac"),
-             new("Sin carpeta", Model.ClasificacionCarpetas[2].Count, "#64748b"),
-             new("Sin clasificar", Model.ClasificacionCarpetas[3].Count, "#f59e0b")],
+            [new("En caja cerrada", Model.ClasificacionCarpetas[0].Count, "#1f7a3d"),
+             new("En cola de caja", Model.ClasificacionCarpetas[1].Count, "#8fd6ad"),
+             new("Sin carpeta", Model.ClasificacionCarpetas[2].Count, "#5b6b82"),
+             new("Sin clasificar", Model.ClasificacionCarpetas[3].Count, "#f0b429")],
             centerText: Model.CajasCerradas.ToString(), centerSub: Model.CajasCerradas == 1 ? "caja cerrada" : "cajas cerradas")
     </div>
     <div class="card chart-card">
@@ -114,7 +114,7 @@
         }
         else
         {
-            @SvgCharts.Bars(Model.CarpetasPorCaja.Select(c => (c.Code, (double)c.Count)).ToList(), "#15803d", unit: "carpeta(s)")
+            @SvgCharts.Bars(Model.CarpetasPorCaja.Select(c => (c.Code, (double)c.Count)).ToList(), "#1f7a3d", unit: "carpeta(s)")
         }
     </div>
 </div>

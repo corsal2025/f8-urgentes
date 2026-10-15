@@ -42,260 +42,7 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-header.app-header {
-    width: 100%;
-    min-width: 0;
-    flex: 0 0 auto;
-    box-sizing: border-box;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-    color: #fff;
-    padding: 8px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    box-shadow: var(--shadow-sm);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-header.app-header .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-header.app-header .brand-logo-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #ffffff;
-    padding: 4px;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
-}
-
-header.app-header .brand-logo {
-    height: 50px;
-    width: auto;
-    object-fit: contain;
-    display: block;
-    image-rendering: -webkit-optimize-contrast;
-    transform: translateZ(0);
-}
-
-header.app-header .brand-text {
-    display: flex;
-    flex-direction: column;
-}
-
-header.app-header .brand-title {
-    font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: -0.02em;
-    color: #ffffff;
-    line-height: 1.2;
-}
-
-header.app-header .brand-subtitle {
-    font-weight: 500;
-    font-size: 0.7rem;
-    color: #94a3b8;
-    letter-spacing: 0.02em;
-}
-
-/* Header search box: sits between the main nav links and the user/admin pill on the right. */
-.header-search {
-    display: flex;
-    align-items: center;
-    margin-left: auto;
-    margin-right: 10px;
-    flex: 0 0 auto;
-}
-
-/* Sync button lives in the header between the search box and the user pill, so it must
-   read against the dark header background instead of the light .tool-btn default. */
-.header-sync-form {
-    display: flex;
-    align-items: center;
-    margin: 0 14px 0 0;
-    flex: 0 0 auto;
-}
-
-.header-sync-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
-    color: #e2e8f0;
-    font-size: 0.72rem;
-    padding: 5px 10px;
-}
-
-.header-sync-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.35);
-    color: #ffffff;
-    box-shadow: none;
-}
-
-.header-search-form {
-    display: flex;
-    align-items: center;
-}
-
-.header-search-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.header-search-icon {
-    position: absolute;
-    left: 10px;
-    color: #94a3b8;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.header-search-wrapper input {
-    padding: 6px 30px 6px 30px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 500;
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
-    width: 220px;
-    transition: all 0.15s ease;
-    outline: none;
-}
-
-.header-search-wrapper input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.header-search-wrapper input:focus {
-    background: #ffffff;
-    color: #0f172a;
-    width: 260px;
-    border-color: #ffffff;
-}
-
-.header-search-wrapper input:focus + .header-search-icon {
-    color: #94a3b8;
-}
-
-.header-search-clear {
-    position: absolute;
-    right: 8px;
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 0.75rem;
-    text-decoration: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    transition: background 0.15s ease, color 0.15s ease;
-    z-index: 1;
-}
-
-.header-search-clear:hover {
-    background: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-}
-
-nav.app-nav {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    justify-content: space-between;
-}
-
-.nav-links-main {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.nav-links-main a {
-    color: #cbd5e1;
-    text-decoration: none;
-    padding: 5px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 0.82rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.15s ease;
-}
-
-.nav-links-main a:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.nav-links-main a.active {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.18);
-    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
-}
-
-.user-session-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-left: auto;
-}
-
-.user-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 3px 10px 3px 4px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 999px;
-    color: #e2e8f0;
-    font-size: 0.76rem;
-    font-weight: 500;
-}
-
-.user-avatar {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    background: var(--color-accent);
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 0.72rem;
-}
-
-.btn-logout {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    background: rgba(239, 68, 68, 0.15);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: var(--radius-sm);
-    color: #fca5a5;
-    text-decoration: none;
-    font-size: 0.74rem;
-    font-weight: 600;
-    transition: all 0.15s ease;
-}
-
-.btn-logout:hover {
-    background: #ef4444;
-    color: #ffffff;
-    border-color: #ef4444;
-}
+/* Cabecera (barra-nacion + header.top): estilos en tema-lico.css */
 
 main {
     padding: 16px 20px;
@@ -1686,22 +1433,6 @@ button.btn-outline-danger:hover { background: var(--color-review-bg); }
     border-radius: 4px;
 }
 
-@media (max-width: 900px) {
-    header.app-header {
-        justify-content: center;
-    }
-
-    header.app-header .brand,
-    nav.app-nav {
-        width: 100%;
-        justify-content: center;
-    }
-
-    nav.app-nav .nav-group[style] {
-        margin-left: 0 !important;
-    }
-}
-
 .recovery-shell .login-card {
     background: #ffffff;
     border: 1px solid #dfe5ea;
@@ -2393,7 +2124,7 @@ a.box-link:hover { text-decoration: underline; }
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    border-bottom: 3px double #1c3f60;
+    border-bottom: 3px double #26388c;
     padding-bottom: 10px;
     margin-bottom: 16px;
 }
@@ -2420,7 +2151,7 @@ a.box-link:hover { text-decoration: underline; }
 .print-header-brand .report-name {
     font-size: 1.1rem;
     font-weight: 700;
-    color: #1c3f60;
+    color: #26388c;
 }
 
 .print-header-folio {
@@ -2437,7 +2168,7 @@ a.box-link:hover { text-decoration: underline; }
     justify-content: space-between;
     align-items: center;
     background: #eef2f6;
-    border-left: 4px solid #1c3f60;
+    border-left: 4px solid #26388c;
     padding: 8px 12px;
     margin-bottom: 12px;
     font-size: 0.85rem;
@@ -2493,7 +2224,7 @@ a.box-link:hover { text-decoration: underline; }
 .print-table td.text-cell:first-child,
 .print-table th:first-child {
     text-align: left;
-    color: #1c3f60;
+    color: #26388c;
 }
 
 .print-table td.name-cell {

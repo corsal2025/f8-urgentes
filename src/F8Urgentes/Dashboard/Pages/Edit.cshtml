@@ -6,7 +6,7 @@
 
 <div class="card" style="padding: 20px; max-width: 640px;">
     <form method="post">
-        <div asp-validation-summary="All" class="recovery-errors" style="color:#d9534f; margin-bottom:12px; font-weight:bold;"></div>
+        <div asp-validation-summary="All" class="recovery-errors" style="color:var(--error); margin-bottom:12px; font-weight:bold;"></div>
         <input type="hidden" asp-for="Input.Id" />
 
         <label class="form-label">Nombre completo</label>
