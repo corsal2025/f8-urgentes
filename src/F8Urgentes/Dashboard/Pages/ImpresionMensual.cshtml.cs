@@ -1,3 +1,4 @@
+using F8Urgentes.Configuration;
 using F8Urgentes.Data;
 using F8Urgentes.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +14,12 @@ namespace F8Urgentes.Dashboard.Pages;
 ///
 /// General rule: a person is NEVER listed here without a penultimate folder date. Cases with
 /// FechaPenultimaCarpeta == null are excluded from the batch (list, print, and MarkPrinted).</summary>
-public sealed class ImpresionMensualModel(IUrgentRequestRepository repository) : PageModel
+public sealed class ImpresionMensualModel(IUrgentRequestRepository repository, F8Options? options = null) : PageModel
 {
     private const string EstadoActualSubida = "SUBIDA A CONASET";
+
+    /// <summary>Name under the "Quien solicita" signature (F8:SolicitanteNombre); empty when not configured.</summary>
+    public string Solicitante => options?.SolicitanteNombre?.Trim() ?? string.Empty;
 
     public string Month { get; private set; } = string.Empty;
     public IReadOnlyList<UrgentRequest> Cases { get; private set; } = [];

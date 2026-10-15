@@ -14,4 +14,8 @@ public sealed class F8Options
 
     public string AdminUsername { get; set; } = "admin";
     public string AdminPassword { get; set; } = string.Empty;
+
+    /// <summary>Name printed under the "Quien solicita" signature line of the monthly print list.
+    /// Empty leaves the line blank to sign by hand.</summary>
+    public string SolicitanteNombre { get; set; } = string.Empty;
 }

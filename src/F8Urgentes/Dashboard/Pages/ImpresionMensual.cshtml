@@ -100,7 +100,13 @@
     <p class="print-total">Total: @Model.Cases.Count carpeta(s)</p>
 
     <div class="print-signatures print-signatures-single">
-        <div class="print-signature">Quien solicita</div>
+        <div class="print-signature">
+            @if (!string.IsNullOrEmpty(Model.Solicitante))
+            {
+                <span class="print-signature-name">@Model.Solicitante</span>
+            }
+            Quien solicita
+        </div>
     </div>
 
     @if (Model.Cases.Count == 0)

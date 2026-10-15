@@ -2200,6 +2200,13 @@ a.box-link:hover { text-decoration: underline; }
     font-size: 0.8rem;
 }
 
+.print-signature-name {
+    display: block;
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
+}
+
 .print-table th,
 .print-table td {
     padding: 8px 12px;

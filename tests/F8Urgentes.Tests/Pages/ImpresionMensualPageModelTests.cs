@@ -1,3 +1,4 @@
+using F8Urgentes.Configuration;
 using F8Urgentes.Dashboard.Pages;
 using F8Urgentes.Data;
 using F8Urgentes.Domain;
@@ -56,5 +57,31 @@ public sealed class ImpresionMensualPageModelTests : IDisposable
         model.OnPostMarkPrinted("2026-08");
 
         Assert.Null(_repository.FindById(noFolder)!.ImpresoMensualAt);
+    }
+
+    [Fact]
+    public void Solicitante_ComesFromConfiguredName()
+    {
+        var model = new ImpresionMensualModel(_repository, new F8Options { SolicitanteNombre = "  Raul Salazar Jamen " });
+
+        Assert.Equal("Raul Salazar Jamen", model.Solicitante);
+    }
+
+    [Fact]
+    public void Solicitante_IsEmptyWhenNotConfigured()
+    {
+        var model = new ImpresionMensualModel(_repository);
+
+        Assert.Equal(string.Empty, model.Solicitante);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Solicitante_IsEmptyWhenConfiguredBlank(string configured)
+    {
+        var model = new ImpresionMensualModel(_repository, new F8Options { SolicitanteNombre = configured });
+
+        Assert.Equal(string.Empty, model.Solicitante);
     }
 }
