@@ -57,6 +57,26 @@ public static class MatrizSyncService
         return result;
     }
 
+    // SpreadsheetDocument.Open(path, false) requests FileShare.Read, which Windows refuses while
+    // Excel (or the OneDrive/Drive client) holds a write handle on the workbook — the exact
+    // case where the operator has the matriz open. Reading through a stream that allows
+    // concurrent writers, into memory, avoids that conflict and releases the file immediately.
+    private static SpreadsheetDocument OpenReadOnlySnapshot(string workbookPath)
+    {
+        var buffer = new MemoryStream();
+        using (var source = new FileStream(
+                   workbookPath,
+                   FileMode.Open,
+                   FileAccess.Read,
+                   FileShare.ReadWrite | FileShare.Delete))
+        {
+            source.CopyTo(buffer);
+        }
+
+        buffer.Position = 0;
+        return SpreadsheetDocument.Open(buffer, isEditable: false);
+    }
+
     // Entrada: opened read-only (isEditable: false) — the OpenXml SDK cannot alter the file
     // under a read-only open, so this pass is inherently non-destructive.
     //
@@ -72,7 +92,7 @@ public static class MatrizSyncService
         {
             try
             {
-                document = SpreadsheetDocument.Open(workbookPath, isEditable: false);
+                document = OpenReadOnlySnapshot(workbookPath);
             }
             catch (IOException) when (attempt < MaxRetries)
             {
@@ -82,16 +102,10 @@ public static class MatrizSyncService
             {
                 Thread.Sleep(RetryDelay);
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or FileFormatException or UnauthorizedAccessException)
             {
                 result.ExcelLocked = true;
-                result.Alerts.Add("El Excel matriz no se pudo leer (sincronizacion de OneDrive/Drive en curso) — se reintentara en la proxima sincronizacion.");
-                return;
-            }
-            catch (FileFormatException)
-            {
-                result.ExcelLocked = true;
-                result.Alerts.Add("El Excel matriz no se pudo leer (sincronizacion de OneDrive/Drive en curso) — se reintentara en la proxima sincronizacion.");
+                result.Alerts.Add($"El Excel matriz no se pudo leer ({ex.GetType().Name}: {ex.Message}) — se reintentara en la proxima sincronizacion.");
                 return;
             }
         }
