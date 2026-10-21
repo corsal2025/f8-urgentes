@@ -131,6 +131,47 @@ public sealed class UrgentRequestRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void Query_FiltersByDateRange_FechaDesdeAndFechaHasta()
+    {
+        var may = SampleRequest("11111111-1");
+        may.FechaPeticion = new DateOnly(2024, 5, 20);
+        var june = SampleRequest("22222222-2");
+        june.FechaPeticion = new DateOnly(2024, 6, 15);
+        var july = SampleRequest("33333333-3");
+        july.FechaPeticion = new DateOnly(2024, 7, 10);
+        var august = SampleRequest("44444444-4");
+        august.FechaPeticion = new DateOnly(2024, 8, 5);
+
+        _repository.Insert(may);
+        _repository.Insert(june);
+        _repository.Insert(july);
+        _repository.Insert(august);
+
+        // Filter June to July (2024-06-01 to 2024-07-31)
+        var results = _repository.Query(new UrgentRequestFilter(
+            FechaDesde: new DateOnly(2024, 6, 1),
+            FechaHasta: new DateOnly(2024, 7, 31)), null);
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, r => r.Rut == "22222222-2");
+        Assert.Contains(results, r => r.Rut == "33333333-3");
+
+        // Filter Desde only (>= July 1st)
+        var desdeResults = _repository.Query(new UrgentRequestFilter(
+            FechaDesde: new DateOnly(2024, 7, 1)), null);
+        Assert.Equal(2, desdeResults.Count);
+        Assert.Contains(desdeResults, r => r.Rut == "33333333-3");
+        Assert.Contains(desdeResults, r => r.Rut == "44444444-4");
+
+        // Filter Hasta only (<= June 30th)
+        var hastaResults = _repository.Query(new UrgentRequestFilter(
+            FechaHasta: new DateOnly(2024, 6, 30)), null);
+        Assert.Equal(2, hastaResults.Count);
+        Assert.Contains(hastaResults, r => r.Rut == "11111111-1");
+        Assert.Contains(hastaResults, r => r.Rut == "22222222-2");
+    }
+
+    [Fact]
     public void Query_FiltersByEstado()
     {
         var a = SampleRequest();

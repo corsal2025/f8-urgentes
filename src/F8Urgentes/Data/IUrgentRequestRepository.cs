@@ -2,7 +2,13 @@ using F8Urgentes.Domain;
 
 namespace F8Urgentes.Data;
 
-public sealed record UrgentRequestFilter(string? Month, string? Estado, string? EstadoActual, bool? Flagged);
+public sealed record UrgentRequestFilter(
+    string? Month = null,
+    string? Estado = null,
+    string? EstadoActual = null,
+    bool? Flagged = null,
+    DateOnly? FechaDesde = null,
+    DateOnly? FechaHasta = null);
 
 public interface IUrgentRequestRepository
 {

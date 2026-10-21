@@ -49,6 +49,9 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public string? Search { get; private set; }
     public string? Tab { get; private set; }
     public string? Sort { get; private set; }
+    public DateOnly? FechaDesde { get; private set; }
+    public DateOnly? FechaHasta { get; private set; }
+    public string? Rango { get; private set; }
     public int FlaggedCount { get; private set; }
     public int ExtraCasesCount { get; private set; }
     public int PenultimasCount { get; private set; }
@@ -60,7 +63,17 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
     public bool ShowMonthlyPrintReminder { get; private set; }
     public string PreviousMonthKey { get; private set; } = string.Empty;
 
-    public void OnGet(string? month, string? estado, string? estadoActual, bool? flagged, string? search, string? tab = null, string? sort = null)
+    public void OnGet(
+        string? month,
+        string? estado,
+        string? estadoActual,
+        bool? flagged,
+        string? search,
+        string? tab = null,
+        string? sort = null,
+        string? fechaDesde = null,
+        string? fechaHasta = null,
+        string? rango = null)
     {
         Month = month;
         Estado = estado;
@@ -69,12 +82,79 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         Search = search;
         Tab = tab;
         Sort = sort;
+        Rango = rango;
+
+        DateOnly? parsedDesde = null;
+        if (!string.IsNullOrWhiteSpace(fechaDesde))
+        {
+            if (DateOnly.TryParse(fechaDesde, out var d))
+            {
+                parsedDesde = d;
+            }
+            else if (fechaDesde.Length == 7 && DateOnly.TryParse($"{fechaDesde}-01", out var ym))
+            {
+                parsedDesde = ym;
+            }
+        }
+
+        DateOnly? parsedHasta = null;
+        if (!string.IsNullOrWhiteSpace(fechaHasta))
+        {
+            if (DateOnly.TryParse(fechaHasta, out var h))
+            {
+                parsedHasta = h;
+            }
+            else if (fechaHasta.Length == 7 && DateOnly.TryParse($"{fechaHasta}-01", out var ym))
+            {
+                parsedHasta = new DateOnly(ym.Year, ym.Month, DateTime.DaysInMonth(ym.Year, ym.Month));
+            }
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
+        if (parsedDesde is null && parsedHasta is null && !string.IsNullOrWhiteSpace(rango))
+        {
+            switch (rango.Trim().ToLowerInvariant())
+            {
+                case "este-mes":
+                    parsedDesde = new DateOnly(today.Year, today.Month, 1);
+                    parsedHasta = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+                    break;
+                case "mes-anterior":
+                    var prev = today.AddMonths(-1);
+                    parsedDesde = new DateOnly(prev.Year, prev.Month, 1);
+                    parsedHasta = new DateOnly(prev.Year, prev.Month, DateTime.DaysInMonth(prev.Year, prev.Month));
+                    break;
+                case "ultimos-3-meses":
+                    var threeMonthsAgo = today.AddMonths(-2);
+                    parsedDesde = new DateOnly(threeMonthsAgo.Year, threeMonthsAgo.Month, 1);
+                    parsedHasta = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+                    break;
+                case "ultimos-6-meses":
+                    var sixMonthsAgo = today.AddMonths(-5);
+                    parsedDesde = new DateOnly(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
+                    parsedHasta = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
+                    break;
+                case "ano-actual":
+                    parsedDesde = new DateOnly(today.Year, 1, 1);
+                    parsedHasta = new DateOnly(today.Year, 12, 31);
+                    break;
+            }
+        }
+
+        if (parsedDesde is not null && parsedHasta is not null && parsedDesde > parsedHasta)
+        {
+            (parsedDesde, parsedHasta) = (parsedHasta, parsedDesde);
+        }
+
+        FechaDesde = parsedDesde;
+        FechaHasta = parsedHasta;
 
         // Caja cases (queued or boxed) live on the /Caja screen, not here — they still count in
         // Estadisticas (still real cases) but must not appear in the day-to-day Casos list.
         // Sin-carpeta cases are the opposite: they stay here (grayed via row-confirmed) since
         // point 2 of the Caja module keeps them visible and reversible from Index itself.
-        var allMatching = repository.Query(new UrgentRequestFilter(month, estado, estadoActual, flagged), search)
+        var allMatching = repository.Query(new UrgentRequestFilter(month, estado, estadoActual, flagged, FechaDesde, FechaHasta), search)
             .Where(r => r.CajaTransferredAt is null)
             .ToList();
 
@@ -130,9 +210,60 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         PenultimasCount = allMatching.Count(r => r.FechaPenultimaCarpeta is not null);
         SinAgregarCount = allMatching.Count(r => r.Origin == "SinAgregar");
 
-        var today = DateOnly.FromDateTime(DateTime.Today);
         PreviousMonthKey = ImpresionMensualModel.PreviousMonthKey(today);
         ShowMonthlyPrintReminder = ShouldRemindMonthlyPrint(all, today);
+    }
+
+    public string BuildUrl(
+        string? newTab = null,
+        string? newSort = null,
+        bool? newFlagged = null,
+        string? newRango = null,
+        bool clearDates = false)
+    {
+        var targetTab = newTab ?? Tab ?? "Todos";
+        var targetSort = newSort ?? Sort;
+        var targetFlagged = newFlagged ?? Flagged;
+        var targetSearch = Search;
+        var targetRango = newRango ?? Rango;
+
+        var query = new List<string>();
+        if (!string.IsNullOrEmpty(targetTab) && targetTab != "Todos")
+        {
+            query.Add($"tab={Uri.EscapeDataString(targetTab)}");
+        }
+        if (targetFlagged == true)
+        {
+            query.Add("flagged=true");
+        }
+        if (!string.IsNullOrEmpty(targetSearch))
+        {
+            query.Add($"search={Uri.EscapeDataString(targetSearch)}");
+        }
+        if (!string.IsNullOrEmpty(targetSort))
+        {
+            query.Add($"sort={Uri.EscapeDataString(targetSort)}");
+        }
+        if (!clearDates)
+        {
+            if (!string.IsNullOrEmpty(targetRango))
+            {
+                query.Add($"rango={Uri.EscapeDataString(targetRango)}");
+            }
+            else
+            {
+                if (FechaDesde is not null)
+                {
+                    query.Add($"fechaDesde={FechaDesde.Value:yyyy-MM-dd}");
+                }
+                if (FechaHasta is not null)
+                {
+                    query.Add($"fechaHasta={FechaHasta.Value:yyyy-MM-dd}");
+                }
+            }
+        }
+
+        return "/Index" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
     }
 
     // The banner and the actual print batch (ImpresionMensualModel.BelongsToMonthlyBatch) must

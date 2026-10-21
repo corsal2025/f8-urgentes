@@ -127,25 +127,25 @@
 <div class="dashboard-controls">
     <div class="controls-row-main">
         <div class="filter-tabs-group">
-            <a href="/Index?tab=Todos" class="tab-pill @(currentTab == "Todos" ? "active" : "")">Todos</a>
-            <a href="/Index?tab=Pendientes" class="tab-pill @(currentTab == "Pendientes" ? "active" : "")">Pendientes</a>
-            <a href="/Index?tab=Subidas" class="tab-pill @(currentTab == "Subidas" ? "active" : "")">Subidas</a>
-            <a href="/Index?tab=Certificados" class="tab-pill @(currentTab == "Certificados" ? "active" : "")">Solicitud de certificado</a>
-            <a href="/Index?tab=Penultimas" class="tab-pill @(currentTab == "Penultimas" ? "active" : "")">
+            <a href="@Model.BuildUrl(newTab: "Todos")" class="tab-pill @(currentTab == "Todos" ? "active" : "")">Todos</a>
+            <a href="@Model.BuildUrl(newTab: "Pendientes")" class="tab-pill @(currentTab == "Pendientes" ? "active" : "")">Pendientes</a>
+            <a href="@Model.BuildUrl(newTab: "Subidas")" class="tab-pill @(currentTab == "Subidas" ? "active" : "")">Subidas</a>
+            <a href="@Model.BuildUrl(newTab: "Certificados")" class="tab-pill @(currentTab == "Certificados" ? "active" : "")">Solicitud de certificado</a>
+            <a href="@Model.BuildUrl(newTab: "Penultimas")" class="tab-pill @(currentTab == "Penultimas" ? "active" : "")">
                 Penúltimas carpetas
                 @if (Model.PenultimasCount > 0)
                 {
                     <span class="badge badge-review">@Model.PenultimasCount</span>
                 }
             </a>
-            <a href="/Index?tab=SinAgregar" class="tab-pill @(currentTab == "SinAgregar" ? "active" : "")">
+            <a href="@Model.BuildUrl(newTab: "SinAgregar")" class="tab-pill @(currentTab == "SinAgregar" ? "active" : "")">
                 Sin agregar
                 @if (Model.SinAgregarCount > 0)
                 {
                     <span class="badge badge-review">@Model.SinAgregarCount</span>
                 }
             </a>
-            <a href="/Index?flagged=true" class="tab-pill @(Model.Flagged == true ? "active" : "")">
+            <a href="@Model.BuildUrl(newFlagged: Model.Flagged == true ? false : true)" class="tab-pill @(Model.Flagged == true ? "active" : "")">
                 Requiere revisión
                 @if (Model.FlaggedCount > 0)
                 {
@@ -204,6 +204,55 @@
     }
 
     <div class="controls-row-actions">
+        <form method="get" action="/Index" class="date-filter-form" id="dateFilterForm">
+            @if (!string.IsNullOrEmpty(Model.Tab) && Model.Tab != "Todos")
+            {
+                <input type="hidden" name="tab" value="@Model.Tab" />
+            }
+            @if (!string.IsNullOrEmpty(Model.Search))
+            {
+                <input type="hidden" name="search" value="@Model.Search" />
+            }
+            @if (!string.IsNullOrEmpty(Model.Sort))
+            {
+                <input type="hidden" name="sort" value="@Model.Sort" />
+            }
+            @if (Model.Flagged == true)
+            {
+                <input type="hidden" name="flagged" value="true" />
+            }
+
+            <div class="date-filter-group">
+                <span class="date-filter-label" title="Filtrar solicitudes por rango de fecha de citación">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Fecha citación:
+                </span>
+                <div class="date-input-wrap">
+                    <label for="fechaDesdeInput" class="date-sublabel">Desde</label>
+                    <input type="date" id="fechaDesdeInput" name="fechaDesde" value="@(Model.FechaDesde?.ToString("yyyy-MM-dd"))" class="date-range-input" />
+                </div>
+                <div class="date-input-wrap">
+                    <label for="fechaHastaInput" class="date-sublabel">Hasta</label>
+                    <input type="date" id="fechaHastaInput" name="fechaHasta" value="@(Model.FechaHasta?.ToString("yyyy-MM-dd"))" class="date-range-input" />
+                </div>
+                <button type="submit" class="btn-filter-apply" title="Aplicar rango de fechas">Filtrar</button>
+
+                <div class="date-quick-presets">
+                    <a href="@Model.BuildUrl(newRango: "este-mes", clearDates: true)" class="preset-pill @(Model.Rango == "este-mes" ? "active" : "")" title="F8 del mes actual">Este mes</a>
+                    <a href="@Model.BuildUrl(newRango: "mes-anterior", clearDates: true)" class="preset-pill @(Model.Rango == "mes-anterior" ? "active" : "")" title="F8 del mes anterior">Mes anterior</a>
+                    <a href="@Model.BuildUrl(newRango: "ultimos-3-meses", clearDates: true)" class="preset-pill @(Model.Rango == "ultimos-3-meses" ? "active" : "")" title="F8 de los últimos 3 meses">Últimos 3 meses</a>
+                    <a href="@Model.BuildUrl(newRango: "ultimos-6-meses", clearDates: true)" class="preset-pill @(Model.Rango == "ultimos-6-meses" ? "active" : "")" title="F8 de los últimos 6 meses">Últimos 6 meses</a>
+                </div>
+
+                @if (Model.FechaDesde is not null || Model.FechaHasta is not null || !string.IsNullOrEmpty(Model.Rango))
+                {
+                    <a href="@Model.BuildUrl(clearDates: true)" class="btn-filter-clear" title="Quitar filtro de fechas y ver todos los meses">
+                        ✕ Quitar filtro
+                    </a>
+                }
+            </div>
+        </form>
+
         <div class="action-items-right">
             <span class="cases-count-badge">@Model.Requests.Count caso(s)</span>
             <button type="button" class="btn-primary btn-open-modal" id="open-quick-add-btn">
@@ -265,7 +314,7 @@
                 <th class="th-wrap">Estado<br />actual</th>
                 <th class="th-wrap">Código<br />F8</th>
                 <th class="th-wrap">
-                    <a asp-page="/Index" asp-route-tab="@currentTab" asp-route-search="@Model.Search" asp-route-flagged="@(Model.Flagged == true ? "true" : null)" asp-route-sort="@(Model.Sort == "penultima-asc" ? "penultima-desc" : "penultima-asc")" class="th-sort-link" title="Ordenar filas por fecha penúltima carpeta, para elegir carpetas de un mes seguidas">
+                    <a href="@Model.BuildUrl(newSort: Model.Sort == "penultima-asc" ? "penultima-desc" : "penultima-asc")" class="th-sort-link" title="Ordenar filas por fecha penúltima carpeta, para elegir carpetas de un mes seguidas">
                         Fecha penúltima<br />carpeta@(Model.Sort == "penultima-asc" ? " ▲" : Model.Sort == "penultima-desc" ? " ▼" : "")
                     </a>
                 </th>

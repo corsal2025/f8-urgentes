@@ -201,6 +201,18 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
             command.Parameters.AddWithValue("$month", filter.Month);
         }
 
+        if (filter.FechaDesde is not null)
+        {
+            where.Add("FechaPeticion >= $fechaDesde");
+            command.Parameters.AddWithValue("$fechaDesde", filter.FechaDesde.Value.ToString("yyyy-MM-dd"));
+        }
+
+        if (filter.FechaHasta is not null)
+        {
+            where.Add("FechaPeticion <= $fechaHasta");
+            command.Parameters.AddWithValue("$fechaHasta", filter.FechaHasta.Value.ToString("yyyy-MM-dd"));
+        }
+
         if (!string.IsNullOrWhiteSpace(filter.Estado))
         {
             where.Add("Estado = $estado");

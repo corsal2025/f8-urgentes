@@ -516,4 +516,58 @@ public sealed class IndexPageModelTests : IDisposable
         model.OnGet(null, null, null, null, null);
         Assert.Empty(model.Requests);
     }
+
+    [Fact]
+    public void OnGet_WithDateRange_FiltersRequestsProperly()
+    {
+        Insert(fecha: new DateOnly(2024, 4, 15), rut: "11111111-1");
+        Insert(fecha: new DateOnly(2024, 5, 20), rut: "22222222-2");
+        Insert(fecha: new DateOnly(2024, 6, 10), rut: "33333333-3");
+
+        var model = CreateModel();
+        model.OnGet(null, null, null, null, null, fechaDesde: "2024-05-01", fechaHasta: "2024-05-31");
+
+        Assert.Single(model.Requests);
+        Assert.Equal("22222222-2", model.Requests[0].Rut);
+        Assert.Equal(new DateOnly(2024, 5, 1), model.FechaDesde);
+        Assert.Equal(new DateOnly(2024, 5, 31), model.FechaHasta);
+    }
+
+    [Fact]
+    public void OnGet_WithPresetRango_ComputesDatesAndFilters()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var prevMonth = today.AddMonths(-1);
+
+        Insert(fecha: new DateOnly(today.Year, today.Month, 1), rut: "11111111-1");
+        Insert(fecha: new DateOnly(prevMonth.Year, prevMonth.Month, 15), rut: "22222222-2");
+
+        var model = CreateModel();
+        model.OnGet(null, null, null, null, null, rango: "mes-anterior");
+
+        Assert.Equal("mes-anterior", model.Rango);
+        Assert.NotNull(model.FechaDesde);
+        Assert.NotNull(model.FechaHasta);
+        Assert.Equal(new DateOnly(prevMonth.Year, prevMonth.Month, 1), model.FechaDesde);
+        Assert.Single(model.Requests);
+        Assert.Equal("22222222-2", model.Requests[0].Rut);
+    }
+
+    [Fact]
+    public void BuildUrl_PreservesActiveFilters()
+    {
+        var model = CreateModel();
+        model.OnGet(null, null, null, null, search: "Perez", tab: "Pendientes", fechaDesde: "2024-01-01", fechaHasta: "2024-03-31");
+
+        var urlNewTab = model.BuildUrl(newTab: "Subidas");
+        Assert.Contains("tab=Subidas", urlNewTab);
+        Assert.Contains("search=Perez", urlNewTab);
+        Assert.Contains("fechaDesde=2024-01-01", urlNewTab);
+        Assert.Contains("fechaHasta=2024-03-31", urlNewTab);
+
+        var urlClearDates = model.BuildUrl(clearDates: true);
+        Assert.DoesNotContain("fechaDesde", urlClearDates);
+        Assert.DoesNotContain("fechaHasta", urlClearDates);
+        Assert.Contains("search=Perez", urlClearDates);
+    }
 }

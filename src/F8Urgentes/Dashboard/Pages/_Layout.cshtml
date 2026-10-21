@@ -28,16 +28,39 @@
                 </a>
                 <div class="header-search" role="search">
                     <form method="get" action="/Index" class="header-search-form">
+                        @{
+                            var qTab = Context.Request.Query["tab"].ToString();
+                            var qFechaDesde = Context.Request.Query["fechaDesde"].ToString();
+                            var qFechaHasta = Context.Request.Query["fechaHasta"].ToString();
+                            var qRango = Context.Request.Query["rango"].ToString();
+                            var qSort = Context.Request.Query["sort"].ToString();
+                            var qFlagged = Context.Request.Query["flagged"].ToString();
+
+                            var clearParams = new List<string>();
+                            if (!string.IsNullOrEmpty(qTab)) clearParams.Add($"tab={Uri.EscapeDataString(qTab)}");
+                            if (!string.IsNullOrEmpty(qFechaDesde)) clearParams.Add($"fechaDesde={Uri.EscapeDataString(qFechaDesde)}");
+                            if (!string.IsNullOrEmpty(qFechaHasta)) clearParams.Add($"fechaHasta={Uri.EscapeDataString(qFechaHasta)}");
+                            if (!string.IsNullOrEmpty(qRango)) clearParams.Add($"rango={Uri.EscapeDataString(qRango)}");
+                            if (!string.IsNullOrEmpty(qSort)) clearParams.Add($"sort={Uri.EscapeDataString(qSort)}");
+                            if (!string.IsNullOrEmpty(qFlagged)) clearParams.Add($"flagged={Uri.EscapeDataString(qFlagged)}");
+                            var clearSearchHref = "/Index" + (clearParams.Count > 0 ? "?" + string.Join("&", clearParams) : "");
+                        }
+                        @if (!string.IsNullOrEmpty(qTab)) { <input type="hidden" name="tab" value="@qTab" /> }
+                        @if (!string.IsNullOrEmpty(qFechaDesde)) { <input type="hidden" name="fechaDesde" value="@qFechaDesde" /> }
+                        @if (!string.IsNullOrEmpty(qFechaHasta)) { <input type="hidden" name="fechaHasta" value="@qFechaHasta" /> }
+                        @if (!string.IsNullOrEmpty(qRango)) { <input type="hidden" name="rango" value="@qRango" /> }
+                        @if (!string.IsNullOrEmpty(qSort)) { <input type="hidden" name="sort" value="@qSort" /> }
+                        @if (!string.IsNullOrEmpty(qFlagged)) { <input type="hidden" name="flagged" value="@qFlagged" /> }
                         <div class="header-search-wrapper">
                             <svg class="header-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                             <input type="text" name="search" id="headerSearchInput" value="@headerSearch" placeholder="Buscar por RUT o nombre..." autocomplete="off" aria-label="Buscar por RUT o nombre" />
                             @if (!string.IsNullOrEmpty(headerSearch))
                             {
-                                <a class="header-search-clear" href="/Index" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">✕</a>
+                                <a class="header-search-clear" href="@clearSearchHref" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">✕</a>
                             }
                             else
                             {
-                                <a class="header-search-clear" href="/Index" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" style="display:none;">✕</a>
+                                <a class="header-search-clear" href="@clearSearchHref" title="Limpiar búsqueda" aria-label="Limpiar búsqueda" style="display:none;">✕</a>
                             }
                         </div>
                     </form>
