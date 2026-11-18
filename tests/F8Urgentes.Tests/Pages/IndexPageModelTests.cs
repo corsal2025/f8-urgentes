@@ -6,11 +6,6 @@ namespace F8Urgentes.Tests.Pages;
 
 public sealed class IndexPageModelTests : IDisposable
 {
-    private sealed class TestEmailSender : F8Urgentes.Services.IEmailSender
-    {
-        public Task SendAsync(string to, string subject, string body, CancellationToken cancellationToken = default) => Task.CompletedTask;
-    }
-
     private readonly string _dbPath;
     private readonly UrgentRequestRepository _repository;
 
@@ -46,7 +41,7 @@ public sealed class IndexPageModelTests : IDisposable
 
     // Handlers that echo JSON for AJAX callers read Request.Headers, so the model needs a live
     // HttpContext even in unit tests — without it PageModel.Request throws NullReferenceException.
-    private IndexModel CreateModel() => new(_repository, new TestEmailSender())
+    private IndexModel CreateModel() => new(_repository)
     {
         PageContext = new Microsoft.AspNetCore.Mvc.RazorPages.PageContext
         {

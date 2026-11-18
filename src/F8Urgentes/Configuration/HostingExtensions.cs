@@ -26,11 +26,6 @@ public static class HostingExtensions
         builder.Services.AddSingleton<IUrgentRequestRepository>(_ =>
             new UrgentRequestRepository($"Data Source={sqliteDbPath}"));
 
-        builder.Services.AddOptions<SmtpOptions>()
-            .Bind(builder.Configuration.GetSection(SmtpOptions.SectionName))
-            .ValidateDataAnnotations();
-        builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
-
         builder.Services.AddDataProtection()
             .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(Path.GetDirectoryName(sqliteDbPath)!, "keys")));
 

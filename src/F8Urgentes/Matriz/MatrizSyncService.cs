@@ -31,6 +31,7 @@ public static class MatrizSyncService
     private static readonly string[] EstadosSinCarpeta = ["NO EXISTE CARPETA", "NO HAY CARPETA"];
     private const string EstadoSubidaConF8 = "SUBIDA CON F8";
     private const int MaxRetries = 4;
+    private const int MaxConsecutiveEmptyRows = 50;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
 
     // Salida (write-back to the Excel matriz) is disabled by request — the office wants to do
@@ -118,7 +119,7 @@ public static class MatrizSyncService
 
         using var _ = document;
         var workbookPart = document.WorkbookPart!;
-        var sharedStrings = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+        var sharedStrings = ReadSharedStrings(workbookPart);
 
         foreach (var sheet in workbookPart.Workbook.Sheets!.Elements<Sheet>())
         {
@@ -142,6 +143,7 @@ public static class MatrizSyncService
                 continue;
             }
 
+            var consecutiveEmpty = 0;
             foreach (var row in sheetData.Elements<Row>())
             {
                 var rowNumber = (int)row.RowIndex!.Value;
@@ -156,9 +158,15 @@ public static class MatrizSyncService
 
                 if (rut.Length == 0 && nombre.Length == 0 && estado.Length == 0)
                 {
-                    // First fully-blank row ends the real data block.
-                    break;
+                    consecutiveEmpty++;
+                    if (consecutiveEmpty >= MaxConsecutiveEmptyRows)
+                    {
+                        break;
+                    }
+                    continue;
                 }
+
+                consecutiveEmpty = 0;
 
                 if (!EstadosSinCarpeta.Contains(NormalizeHeader(estado), StringComparer.Ordinal))
                 {
@@ -263,7 +271,7 @@ public static class MatrizSyncService
         using (document)
         {
             var workbookPart = document.WorkbookPart!;
-            var sharedStrings = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+            var sharedStrings = ReadSharedStrings(workbookPart);
             var columnsBySheet = new Dictionary<string, MatrizColumns>();
             var writtenIds = new List<long>();
 
@@ -398,7 +406,7 @@ public static class MatrizSyncService
 
     private sealed record MatrizColumns(int Rut, int NombreCompleto, int EstadoCarpeta, int? FechaCitacion, int FechaSubioCarpeta);
 
-    private static MatrizColumns? MapColumns(SheetData sheetData, SharedStringTablePart? sharedStrings)
+    private static MatrizColumns? MapColumns(SheetData sheetData, IReadOnlyList<string> sharedStrings)
     {
         var headerRow = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex!.Value == 2);
         if (headerRow is null)
@@ -459,14 +467,21 @@ public static class MatrizSyncService
         return new MatrizColumns(rutCol, nombreCol, estadoCol, fechaCitacionCol == 0 ? null : fechaCitacionCol, fechaSubioCol);
     }
 
-    private static string? GetCellText(Row row, int columnIndex, SharedStringTablePart? sharedStrings)
+    private static IReadOnlyList<string> ReadSharedStrings(WorkbookPart workbookPart)
+    {
+        var sharedStringsPart = workbookPart.GetPartsOfType<SharedStringTablePart>().FirstOrDefault();
+        return sharedStringsPart?.SharedStringTable?.Elements<SharedStringItem>().Select(x => x.InnerText).ToArray()
+               ?? [];
+    }
+
+    private static string? GetCellText(Row row, int columnIndex, IReadOnlyList<string> sharedStrings)
     {
         var columnLetter = ColumnLetterFromIndex(columnIndex);
         var cell = row.Elements<Cell>().FirstOrDefault(c => ColumnPartOf(c.CellReference!.Value!) == columnLetter);
         return GetCellText(cell, sharedStrings);
     }
 
-    private static string? GetCellText(Cell? cell, SharedStringTablePart? sharedStrings)
+    private static string? GetCellText(Cell? cell, IReadOnlyList<string> sharedStrings)
     {
         if (cell is null)
         {
@@ -480,12 +495,11 @@ public static class MatrizSyncService
 
         if (cell.DataType?.Value == CellValues.SharedString)
         {
-            if (sharedStrings is null || cell.CellValue is null || !int.TryParse(cell.CellValue.InnerText, out var index))
+            if (cell.CellValue is null || !int.TryParse(cell.CellValue.InnerText, out var index))
             {
                 return null;
             }
-            var items = sharedStrings.SharedStringTable.Elements<SharedStringItem>().ToList();
-            return index >= 0 && index < items.Count ? items[index].InnerText : null;
+            return index >= 0 && index < sharedStrings.Count ? sharedStrings[index] : null;
         }
 
         return cell.CellValue?.InnerText;

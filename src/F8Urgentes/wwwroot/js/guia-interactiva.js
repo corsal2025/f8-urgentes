@@ -18,10 +18,7 @@
   var PAGINAS = {
     '/index':            { url: '/Index',                   seccion: 'Solicitudes' },
     '/edit':             { url: '/Edit',                    seccion: 'Nueva solicitud' },
-    '/caja':             { url: '/Caja',                    seccion: 'Caja' },
     '/carpetasextra':    { url: '/CarpetasExtra',           seccion: 'Carpetas Extra' },
-    '/sincarpetas':      { url: '/SinCarpetas',             seccion: 'Sin Carpetas' },
-    '/sectorf8':         { url: '/SectorF8?sector=Archivo', seccion: 'Colas PDF' },
     '/estadisticas':     { url: '/Estadisticas',            seccion: 'Estadísticas' },
     '/impresionmensual': { url: '/ImpresionMensual',        seccion: 'Impresión mensual' }
   };
@@ -35,14 +32,14 @@
       target: '#btn-guia-global',
       titulo: 'Hola, soy Lico: tu guía',
       icono: '👋',
-      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b>, <b>Nueva solicitud</b>, <b>Caja</b>, <b>Carpetas Extra</b>, <b>Sin Carpetas</b>, las <b>colas PDF</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
+      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b>, <b>Nueva solicitud</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
     },
     {
       pagina: '/index',
       target: '.app-nav',
       titulo: 'Las secciones del sistema',
       icono: '🧭',
-      descripcion: '<b>Solicitudes</b>: el listado diario de casos. <b>Nueva solicitud</b>: formulario para ingresar un caso. <b>Caja</b>: cola y cajas físicas de carpetas. <b>Carpetas Extra</b>: carpetas fuera del flujo de la matriz. <b>Sin Carpetas</b>: casos cerrados sin carpeta. La sección abierta se subraya en azul.'
+      descripcion: '<b>Solicitudes</b>: el listado diario de casos. <b>Nueva solicitud</b>: formulario para ingresar un caso. <b>Carpetas Extra</b>: carpetas fuera del flujo de la matriz. La sección abierta se subraya en azul.'
     },
     {
       pagina: '/index',
@@ -73,14 +70,14 @@
       target: '.filter-tabs-group',
       titulo: 'Pestañas de filtro',
       icono: '🗂️',
-      descripcion: '<b>Todos</b>; <b>Pendientes</b> (aún no subidos a CONASET); <b>Subidas</b> (SUBIDA A CONASET); <b>Solicitud de certificado</b> (estado CREAR CERTIFICADO); <b>Penúltimas carpetas</b> (con fecha de penúltima carpeta); <b>Sin agregar</b> (ingresados con el botón «Solicitudes sin agregar») y <b>Requiere revisión</b> (casos con datos por revisar). El número de la pestaña es cuántos casos tiene.'
+      descripcion: '<b>Todos</b>; <b>Pendientes</b> (aún no subidos a CONASET); <b>Subidas</b> (SUBIDA A CONASET); <b>Solicitud de certificado</b> (estado CREAR CERTIFICADO); <b>Sin agregar</b> (ingresados con el botón «Solicitudes sin agregar») y <b>Requiere revisión</b> (casos con datos por revisar). El número de la pestaña es cuántos casos tiene.'
     },
     {
       pagina: '/index',
       target: '.tools-group',
       titulo: 'Accesos rápidos',
       icono: '⚡',
-      descripcion: '<b>Archivo</b> y <b>Oficina 43</b> abren la cola de impresión PDF de cada sector. <b>Estadísticas</b> muestra indicadores y gráficos. <b>Impresión mensual</b> arma el listado de carpetas subidas en el mes.'
+      descripcion: '<b>Estadísticas</b> muestra indicadores y gráficos. <b>Impresión mensual</b> arma el listado de carpetas subidas en el mes.'
     },
     {
       pagina: '/index', pose: 'alerta',
@@ -88,7 +85,7 @@
       fallbackTarget: '.dashboard-controls',
       titulo: 'Avisos',
       icono: '⚠️',
-      descripcion: 'Aquí, sobre la tabla, aparecen los avisos: el recordatorio de <b>imprimir las penúltimas carpetas</b> del mes anterior (los primeros 10 días del mes, mientras falte imprimirlas), el resultado de <b>Sincronizar</b> y, en rojo, los <b>RUT duplicados</b> (más de un caso con el mismo RUT).'
+      descripcion: 'Aquí, sobre la tabla, aparecen los avisos: el resultado de <b>Sincronizar</b>, mensajes de certificados y, en rojo, los <b>RUT duplicados</b> (más de un caso con el mismo RUT).'
     },
     {
       pagina: '/index',
@@ -96,7 +93,7 @@
       fallbackTarget: '.controls-row-actions',
       titulo: 'Solicitudes sin agregar',
       icono: '➕',
-      descripcion: 'Abre un formulario para ingresar <b>uno o varios casos</b> de una vez: <b>Nombre completo</b> y <b>RUT</b> (obligatorios) y la fecha de <b>penúltima carpeta</b> si la tienes. «+ Agregar otro» suma filas. Quedan con fecha de citación de hoy y en la pestaña <b>Sin agregar</b>. A la izquierda verás cuántos casos muestra la lista.'
+      descripcion: 'Abre un formulario para ingresar <b>uno o varios casos</b> de una vez: <b>Nombre completo</b> y <b>RUT</b> (obligatorios). «+ Agregar otro» suma filas. Quedan con fecha de citación de hoy y en la pestaña <b>Sin agregar</b>. A la izquierda verás cuántos casos muestra la lista.'
     },
 
     // ---------- SOLICITUDES: tabla ----------
@@ -106,12 +103,12 @@
       fallbackTarget: 'table.cases-list',
       titulo: 'Columnas de la tabla',
       icono: '📋',
-      descripcion: '<b>Nombre</b> y <b>RUT</b> quedan fijos a la izquierda al desplazar la tabla. Luego vienen <b>Marcar</b>, <b>Pendiente carpeta</b>, <b>Fecha citación</b>, <b>Sector oficina</b> (de la matriz), <b>Estado actual</b>, <b>Código F8</b>, <b>Fecha penúltima carpeta</b>, <b>Sector carpeta</b>, <b>Fecha subida F8</b> y las acciones. Los casos ya subidos van al final.'
+      descripcion: '<b>Nombre</b> y <b>RUT</b> quedan fijos a la izquierda al desplazar la tabla. Luego vienen <b>Marcar</b>, <b>Sector oficina</b> (de la matriz), <b>Estado actual</b>, <b>Código F8</b>, <b>Fecha subida F8</b> y las acciones. Los casos ya subidos van al final.'
     },
     {
       pagina: '/index',
       target: 'table.cases-list tbody td.name-cell',
-      fallbackTarget: 'table.cases-list thead th:nth-child(1)',
+      fallbackTarget: 'table.cases-list thead th:nth-child(2)',
       titulo: 'Edición directa en la celda',
       icono: '✏️',
       descripcion: '<b>Nombre</b>, <b>RUT</b> y <b>Código F8</b> se corrigen escribiendo en la misma celda: se guardan al salir de ella o al pulsar <b>Enter</b>. Al copiar un RUT de la tabla se copia sin puntos.'
@@ -119,18 +116,10 @@
     {
       pagina: '/index',
       target: 'table.cases-list tbody .marked-checkbox',
-      fallbackTarget: 'table.cases-list thead th:nth-child(3)',
+      fallbackTarget: 'table.cases-list thead th:nth-child(1)',
       titulo: 'Marcar',
       icono: '✔️',
-      descripcion: 'Incluye el caso en la <b>próxima impresión de su sector</b> (cola PDF Archivo u Oficina 43). La fila se pinta de <b>amarillo</b>. Se guarda al instante y se excluye con «Pendiente carpeta»: marcar una desmarca la otra.'
-    },
-    {
-      pagina: '/index',
-      target: 'table.cases-list tbody .pendiente-checkbox',
-      fallbackTarget: 'table.cases-list thead th:nth-child(4)',
-      titulo: 'Pendiente carpeta',
-      icono: '📁',
-      descripcion: 'Indica que la carpeta física aún está pendiente. La fila se pinta de <b>morado</b> y el caso también entra en la cola de impresión de su sector. Al pulsar <b>Subir</b> se quitan ambas marcas.'
+      descripcion: 'Incluye el caso en la <b>próxima impresión de su sector</b>. La fila se pinta de <b>amarillo</b> y se guarda al instante.'
     },
     {
       pagina: '/index',
@@ -138,15 +127,7 @@
       fallbackTarget: 'table.cases-list thead th:nth-child(7)',
       titulo: 'Estado actual',
       icono: '🏷️',
-      descripcion: 'Muestra el estado del caso y permite cambiarlo a <b>CREAR CERTIFICADO</b> cuando no se encuentra la carpeta; entonces aparece el botón <b>✉</b> en Acción para pedir el certificado a Matías por correo. Si el caso está <b>SUBIDA A CONASET</b>, el selector queda bloqueado.'
-    },
-    {
-      pagina: '/index',
-      target: 'table.cases-list tbody .fecha-penultima-input',
-      fallbackTarget: 'table.cases-list thead th:nth-child(9)',
-      titulo: 'Fecha penúltima carpeta y sector',
-      icono: '📅',
-      descripcion: 'Se guarda al elegir la fecha y define el <b>Sector carpeta</b>: antes de <b>junio de 2023</b> va a <b>Archivo</b>; desde junio de 2023, a <b>Oficina 43</b>; sin fecha queda <b>S/C</b>. Pulsa el encabezado de esta columna para ordenar por fecha (▲ / ▼) y recorrer las carpetas de un mes seguidas.'
+      descripcion: 'Muestra el estado del caso y permite cambiarlo a <b>CREAR CERTIFICADO</b> cuando no se encuentra la carpeta. Si el caso está <b>SUBIDA A CONASET</b>, el selector queda bloqueado.'
     },
     {
       pagina: '/index',
@@ -155,14 +136,6 @@
       titulo: 'Subir',
       icono: '⬆️',
       descripcion: 'Deja el caso en <b>SUBIDA A CONASET</b> con la fecha de hoy en «Fecha subida F8» y le quita las marcas de impresión. El caso pasa al final de la lista y a la pestaña <b>Subidas</b>.'
-    },
-    {
-      pagina: '/index',
-      target: 'table.cases-list tbody .btn-folder-none, table.cases-list tbody .btn-folder-revert',
-      fallbackTarget: 'table.cases-list thead th:last-child',
-      titulo: 'Sin carpeta y Caja',
-      icono: '📦',
-      descripcion: '<b>Sin carpeta</b> cierra el caso sin carpeta: la fila queda gris y el caso aparece también en <b>Sin Carpetas</b>; <b>Revertir</b> lo deshace. <b>Caja</b> pide confirmación y envía el caso a la cola de <b>Caja</b>: sale de esta lista y vuelve si lo quitas de la cola.'
     },
     {
       pagina: '/index', pose: 'alerta',
@@ -178,7 +151,7 @@
       fallbackTarget: 'table.cases-list',
       titulo: 'Colores de las filas',
       icono: '🎨',
-      descripcion: '<b>Amarillo</b>: marcado para imprimir. <b>Morado</b>: pendiente de carpeta. <b>Gris</b>: subida a CONASET o sin carpeta. <b>Rosado</b>: requiere revisión. <b>Rojo</b>: estado DENEGADA.'
+      descripcion: '<b>Amarillo</b>: marcado para imprimir. <b>Gris</b>: subida a CONASET o sin carpeta. <b>Rosado</b>: requiere revisión. <b>Rojo</b>: estado DENEGADA.'
     },
 
     // ---------- NUEVA SOLICITUD ----------
@@ -215,56 +188,14 @@
       descripcion: 'Guarda la solicitud y vuelve a <b>Solicitudes</b>, donde ya aparece en la lista.'
     },
 
-    // ---------- CAJA ----------
-    {
-      pagina: '/caja', pose: 'saluda',
-      target: '.caja-section h2',
-      fallbackTarget: 'main',
-      titulo: 'Cola de la próxima caja',
-      icono: '📦',
-      descripcion: 'Aquí esperan los casos enviados con el botón <b>Caja</b> desde Solicitudes, Carpetas Extra o Sin Carpetas, en el orden en que llegaron. El número indica cuántos hay en cola.'
-    },
-    {
-      pagina: '/caja',
-      target: '.queue-table',
-      fallbackTarget: '.caja-section .table-card',
-      titulo: 'Casos en la cola',
-      icono: '📋',
-      descripcion: 'Muestra N° de orden (según llegaron a la cola), nombre, RUT, Código F8, fecha de penúltima carpeta y sector. <b>Quitar</b> devuelve el caso a Solicitudes (pide confirmación). Con las casillas puedes elegir varios y usar <b>Quitar seleccionados</b>.'
-    },
-    {
-      pagina: '/caja',
-      target: 'div:has(> #boxNumberInput)',
-      fallbackTarget: '#boxNumberInput',
-      titulo: 'Rótulo de la caja',
-      icono: '🔢',
-      descripcion: 'Número de la caja que vas a cerrar; el sistema sugiere el siguiente. El código queda como <b>A{número}-PUC</b>, por ejemplo A1-PUC.'
-    },
-    {
-      pagina: '/caja',
-      target: '#btnCerrarCaja',
-      fallbackTarget: '.caja-section',
-      titulo: 'Cerrar caja',
-      icono: '🔒',
-      descripcion: 'Pide confirmación y guarda <b>todos los casos de la cola</b> en la caja con ese rótulo. Luego abre su <b>acta</b>: listado de carpetas con firmas de entrega y recepción, lista para imprimir o guardar como PDF. Está desactivado si la cola está vacía.'
-    },
-    {
-      pagina: '/caja',
-      target: '.boxes-history',
-      fallbackTarget: '.caja-section ~ .caja-section',
-      titulo: 'Cajas cerradas',
-      icono: '🗃️',
-      descripcion: 'Historial de cajas con su fecha de cierre y cantidad de casos. <b>Ver listado / imprimir</b> abre el acta de la caja. <b>Reabrir</b> devuelve sus casos a la cola para quitar, agregar o corregir antes de cerrarla de nuevo.'
-    },
-
     // ---------- CARPETAS EXTRA ----------
     {
       pagina: '/carpetasextra', pose: 'saluda',
       target: 'main .dashboard-controls',
       fallbackTarget: 'main',
-      titulo: 'Carpetas extras y penúltimas antiguas',
+      titulo: 'Carpetas extras',
       icono: '📂',
-      descripcion: 'Para carpetas que no vienen de la matriz: penúltimas carpetas antiguas o pedidos esporádicos. Se guardan con origen «Extra» y también aparecen en <b>Solicitudes</b> y <b>Estadísticas</b>. A la derecha, cuántas hay registradas.'
+      descripcion: 'Para carpetas que no vienen de la matriz, como pedidos esporádicos. Se guardan con origen «Extra» y también aparecen en <b>Solicitudes</b> y <b>Estadísticas</b>. A la derecha, cuántas hay registradas.'
     },
     {
       pagina: '/carpetasextra',
@@ -272,7 +203,7 @@
       fallbackTarget: 'main',
       titulo: 'Registrar una carpeta extra',
       icono: '✍️',
-      descripcion: '<b>Nombre completo</b> y <b>RUT</b> son obligatorios (el RUT debe tener dígito verificador válido). Agrega Código F8, fecha de última carpeta, Estado y Estado actual si los tienes; si un estado no se reconoce, el caso queda en <b>Requiere revisión</b>. Pulsa <b>+ Guardar Carpeta Extra</b>.'
+      descripcion: '<b>Nombre completo</b> y <b>RUT</b> son obligatorios (el RUT debe tener dígito verificador válido). Agrega Código F8, Estado y Estado actual si los tienes; si un estado no se reconoce, el caso queda en <b>Requiere revisión</b>. Pulsa <b>+ Guardar Carpeta Extra</b>.'
     },
     {
       pagina: '/carpetasextra',
@@ -281,58 +212,6 @@
       titulo: 'Listado de carpetas extra',
       icono: '📋',
       descripcion: '<b>Caja</b> envía la carpeta a la cola de Caja (pide confirmación y sale de esta lista). El basurero la elimina, previa confirmación. Una fila rosada indica que requiere revisión.'
-    },
-
-    // ---------- SIN CARPETAS ----------
-    {
-      pagina: '/sincarpetas', pose: 'saluda',
-      target: 'main .dashboard-controls',
-      fallbackTarget: 'main',
-      titulo: 'Módulo Sin Carpetas',
-      icono: '📁',
-      descripcion: 'Reúne los casos marcados con <b>Sin carpeta</b> en Solicitudes, primero los ingresados más recientemente. A la derecha, cuántas personas hay sin carpeta.'
-    },
-    {
-      pagina: '/sincarpetas',
-      target: 'main .table-card tbody .action-group',
-      fallbackTarget: 'main .table-card table',
-      titulo: 'Acciones sobre cada caso',
-      icono: '↩️',
-      descripcion: '<b>Revertir</b> quita la marca «Sin carpeta»: el caso sale de esta lista y deja de verse gris en Solicitudes. <b>Caja</b> lo envía a la cola de Caja. El basurero elimina la solicitud, previa confirmación.'
-    },
-
-    // ---------- COLAS PDF (SECTOR) ----------
-    {
-      pagina: '/sectorf8', pose: 'saluda',
-      target: '.tool-nav',
-      fallbackTarget: 'main',
-      titulo: 'Barra de funciones',
-      icono: '🧰',
-      descripcion: 'En las pantallas de apoyo esta barra lleva a <b>Solicitudes</b>, las colas <b>PDF Archivo</b> y <b>PDF Oficina 43</b>, <b>Estadísticas</b>, <b>Impresión mensual</b> y <b>Caja</b>. La opción abierta se destaca en azul.'
-    },
-    {
-      pagina: '/sectorf8',
-      target: 'main .card.table-card table',
-      fallbackTarget: 'main .card.table-card',
-      titulo: 'Cola de impresión del sector',
-      icono: '🖨️',
-      descripcion: 'Lista los casos <b>marcados</b> o <b>pendientes de carpeta</b> cuyo sector (según la fecha de penúltima carpeta) es el de esta cola, y que aún no se imprimen. Los casos enviados a Caja no aparecen. Cada sector tiene su propia cola: elígela en la barra de arriba.'
-    },
-    {
-      pagina: '/sectorf8',
-      target: 'main .nav-group .btn-outline',
-      fallbackTarget: 'main .card.table-card',
-      titulo: 'Imprimir informe',
-      icono: '📄',
-      descripcion: 'Imprime o guarda como PDF el <b>INFORME</b> del sector con nombre, RUT y fecha de penúltima carpeta. El botón aparece cuando la cola tiene casos.'
-    },
-    {
-      pagina: '/sectorf8',
-      target: 'form[action*="ClearAll"] button',
-      fallbackTarget: 'main .card.table-card',
-      titulo: 'Marcar todos como impresos',
-      icono: '✅',
-      descripcion: 'Registra como impresos todos los casos de la cola y la deja vacía. No cambia el estado de los casos en Solicitudes.'
     },
 
     // ---------- ESTADÍSTICAS ----------
@@ -400,7 +279,7 @@
       fallbackTarget: 'main',
       titulo: 'Listado del mes',
       icono: '🧾',
-      descripcion: 'Casos <b>SUBIDA A CONASET</b> cuya fecha de subida cae en el mes elegido y que tienen fecha de penúltima carpeta, ordenados por fecha de subida. Incluye folio, fecha de generación, total y firma de quien solicita.'
+      descripcion: 'Casos <b>SUBIDA A CONASET</b> cuya fecha de subida cae en el mes elegido, ordenados por fecha de subida. Incluye folio, fecha de generación, total y firma de quien solicita.'
     },
     {
       pagina: '/impresionmensual',
@@ -416,7 +295,7 @@
       fallbackTarget: '.print-report',
       titulo: 'Vaciar listado',
       icono: '🧹',
-      descripcion: 'Pide confirmación y registra el listado del mes como <b>impreso</b>. Si es el mes anterior, con eso se apaga el aviso «Recuerda imprimir las penúltimas carpetas» de Solicitudes.'
+      descripcion: 'Pide confirmación y registra el listado del mes como <b>impreso</b>.'
     },
     {
       pagina: '/impresionmensual', pose: 'celebra',

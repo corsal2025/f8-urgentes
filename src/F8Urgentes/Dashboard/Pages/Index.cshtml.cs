@@ -2,43 +2,18 @@
 using F8Urgentes.Data;
 using F8Urgentes.Domain;
 using F8Urgentes.Matriz;
-using F8Urgentes.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace F8Urgentes.Dashboard.Pages;
 
-public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender emailSender, F8Options? options = null) : PageModel
+public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? options = null) : PageModel
 {
     private const string EstadoActualSubida = "SUBIDA A CONASET";
     private const string EstadoActualCertificado = "CREAR CERTIFICADO";
-    private const string CertificadoRecipient = "matias.villalobos@munivalpo.cl";
-
-    public static string CertificadoMailto(UrgentRequest request)
-    {
-        var nombre = request.NombreCompleto?.Trim() ?? string.Empty;
-        var rut = RutFormatter.WithDots(request.Rut);
-        var subject = $"Solicitud de certificado - {nombre}";
-        var body = $"""
-            Estimado Matías:
-
-            Junto con saludar, solicito gestionar ante el Director la emisión de certificado para el siguiente contribuyente, debido a que no se encontró carpeta en nuestra base de datos:
-
-            Nombre: {nombre}
-            RUT: {rut}
-
-            Saludos cordiales,
-            F8 Urgentes
-            """;
-
-        return $"mailto:{CertificadoRecipient}?subject={Uri.EscapeDataString(subject)}&body={Uri.EscapeDataString(body)}";
-    }
 
     [TempData]
     public string? SyncMessage { get; set; }
-
-    [TempData]
-    public string? CertificadoMessage { get; set; }
 
     public IReadOnlyList<UrgentRequest> Requests { get; private set; } = [];
     public IReadOnlyList<string> DuplicateRuts { get; private set; } = [];
@@ -372,77 +347,6 @@ public sealed class IndexModel(IUrgentRequestRepository repository, IEmailSender
         }
 
         return RedirectToPage();
-    }
-
-    public async Task<IActionResult> OnPostEnviarCorreoCertificado(long id)
-    {
-        var request = repository.FindById(id);
-        if (request is not null)
-        {
-            var rutDisplay = RutFormatter.WithDots(request.Rut);
-            var subject = $"Solicitud de certificado - {request.NombreCompleto}";
-            var body = $"""
-                Estimado Matías,
-
-                Se solicita gestionar el certificado ante la Dirección para el siguiente contribuyente:
-
-                Nombre: {request.NombreCompleto}
-                RUT: {rutDisplay}
-
-                Saludos,
-                F8 Urgentes
-                """;
-
-            try
-            {
-                await emailSender.SendAsync(CertificadoRecipient, subject, body);
-                CertificadoMessage = $"Correo enviado a {CertificadoRecipient} por {request.NombreCompleto}.";
-            }
-            catch (Exception ex)
-            {
-                CertificadoMessage = $"No se pudo enviar el correo: {ex.Message}";
-            }
-        }
-        return RedirectToPage(new { tab = "Certificados" });
-    }
-
-    public async Task<IActionResult> OnPostEnviarCorreoCertificadoV2(long id)
-    {
-        var request = repository.FindById(id);
-        if (request is null)
-        {
-            return new JsonResult(new { message = "Solicitud no encontrada." }) { StatusCode = StatusCodes.Status404NotFound };
-        }
-
-        if (request.EstadoActual != EstadoActualCertificado)
-        {
-            return new JsonResult(new { message = "Esta solicitud no está marcada para crear certificado." }) { StatusCode = StatusCodes.Status400BadRequest };
-        }
-
-        var nombre = request.NombreCompleto?.Trim() ?? string.Empty;
-        var rut = RutFormatter.WithDots(request.Rut);
-        var subject = $"Solicitud de certificado - {nombre}";
-        var body = $"""
-            Estimado Matías:
-
-            Junto con saludar, solicito gestionar ante el Director la emisión de certificado para el siguiente contribuyente, debido a que no se encontró carpeta en nuestra base de datos:
-
-            Nombre: {nombre}
-            RUT: {rut}
-
-            Saludos cordiales,
-            F8 Urgentes
-            """;
-
-        try
-        {
-            await emailSender.SendAsync(CertificadoRecipient, subject, body);
-            return new JsonResult(new { message = $"Correo enviado a Matías Villalobos por {nombre}." });
-        }
-        catch
-        {
-            return new JsonResult(new { message = "No se pudo enviar correo. Falta configurar SMTP corporativo en el servidor." }) { StatusCode = StatusCodes.Status500InternalServerError };
-        }
     }
 
     public IActionResult OnPostSincronizar()

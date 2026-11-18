@@ -28,7 +28,6 @@
                 <th class="th-wrap">Nombre<br />contribuyente</th>
                 <th>RUT</th>
                 <th class="th-wrap">Código<br />F8</th>
-                <th class="th-wrap">Fecha penúltima<br />carpeta</th>
                 <th class="th-wrap">Sector<br />oficina</th>
                 <th class="th-wrap">Estado</th>
                 <th class="th-wrap">Estado<br />actual</th>
@@ -39,7 +38,7 @@
             @if (Model.SinCarpetasCases.Count == 0)
             {
                 <tr>
-                    <td colspan="8" style="text-align:center; padding:28px; color:var(--color-text-muted);">
+                    <td colspan="7" style="text-align:center; padding:28px; color:var(--color-text-muted);">
                         <div class="lico-vacio lico-vacio-celebra">
                             <span class="lico-vacio-img" data-lico="celebra" aria-hidden="true"></span>
                             <p class="lico-vacio-txt"><b>Todo en orden</b>No hay solicitudes marcadas como "Sin carpeta".</p>
@@ -53,7 +52,6 @@
                     <td class="name-cell" style="text-align:left; font-weight:700;">@request.NombreCompleto</td>
                     <td class="rut-cell">@F8Urgentes.Domain.RutFormatter.WithDots(request.Rut)</td>
                     <td class="text-cell">@(request.CodigoF8 ?? "—")</td>
-                    <td class="text-cell">@(request.FechaPenultimaCarpeta is { } f ? F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(f) : "S/C")</td>
                     <td class="text-cell">@(request.MatrizSector ?? "—")</td>
                     <td class="text-cell">@(request.Estado ?? "—")</td>
                     <td class="text-cell">@(request.EstadoActual ?? "PENDIENTE")</td>

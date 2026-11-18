@@ -109,7 +109,6 @@
                         <th>N°</th>
                         <th style="text-align:left;">Nombre completo</th>
                         <th>RUT</th>
-                        <th>Fecha penúltima carpeta</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -121,12 +120,11 @@
                         <td class="n">@correlativo</td>
                         <td class="nom">@item.NombreCompleto</td>
                         <td class="mono">@F8Urgentes.Domain.RutFormatter.WithDots(item.Rut)</td>
-                        <td>@(item.FechaPenultimaCarpeta is { } f ? F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(f) : "S/C")</td>
                     </tr>
                 }
                 </tbody>
                 <tfoot>
-                    <tr><td colspan="4">Total de carpetas: @Model.SelectedBoxCases.Count</td></tr>
+                    <tr><td colspan="3">Total de carpetas: @Model.SelectedBoxCases.Count</td></tr>
                 </tfoot>
             </table>
         }
@@ -162,7 +160,7 @@ else
             {
                 <div class="lico-vacio">
                     <span class="lico-vacio-img" data-lico="explica" aria-hidden="true"></span>
-                    <p class="lico-vacio-txt"><b>La cola está vacía</b><span>No hay casos en la cola. Ve a <strong>Solicitudes</strong> y presiona "Caja" en los casos con fecha penúltima carpeta.</span></p>
+                    <p class="lico-vacio-txt"><b>La cola está vacía</b><span>No hay casos en la cola. Ve a <strong>Solicitudes</strong> y presiona "Caja" en los casos que quieras enviar.</span></p>
                 </div>
             }
             else
@@ -175,7 +173,6 @@ else
                             <th style="text-align:left;">Nombre</th>
                             <th>RUT</th>
                             <th>Código F8</th>
-                            <th>Fecha penúltima carpeta</th>
                             <th class="no-print">Sector</th>
                             <th style="width:85px;">Acción</th>
                         </tr>
@@ -191,7 +188,6 @@ else
                             <td style="text-align:left; font-weight:600;">@item.NombreCompleto</td>
                             <td style="text-align:center;">@F8Urgentes.Domain.RutFormatter.WithDots(item.Rut)</td>
                             <td style="text-align:center;">@item.CodigoF8</td>
-                            <td style="text-align:center;">@(item.FechaPenultimaCarpeta is { } f ? F8Urgentes.Domain.SpanishDateFormatter.SlashMonthDate(f) : "S/C")</td>
                             <td class="no-print" style="text-align:center;">@(item.Sector switch { F8Urgentes.Domain.FolderSector.Archivo => "Archivo", F8Urgentes.Domain.FolderSector.Oficina43 => "Oficina 43", _ => "S/C" })</td>
                             <td style="text-align:center;">
                                 <form method="post" asp-page-handler="UndoSingle" style="display:inline;"
