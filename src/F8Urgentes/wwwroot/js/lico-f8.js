@@ -20,7 +20,6 @@
       'Fila amarilla: marcada para imprimir.',
       '"Solicitudes sin agregar" abre un formulario para ingresar varios casos de una vez.'
     ],
-    carpetasextra: ['Ingresa arriba las carpetas extra; quedan listadas abajo.'],
     estadisticas: [
       'El plazo legal se cuenta en 15 días hábiles.',
       'Los números cuentan una historia: compara ingresos y subidas mes a mes.'

@@ -17,7 +17,6 @@
   // Ruta (en minúsculas) -> URL a la que navega la guía y nombre de la sección.
   var PAGINAS = {
     '/index':            { url: '/Index',                   seccion: 'Solicitudes' },
-    '/carpetasextra':    { url: '/CarpetasExtra',           seccion: 'Carpetas Extra' },
     '/estadisticas':     { url: '/Estadisticas',            seccion: 'Estadísticas' }
   };
 
@@ -30,14 +29,14 @@
       target: '#btn-guia-global',
       titulo: 'Hola, soy Lico: tu guía',
       icono: '👋',
-      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b>, <b>Carpetas Extra</b> y <b>Estadísticas</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
+      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b> y <b>Estadísticas</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
     },
     {
       pagina: '/index',
       target: '.app-nav',
       titulo: 'Las secciones del sistema',
       icono: '🧭',
-      descripcion: 'Navega entre <b>Solicitudes</b>, <b>Carpetas Extra</b> y <b>Estadísticas</b>. La sección activa queda subrayada en ámbar.'
+      descripcion: 'Navega entre <b>Solicitudes</b> y <b>Estadísticas</b>. La sección activa queda subrayada en ámbar.'
     },
     {
       pagina: '/index',
@@ -145,32 +144,6 @@
       titulo: 'Colores de las filas',
       icono: '🎨',
       descripcion: '<b>Amarillo</b>: marcado para imprimir. <b>Gris</b>: subida a CONASET o sin carpeta. <b>Rosado</b>: requiere revisión. <b>Rojo</b>: estado DENEGADA.'
-    },
-
-    // ---------- CARPETAS EXTRA ----------
-    {
-      pagina: '/carpetasextra', pose: 'saluda',
-      target: 'main .dashboard-controls',
-      fallbackTarget: 'main',
-      titulo: 'Carpetas extras',
-      icono: '📂',
-      descripcion: 'Para carpetas que no vienen de la matriz, como pedidos esporádicos. Se guardan con origen «Extra» y también aparecen en <b>Solicitudes</b> y <b>Estadísticas</b>. A la derecha, cuántas hay registradas.'
-    },
-    {
-      pagina: '/carpetasextra',
-      target: 'main .card form',
-      fallbackTarget: 'main',
-      titulo: 'Registrar una carpeta extra',
-      icono: '✍️',
-      descripcion: '<b>Nombre completo</b> y <b>RUT</b> son obligatorios (el RUT debe tener dígito verificador válido). Pulsa <b>+ Guardar Carpeta Extra</b>.'
-    },
-    {
-      pagina: '/carpetasextra',
-      target: 'main .table-card table',
-      fallbackTarget: 'main .table-card',
-      titulo: 'Listado de carpetas extra',
-      icono: '📋',
-      descripcion: 'Muestra <b>Nombre contribuyente</b> y <b>RUT</b> de cada carpeta extra registrada. El basurero la elimina, previa confirmación.'
     },
 
     // ---------- ESTADÍSTICAS ----------
