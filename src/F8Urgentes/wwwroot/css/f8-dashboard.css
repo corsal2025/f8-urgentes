@@ -932,8 +932,8 @@ table.cases-list td.rut-cell input.input-inline {
 
 /* Tightly auto-adjust columns to their content without artificial empty space */
 table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { width: 72px; min-width: 72px; max-width: 72px; text-align: center; } /* Marcar */
-table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { min-width: 240px; } /* Nombre */
-table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { min-width: 125px; white-space: nowrap; }  /* RUT */
+table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { width: 1%; min-width: 0; white-space: nowrap; } /* Nombre */
+table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { width: 1%; min-width: 118px; white-space: nowrap; }  /* RUT */
 table.cases-list th:nth-child(8), table.cases-list td:nth-child(8) { min-width: 110px; white-space: nowrap; text-align: center; } /* Acción */
 
 table.cases-list th.th-wrap {

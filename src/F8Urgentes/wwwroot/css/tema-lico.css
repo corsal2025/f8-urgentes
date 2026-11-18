@@ -140,6 +140,7 @@ body.cases-page {
   min-height: 100dvh;
   overflow-y: auto;
   overflow-x: hidden;
+  overflow-anchor: none;
 }
 
 ::selection { background: var(--ring); }
@@ -186,41 +187,45 @@ header.top::after {
 .marca {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   flex: none;
   color: #fff8e8;
   text-decoration: none;
 }
 .marca:hover { text-decoration: none; }
-.marca .brand-logo {
-  height: 46px;
-  width: auto;
+.marca .brand-logo,
+.brand-municipal-logo {
   display: block;
+  width: 80px;
+  height: 76px;
+  flex: 0 0 80px;
   background: #fff;
-  padding: 3px;
-  border-radius: 6px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .28);
+  padding: 0;
+  border-radius: 4px;
+  object-fit: cover;
+  object-position: center;
+  clip-path: inset(0 round 4px);
+  object-view-box: inset(10%);
+  box-shadow: none;
   image-rendering: -webkit-optimize-contrast;
   transition: transform .2s ease;
 }
 .marca:hover .brand-logo { transform: scale(1.03); }
-.marca-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.marca-txt { display: flex; flex-direction: column; gap: 0; min-width: 0; }
 .marca-titulo {
-  font-family: var(--serif);
-  font-size: clamp(1.22rem, 1.4vw, 1.5rem);
-  font-weight: 400;
+  font: 400 clamp(1.35rem, 1.85vw, 1.85rem) / 1.1 Georgia, 'Times New Roman', serif;
   letter-spacing: -0.03em;
   color: #fff5e4;
-  line-height: 1.08;
   white-space: nowrap;
 }
 .marca-org {
-  font-size: 8.5px;
-  font-weight: 600;
-  letter-spacing: .09em;
+  font-size: 0.56rem;
+  font-weight: 400;
+  letter-spacing: .12em;
   text-transform: uppercase;
   color: #e6d2d8;
-  line-height: 1.15;
+  line-height: 1.2;
+  margin-top: 5px;
   white-space: nowrap;
 }
 
@@ -267,8 +272,8 @@ header.top::after {
 }
 .header-search-clear:hover { background: rgba(255, 255, 255, .2); color: #fff; }
 
-/* Lado derecho: botones limpios estilo Petición de Cambio de Domicilio */
-.top-right { flex: none; display: flex; align-items: center; gap: 7px; flex-wrap: nowrap; }
+/* Lado derecho: botones limpios estilo Petición de Cambio de Domicilio + marca RSJ */
+.top-right { flex: none; display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
 .header-sync-form { display: flex; align-items: center; margin: 0; }
 
 header.top .header-sync-btn,
@@ -278,16 +283,16 @@ header.top .header-sync-btn,
 .btn-guia-accion {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  height: 36px;
+  gap: 7px;
+  min-height: 38px;
+  height: 38px;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, .05);
+  background: rgba(255, 255, 255, .04);
   color: #f4f0e8;
   border: 1px solid rgba(255, 255, 255, .28);
   border-radius: 8px;
   font: inherit;
-  font-size: 12px;
+  font-size: .75rem;
   font-weight: 500;
   white-space: nowrap;
   text-decoration: none;
@@ -296,16 +301,41 @@ header.top .header-sync-btn,
 }
 
 header.top .header-sync-btn,
-.btn-logout,
-.icono-btn {
+.btn-logout {
   padding: 0 10px;
   cursor: pointer;
 }
 
 .btn-guia-accion {
-  padding: 0 10px 0 6px;
+  padding: 5px 10px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: .75rem;
+}
+
+#lico-onoff.icono-btn {
+  padding: 7px 10px;
+  cursor: pointer;
+  background: transparent;
+  color: #e6d2d8;
+  font-size: .7rem;
+}
+
+.sidebar-support .rsj-signature {
+  display: flex;
+  flex: 0 0 76px;
+  align-items: center;
+  justify-content: center;
+  width: 76px;
+  height: 72px;
+  padding: 0;
+  margin-left: 2px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+.sidebar-support .rsj-signature rsj-brand {
+  width: 76px !important;
+  flex: 0 0 76px;
 }
 
 .user-pill {
@@ -413,7 +443,8 @@ nav.app-nav .nav-icon { flex: none; font-size: 14px; line-height: 1; }
 
 @media (max-width: 1320px) {
   .top-inner { width: calc(100% - 32px); gap: 12px; }
-  .marca .brand-logo { height: 42px; }
+  .marca .brand-logo,
+  .brand-municipal-logo { width: 56px; height: 53px; flex: 0 0 56px; }
   .marca-titulo { font-size: 1.2rem; }
   .marca-org { display: none; }
   nav.app-nav { gap: 2px; margin-left: 0; }
@@ -473,6 +504,7 @@ body.cases-page main {
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: auto;
+  overflow-anchor: none;
   border-radius: 14px;
   border: 1px solid var(--borde);
   background: var(--papel);
@@ -1683,7 +1715,27 @@ table.cases-list .input-inline:focus {
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 3px var(--ring) !important;
 }
-table.cases-list td.name-cell input.input-inline { font-size: 13px; font-weight: 600 !important; color: var(--tinta) !important; }
+table.cases-list th:nth-child(2),
+table.cases-list td:nth-child(2) {
+  width: 1%;
+  min-width: 0;
+  white-space: nowrap;
+}
+table.cases-list td.name-cell {
+  padding: 6px 8px;
+  width: 1%;
+  white-space: nowrap;
+}
+table.cases-list td.name-cell input.input-inline {
+  field-sizing: content;
+  width: auto;
+  min-width: 6ch;
+  max-width: none;
+  padding: 3px 6px;
+  font-size: 13px;
+  font-weight: 600 !important;
+  color: var(--tinta) !important;
+}
 table.cases-list td.rut-cell input.input-inline { font-family: var(--mono); font-size: 12.5px; font-weight: 600 !important; color: var(--tinta-2) !important; }
 select.estado-actual-select {
   border-radius: 999px;
@@ -2190,9 +2242,9 @@ header.top .head-lico svg { width: 34px; height: 34px; }
    Guía interactiva "Guía con Lico" (guia-interactiva.js)
    ========================================================= */
 .lico-mini {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
+  display: flex;
+  width: 26px;
+  height: 28px;
   flex: none;
   background: transparent;
   border-radius: 0;
@@ -2203,8 +2255,9 @@ header.top .head-lico svg { width: 34px; height: 34px; }
 .lico-mini svg,
 .lico-mini img,
 .lico-mini-img {
-  width: 100%;
-  height: 100%;
+  width: 45px;
+  max-width: none;
+  height: 30px;
   display: block;
   object-fit: contain;
 }

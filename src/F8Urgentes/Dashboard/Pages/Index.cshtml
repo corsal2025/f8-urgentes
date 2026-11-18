@@ -401,23 +401,56 @@
         var scrollKey = 'f8-index-scroll';
         var table = document.querySelector('.card.table-card');
         var saved = sessionStorage.getItem(scrollKey);
+        var restoredPos = null;
+        var restoreActive = false;
+
         if (saved !== null) {
             sessionStorage.removeItem(scrollKey);
             try {
-                var pos = JSON.parse(saved);
-                window.scrollTo(0, pos.y || 0);
-                if (table) {
-                    table.scrollLeft = pos.x || 0;
-                    table.scrollTop = pos.ty || 0;
+                restoredPos = JSON.parse(saved);
+                restoreActive = true;
+                if ('scrollRestoration' in history) {
+                    history.scrollRestoration = 'manual';
                 }
-            } catch (err) { /* malformed value, skip restore */ }
+            } catch (err) { restoredPos = null; restoreActive = false; }
         }
-        document.addEventListener('submit', function () {
+
+        function stopRestore() {
+            restoreActive = false;
+        }
+        ['wheel', 'touchstart', 'pointerdown', 'keydown'].forEach(function (ev) {
+            window.addEventListener(ev, stopRestore, { passive: true, once: true });
+        });
+
+        window.__f8RestoreScroll = function () {
+            if (!restoreActive || !restoredPos) return;
+            window.scrollTo(0, restoredPos.y || 0);
+            if (table) {
+                table.scrollLeft = restoredPos.x || 0;
+                table.scrollTop = restoredPos.ty || 0;
+            }
+        };
+
+        if (restoreActive) {
+            window.__f8RestoreScroll();
+            window.addEventListener('DOMContentLoaded', window.__f8RestoreScroll);
+            window.addEventListener('load', window.__f8RestoreScroll);
+            requestAnimationFrame(window.__f8RestoreScroll);
+        }
+
+        function saveIndexScroll() {
             sessionStorage.setItem(scrollKey, JSON.stringify({
                 y: window.scrollY,
                 x: table ? table.scrollLeft : 0,
                 ty: table ? table.scrollTop : 0
             }));
+        }
+
+        document.addEventListener('submit', saveIndexScroll);
+        document.addEventListener('click', function (event) {
+            if (event.target && event.target.closest && event.target.closest('.tab-pill, .toolbar-search-clear, .th-sort-link')) {
+                saveIndexScroll();
+            }
         });
     })();
 
@@ -579,6 +612,55 @@
     }
 
     try {
+        document.querySelectorAll('form[action*="MarkUploaded"]').forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+                var row = form.closest('tr');
+                if (row) {
+                    row.classList.add('row-confirmed');
+                    var markedBox = row.querySelector('input.marked-checkbox');
+                    if (markedBox) markedBox.checked = false;
+
+                    var select = row.querySelector('select.estado-actual-select');
+                    if (select) {
+                        var hasSubidaOpt = Array.prototype.some.call(select.options, function (opt) {
+                            return opt.value === 'SUBIDA A CONASET';
+                        });
+                        if (!hasSubidaOpt) {
+                            var opt = document.createElement('option');
+                            opt.value = 'SUBIDA A CONASET';
+                            opt.textContent = 'SUBIDA A CONASET';
+                            select.appendChild(opt);
+                        }
+                        select.value = 'SUBIDA A CONASET';
+                        select.disabled = true;
+                        ['badge-pending', 'badge-uploaded', 'badge-confirmed', 'badge-review'].forEach(function (cls) {
+                            select.classList.remove(cls);
+                        });
+                        select.classList.add('badge-confirmed');
+                    }
+
+                    var fechaCell = row.querySelector('.fecha-subida-cell');
+                    if (fechaCell) {
+                        fechaCell.textContent = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date());
+                    }
+                    form.style.display = 'none';
+                }
+
+                submitToggle(form, function (payload) {
+                    if (payload && payload.fechaDeSubida && row) {
+                        var cell = row.querySelector('.fecha-subida-cell');
+                        if (cell) cell.textContent = payload.fechaDeSubida;
+                    }
+                    form.remove();
+                });
+            });
+        });
+    } catch (err) {
+        console.error('MarkUploaded ajax wiring failed', err);
+    }
+
+    try {
         function formatRutInput(input) {
             function format(value) {
                 var clean = value.replace(/[^0-9kK]/g, '').toUpperCase();
@@ -669,6 +751,36 @@
     }
 
     try {
+        var nameMeasureEl = null;
+        function measureNameInputWidth(input) {
+            if (!nameMeasureEl) {
+                nameMeasureEl = document.createElement('span');
+                nameMeasureEl.style.position = 'fixed';
+                nameMeasureEl.style.visibility = 'hidden';
+                nameMeasureEl.style.pointerEvents = 'none';
+                nameMeasureEl.style.whiteSpace = 'pre';
+                nameMeasureEl.style.top = '-9999px';
+                nameMeasureEl.style.left = '-9999px';
+                document.body.appendChild(nameMeasureEl);
+            }
+            var cs = window.getComputedStyle(input);
+            nameMeasureEl.style.font = cs.font || (cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily);
+            nameMeasureEl.style.letterSpacing = cs.letterSpacing;
+            nameMeasureEl.textContent = input.value || input.placeholder || '';
+            return Math.ceil(nameMeasureEl.getBoundingClientRect().width + 14);
+        }
+
+        function autoFitNameInput(input) {
+            input.style.width = measureNameInputWidth(input) + 'px';
+        }
+
+        function autoFitNameInputs() {
+            var inputs = document.querySelectorAll('table.cases-list td.name-cell input.input-inline');
+            inputs.forEach(autoFitNameInput);
+            updateStickyOffsets();
+            if (typeof window.__f8RestoreScroll === 'function') window.__f8RestoreScroll();
+        }
+
         function updateStickyOffsets() {
             var table = document.querySelector('table.cases-list');
             if (!table) return;
@@ -695,13 +807,21 @@
                 'table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { left: ' + left3 + 'px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
                 'table.cases-list thead th:nth-child(1), table.cases-list thead th:nth-child(2), table.cases-list thead th:nth-child(3) { z-index: 25 !important; background-color: var(--color-th-bg, #f3e8eb) !important; }';
         }
-        window.addEventListener('DOMContentLoaded', updateStickyOffsets);
-        window.addEventListener('load', updateStickyOffsets);
+
+        document.addEventListener('input', function (event) {
+            if (event.target && event.target.matches('table.cases-list td.name-cell input.input-inline')) {
+                autoFitNameInput(event.target);
+                updateStickyOffsets();
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', autoFitNameInputs);
+        window.addEventListener('load', autoFitNameInputs);
         window.addEventListener('resize', updateStickyOffsets);
-        if (document.fonts) document.fonts.ready.then(updateStickyOffsets);
-        setTimeout(updateStickyOffsets, 0);
-        setTimeout(updateStickyOffsets, 80);
-        setTimeout(updateStickyOffsets, 400);
+        if (document.fonts) document.fonts.ready.then(autoFitNameInputs);
+        setTimeout(autoFitNameInputs, 0);
+        setTimeout(autoFitNameInputs, 80);
+        setTimeout(autoFitNameInputs, 400);
     } catch (err) {
         console.error('Sticky offset calculation failed', err);
     }
