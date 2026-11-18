@@ -90,7 +90,8 @@
         text-transform: uppercase;
         letter-spacing: 0.03em;
     }
-    .modern-modal-row input {
+    .modern-modal-row input,
+    .modern-modal-row select {
         padding: 7px 10px;
         border: 1px solid var(--linea);
         border-radius: var(--r-sm);
@@ -99,7 +100,8 @@
         background: var(--papel);
         color: var(--tinta);
     }
-    .modern-modal-row input:focus {
+    .modern-modal-row input:focus,
+    .modern-modal-row select:focus {
         border-color: var(--azul);
         outline: none;
         box-shadow: 0 0 0 3px var(--ring);
@@ -263,6 +265,19 @@
                     <div class="modal-field modal-field-rut">
                         <label>RUT</label>
                         <input class="input-block rut-input" name="rut" placeholder="ej: 18.785.387-7" required />
+                    </div>
+                    <div class="modal-field">
+                        <label>Sector oficina</label>
+                        <select class="input-block" name="matrizSector">
+                            <option value="">—</option>
+                            <option value="AV. ARGENTINA">AV. ARGENTINA</option>
+                            <option value="PLACILLA">PLACILLA</option>
+                            <option value="MERC. PUERTO">MERC. PUERTO</option>
+                        </select>
+                    </div>
+                    <div class="modal-field">
+                        <label>Código F8</label>
+                        <input class="input-block" name="codigoF8" placeholder="ej: 25309877" />
                     </div>
                     <button type="button" class="btn-danger remove-row-btn" title="Quitar fila" hidden>×</button>
                 </div>
@@ -491,6 +506,8 @@
         row.className = 'quick-add-row modern-modal-row';
         row.innerHTML = '<div class="modal-field"><label>Nombre completo</label><input class="input-block" name="nombreCompleto" placeholder="ej: Gustavo Peña Castro" required /></div>' +
             '<div class="modal-field modal-field-rut"><label>RUT</label><input class="input-block rut-input" name="rut" placeholder="ej: 18.785.387-7" required /></div>' +
+            '<div class="modal-field"><label>Sector oficina</label><select class="input-block" name="matrizSector"><option value="">—</option><option value="AV. ARGENTINA">AV. ARGENTINA</option><option value="PLACILLA">PLACILLA</option><option value="MERC. PUERTO">MERC. PUERTO</option></select></div>' +
+            '<div class="modal-field"><label>Código F8</label><input class="input-block" name="codigoF8" placeholder="ej: 25309877" /></div>' +
             '<button type="button" class="btn-danger remove-row-btn" title="Quitar fila">×</button>';
         rows.appendChild(row);
     });

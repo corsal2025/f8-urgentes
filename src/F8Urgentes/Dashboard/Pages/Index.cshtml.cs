@@ -265,7 +265,7 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         return RedirectToPage();
     }
 
-    public IActionResult OnPostAddManualCases(List<string> nombreCompleto, List<string> rut, List<string>? estado = null, List<string?>? fechaPenultimaCarpeta = null)
+    public IActionResult OnPostAddManualCases(List<string> nombreCompleto, List<string> rut, List<string>? estado = null, List<string?>? fechaPenultimaCarpeta = null, List<string?>? matrizSector = null, List<string?>? codigoF8 = null)
     {
         var count = Math.Min(nombreCompleto.Count, rut.Count);
         for (var i = 0; i < count; i++)
@@ -280,6 +280,12 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
             var rawEstado = (estado is not null && i < estado.Count) ? estado[i] : null;
             var normalizedEstado = string.IsNullOrWhiteSpace(rawEstado) ? null : EstadoCatalog.NormalizeForPersistence(rawEstado, isEstado: true);
             var canonicalRut = Rut.TryParse(rutValue, out var parsedRut) ? parsedRut.ToString() : rutValue;
+            var rawSector = (matrizSector is not null && i < matrizSector.Count && !string.IsNullOrWhiteSpace(matrizSector[i]))
+                ? matrizSector[i]!.Trim()
+                : null;
+            var rawCodigoF8 = (codigoF8 is not null && i < codigoF8.Count && !string.IsNullOrWhiteSpace(codigoF8[i]))
+                ? codigoF8[i]!.Trim()
+                : null;
 
             DateOnly? parsedPenultimaDate = null;
             if (fechaPenultimaCarpeta is not null && i < fechaPenultimaCarpeta.Count && !string.IsNullOrWhiteSpace(fechaPenultimaCarpeta[i]))
@@ -312,6 +318,8 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
                 NombreCompleto = nombre,
                 Rut = canonicalRut,
                 RutRaw = rutValue,
+                MatrizSector = rawSector,
+                CodigoF8 = rawCodigoF8,
                 Estado = normalizedEstado,
                 FechaPenultimaCarpeta = parsedPenultimaDate,
                 FechaPeticion = DateOnly.FromDateTime(DateTime.Today),
