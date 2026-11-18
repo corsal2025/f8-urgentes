@@ -27,18 +27,6 @@
                 <input asp-for="Input.Rut" class="input-block rut-input" placeholder="ej: 12.345.678-9" required />
                 <span asp-validation-for="Input.Rut" class="review-hint" style="color:var(--color-review);"></span>
             </div>
-            <div class="modal-field">
-                <label asp-for="Input.CodigoF8">Código F8</label>
-                <input asp-for="Input.CodigoF8" class="input-block" placeholder="ej: F8-2024-001" />
-            </div>
-            <div class="modal-field">
-                <label asp-for="Input.Estado">Estado</label>
-                <input asp-for="Input.Estado" class="input-block" placeholder="ej: PRIMERA LICENCIA" />
-            </div>
-            <div class="modal-field">
-                <label asp-for="Input.EstadoActual">Estado actual</label>
-                <input asp-for="Input.EstadoActual" class="input-block" placeholder="ej: PENDIENTE" />
-            </div>
         </div>
             <div style="display:flex; justify-content:flex-end;">
                 <button type="submit" class="btn-primary" style="padding:8px 18px; font-weight:700;">+ Guardar Carpeta Extra</button>
@@ -52,9 +40,6 @@
             <tr>
                 <th class="th-wrap">Nombre<br />contribuyente</th>
                 <th>RUT</th>
-                <th class="th-wrap">Código<br />F8</th>
-                <th class="th-wrap">Estado</th>
-                <th class="th-wrap">Estado<br />actual</th>
                 <th>Acción</th>
             </tr>
         </thead>
@@ -62,7 +47,7 @@
             @if (Model.ExtraCases.Count == 0)
             {
                 <tr>
-                    <td colspan="6" style="text-align:center; padding:24px; color:var(--color-text-muted);">
+                    <td colspan="3" style="text-align:center; padding:24px; color:var(--color-text-muted);">
                         <div class="lico-vacio">
                             <span class="lico-vacio-img" data-lico="explica" aria-hidden="true"></span>
                             <p class="lico-vacio-txt"><b>Sin carpetas extra</b>No hay carpetas extras registradas aún. Ingresa una arriba.</p>
@@ -75,9 +60,6 @@
                 <tr class="@(request.NeedsReview ? "row-needs-review" : "")">
                     <td class="name-cell" style="text-align:left; font-weight:700;">@request.NombreCompleto</td>
                     <td class="rut-cell">@F8Urgentes.Domain.RutFormatter.WithDots(request.Rut)</td>
-                    <td class="text-cell">@(request.CodigoF8 ?? "—")</td>
-                    <td class="text-cell">@(request.Estado ?? "—")</td>
-                    <td class="text-cell">@(request.EstadoActual ?? "PENDIENTE")</td>
                     <td class="action-cell">
                         <div class="action-group">
                             <form method="post" asp-page-handler="Delete" onsubmit="return confirm('¿Eliminar esta carpeta extra?');">

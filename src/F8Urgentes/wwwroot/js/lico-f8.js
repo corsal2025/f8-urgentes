@@ -24,8 +24,7 @@
     estadisticas: [
       'El plazo legal se cuenta en 15 días hábiles.',
       'Los números cuentan una historia: compara ingresos y subidas mes a mes.'
-    ],
-    impresionmensual: ['Aquí sale el listado del mes para imprimir las carpetas subidas.']
+    ]
   };
 
   function pagina() {

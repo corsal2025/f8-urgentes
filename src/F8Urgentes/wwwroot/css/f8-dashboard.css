@@ -931,10 +931,10 @@ table.cases-list td.rut-cell input.input-inline {
 }
 
 /* Tightly auto-adjust columns to their content without artificial empty space */
-table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { width: 72px; min-width: 72px; max-width: 72px; text-align: center; } /* Marcar */
-table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { width: 1%; min-width: 0; white-space: nowrap; } /* Nombre */
-table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { width: 1%; min-width: 118px; white-space: nowrap; }  /* RUT */
-table.cases-list th:nth-child(8), table.cases-list td:nth-child(8) { min-width: 110px; white-space: nowrap; text-align: center; } /* Acción */
+table.cases-solicitudes th:nth-child(1), table.cases-solicitudes td:nth-child(1) { width: 72px; min-width: 72px; max-width: 72px; text-align: center; } /* Marcar */
+table.cases-solicitudes th:nth-child(2), table.cases-solicitudes td:nth-child(2) { width: 1%; min-width: 0; white-space: nowrap; } /* Nombre */
+table.cases-solicitudes th:nth-child(3), table.cases-solicitudes td:nth-child(3) { width: 1%; min-width: 118px; white-space: nowrap; }  /* RUT */
+table.cases-solicitudes th:nth-child(8), table.cases-solicitudes td:nth-child(8) { min-width: 110px; white-space: nowrap; text-align: center; } /* Acción */
 
 table.cases-list th.th-wrap {
     white-space: normal;
@@ -966,8 +966,8 @@ table.cases-list thead th {
 }
 
 /* Freeze first 3 columns: Marcar (col 1), Nombre Contribuyente (col 2) and RUT (col 3) */
-table.cases-list th:nth-child(1),
-table.cases-list td:nth-child(1) {
+table.cases-solicitudes th:nth-child(1),
+table.cases-solicitudes td:nth-child(1) {
     position: sticky;
     left: 0;
     z-index: 6;
@@ -975,8 +975,8 @@ table.cases-list td:nth-child(1) {
     box-shadow: none;
 }
 
-table.cases-list th:nth-child(2),
-table.cases-list td:nth-child(2) {
+table.cases-solicitudes th:nth-child(2),
+table.cases-solicitudes td:nth-child(2) {
     position: sticky;
     left: var(--sticky-col2, var(--sticky-rut, 80px));
     z-index: 6;
@@ -984,8 +984,8 @@ table.cases-list td:nth-child(2) {
     box-shadow: none;
 }
 
-table.cases-list th:nth-child(3),
-table.cases-list td:nth-child(3) {
+table.cases-solicitudes th:nth-child(3),
+table.cases-solicitudes td:nth-child(3) {
     position: sticky;
     left: var(--sticky-col3, 300px);
     z-index: 6;
@@ -994,79 +994,79 @@ table.cases-list td:nth-child(3) {
 }
 
 /* Solid opaque background colors for sticky columns 1, 2 and 3 to prevent see-through when scrolling */
-table.cases-list thead th:nth-child(1),
-table.cases-list thead th:nth-child(2),
-table.cases-list thead th:nth-child(3) {
+table.cases-solicitudes thead th:nth-child(1),
+table.cases-solicitudes thead th:nth-child(2),
+table.cases-solicitudes thead th:nth-child(3) {
     z-index: 20 !important;
     background-color: #f8fafc !important;
     border-right: none !important;
     box-shadow: none !important;
 }
 
-table.cases-list tbody tr td:nth-child(1),
-table.cases-list tbody tr td:nth-child(2),
-table.cases-list tbody tr td:nth-child(3) { background-color: #ffffff; }
-table.cases-list tbody tr.estado-row-f8 td:nth-child(1),
-table.cases-list tbody tr.estado-row-f8 td:nth-child(2),
-table.cases-list tbody tr.estado-row-f8 td:nth-child(3) { background-color: #f0fdf4 !important; }
-table.cases-list tbody tr.estado-row-licencia td:nth-child(1),
-table.cases-list tbody tr.estado-row-licencia td:nth-child(2),
-table.cases-list tbody tr.estado-row-licencia td:nth-child(3) { background-color: #fefce8 !important; }
-table.cases-list tbody tr.estado-row-domicilio td:nth-child(1),
-table.cases-list tbody tr.estado-row-domicilio td:nth-child(2),
-table.cases-list tbody tr.estado-row-domicilio td:nth-child(3) { background-color: #eff6ff !important; }
-table.cases-list tbody tr.estado-row-certificado td:nth-child(1),
-table.cases-list tbody tr.estado-row-certificado td:nth-child(2),
-table.cases-list tbody tr.estado-row-certificado td:nth-child(3) { background-color: #fff7ed !important; }
-table.cases-list tbody tr.estado-row-subida td:nth-child(1),
-table.cases-list tbody tr.estado-row-subida td:nth-child(2),
-table.cases-list tbody tr.estado-row-subida td:nth-child(3) { background-color: #faf5ff !important; }
-table.cases-list tbody tr.estado-row-pendiente td:nth-child(1),
-table.cases-list tbody tr.estado-row-pendiente td:nth-child(2),
-table.cases-list tbody tr.estado-row-pendiente td:nth-child(3) { background-color: #f8fafc !important; }
-table.cases-list tbody tr.estado-row-denegada td:nth-child(1),
-table.cases-list tbody tr.estado-row-denegada td:nth-child(2),
-table.cases-list tbody tr.estado-row-denegada td:nth-child(3) { background-color: #fef2f2 !important; }
-table.cases-list tbody tr.row-confirmed td:nth-child(1),
-table.cases-list tbody tr.row-confirmed td:nth-child(2),
-table.cases-list tbody tr.row-confirmed td:nth-child(3) { background-color: #e5e7eb !important; }
-table.cases-list tbody tr.row-needs-review td:nth-child(1),
-table.cases-list tbody tr.row-needs-review td:nth-child(2),
-table.cases-list tbody tr.row-needs-review td:nth-child(3) { background-color: #fff1f2 !important; }
-table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(1),
-table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(2),
-table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(3) { background-color: #fef08a !important; }
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(1),
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(2),
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(3) { background-color: #ddd6fe !important; }
+table.cases-solicitudes tbody tr td:nth-child(1),
+table.cases-solicitudes tbody tr td:nth-child(2),
+table.cases-solicitudes tbody tr td:nth-child(3) { background-color: #ffffff; }
+table.cases-solicitudes tbody tr.estado-row-f8 td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-f8 td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-f8 td:nth-child(3) { background-color: #f0fdf4 !important; }
+table.cases-solicitudes tbody tr.estado-row-licencia td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-licencia td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-licencia td:nth-child(3) { background-color: #fefce8 !important; }
+table.cases-solicitudes tbody tr.estado-row-domicilio td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-domicilio td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-domicilio td:nth-child(3) { background-color: #eff6ff !important; }
+table.cases-solicitudes tbody tr.estado-row-certificado td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-certificado td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-certificado td:nth-child(3) { background-color: #fff7ed !important; }
+table.cases-solicitudes tbody tr.estado-row-subida td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-subida td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-subida td:nth-child(3) { background-color: #faf5ff !important; }
+table.cases-solicitudes tbody tr.estado-row-pendiente td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-pendiente td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-pendiente td:nth-child(3) { background-color: #f8fafc !important; }
+table.cases-solicitudes tbody tr.estado-row-denegada td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-denegada td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-denegada td:nth-child(3) { background-color: #fef2f2 !important; }
+table.cases-solicitudes tbody tr.row-confirmed td:nth-child(1),
+table.cases-solicitudes tbody tr.row-confirmed td:nth-child(2),
+table.cases-solicitudes tbody tr.row-confirmed td:nth-child(3) { background-color: #e5e7eb !important; }
+table.cases-solicitudes tbody tr.row-needs-review td:nth-child(1),
+table.cases-solicitudes tbody tr.row-needs-review td:nth-child(2),
+table.cases-solicitudes tbody tr.row-needs-review td:nth-child(3) { background-color: #fff1f2 !important; }
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(1),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(2),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(3) { background-color: #fef08a !important; }
+table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(1),
+table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(2),
+table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(3) { background-color: #ddd6fe !important; }
 
-table.cases-list tbody tr:hover td:nth-child(1),
-table.cases-list tbody tr:hover td:nth-child(2),
-table.cases-list tbody tr:hover td:nth-child(3) { background-color: #f1f5f9 !important; }
-table.cases-list tbody tr.estado-row-f8:hover td:nth-child(1),
-table.cases-list tbody tr.estado-row-f8:hover td:nth-child(2),
-table.cases-list tbody tr.estado-row-f8:hover td:nth-child(3) { background-color: #dcfce7 !important; }
-table.cases-list tbody tr.estado-row-licencia:hover td:nth-child(1),
-table.cases-list tbody tr.estado-row-licencia:hover td:nth-child(2),
-table.cases-list tbody tr.estado-row-licencia:hover td:nth-child(3) { background-color: #fef9c3 !important; }
-table.cases-list tbody tr.estado-row-domicilio:hover td:nth-child(1),
-table.cases-list tbody tr.estado-row-domicilio:hover td:nth-child(2),
-table.cases-list tbody tr.estado-row-domicilio:hover td:nth-child(3) { background-color: #dbeafe !important; }
-table.cases-list tbody tr.estado-row-certificado:hover td:nth-child(1),
-table.cases-list tbody tr.estado-row-certificado:hover td:nth-child(2),
-table.cases-list tbody tr.estado-row-certificado:hover td:nth-child(3) { background-color: #ffedd5 !important; }
-table.cases-list tbody tr.estado-row-subida:hover td:nth-child(1),
-table.cases-list tbody tr.estado-row-subida:hover td:nth-child(2),
-table.cases-list tbody tr.estado-row-subida:hover td:nth-child(3) { background-color: #f3e8ff !important; }
-table.cases-list tbody tr.estado-row-pendiente:hover td:nth-child(1),
-table.cases-list tbody tr.estado-row-pendiente:hover td:nth-child(2),
-table.cases-list tbody tr.estado-row-pendiente:hover td:nth-child(3) { background-color: #e2e8f0 !important; }
-table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(1),
-table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(2),
-table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(3) { background-color: #fde047 !important; }
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(1),
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(2),
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(3) { background-color: #c4b5fd !important; }
+table.cases-solicitudes tbody tr:hover td:nth-child(1),
+table.cases-solicitudes tbody tr:hover td:nth-child(2),
+table.cases-solicitudes tbody tr:hover td:nth-child(3) { background-color: #f1f5f9 !important; }
+table.cases-solicitudes tbody tr.estado-row-f8:hover td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-f8:hover td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-f8:hover td:nth-child(3) { background-color: #dcfce7 !important; }
+table.cases-solicitudes tbody tr.estado-row-licencia:hover td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-licencia:hover td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-licencia:hover td:nth-child(3) { background-color: #fef9c3 !important; }
+table.cases-solicitudes tbody tr.estado-row-domicilio:hover td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-domicilio:hover td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-domicilio:hover td:nth-child(3) { background-color: #dbeafe !important; }
+table.cases-solicitudes tbody tr.estado-row-certificado:hover td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-certificado:hover td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-certificado:hover td:nth-child(3) { background-color: #ffedd5 !important; }
+table.cases-solicitudes tbody tr.estado-row-subida:hover td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-subida:hover td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-subida:hover td:nth-child(3) { background-color: #f3e8ff !important; }
+table.cases-solicitudes tbody tr.estado-row-pendiente:hover td:nth-child(1),
+table.cases-solicitudes tbody tr.estado-row-pendiente:hover td:nth-child(2),
+table.cases-solicitudes tbody tr.estado-row-pendiente:hover td:nth-child(3) { background-color: #e2e8f0 !important; }
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(1),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(2),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(3) { background-color: #fde047 !important; }
+table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(1),
+table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(2),
+table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(3) { background-color: #c4b5fd !important; }
 
 table.cases-list td > * {
     vertical-align: middle;

@@ -50,25 +50,13 @@ public sealed class CarpetasExtraModel(IUrgentRequestRepository repository) : Pa
             Apellidos = Input.Apellidos,
             Rut = parsedRut.ToString(),
             RutRaw = Input.Rut,
-            CodigoF8 = string.IsNullOrWhiteSpace(Input.CodigoF8) ? null : Input.CodigoF8.Trim(),
             FechaPenultimaCarpeta = Input.fechaPenultimaCarpeta,
-            Estado = EstadoCatalog.NormalizeForPersistence(Input.Estado, isEstado: true),
-            EstadoActual = EstadoCatalog.NormalizeForPersistence(Input.EstadoActual, isEstado: false),
             FechaPeticion = Input.fechaPeticion ?? DateOnly.FromDateTime(DateTime.Now.Date),
             Origin = OrigenExtra,
             CreatedAt = DateTimeOffset.UtcNow,
-            NeedsReview = EstadoCatalog.IsUnknownEstado(Input.Estado) || EstadoCatalog.IsUnknownEstadoActual(Input.EstadoActual),
         };
 
-        var id = repository.Insert(request);
-        if (EstadoCatalog.IsUnknownEstado(Input.Estado))
-        {
-            repository.AddFlag(id, "Estado", ImportFlag.ReasonCodes.UnknownEstado, Input.Estado);
-        }
-        if (EstadoCatalog.IsUnknownEstadoActual(Input.EstadoActual))
-        {
-            repository.AddFlag(id, "EstadoActual", ImportFlag.ReasonCodes.UnknownEstadoActual, Input.EstadoActual);
-        }
+        repository.Insert(request);
 
         // Limpiar el formulario para el siguiente ingreso
         Input = new InputModel();
@@ -118,19 +106,10 @@ public sealed class CarpetasExtraModel(IUrgentRequestRepository repository) : Pa
         [Display(Name = "RUT")]
         public string? Rut { get; set; }
 
-        [Display(Name = "Código F8")]
-        public string? CodigoF8 { get; set; }
-
         [Display(Name = "Fecha petición")]
         public DateOnly? fechaPeticion { get; set; }
 
         [Display(Name = "Fecha penúltima carpeta")]
         public DateOnly? fechaPenultimaCarpeta { get; set; }
-
-        [Display(Name = "Estado")]
-        public string? Estado { get; set; }
-
-        [Display(Name = "Estado actual")]
-        public string? EstadoActual { get; set; }
     }
 }

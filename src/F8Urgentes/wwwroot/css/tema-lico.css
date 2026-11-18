@@ -1623,9 +1623,9 @@ table.cases-index th {
   box-shadow: none;
   padding: 12px 14px;
 }
-table.cases-list thead th:nth-child(1),
-table.cases-list thead th:nth-child(2),
-table.cases-list thead th:nth-child(3) {
+table.cases-solicitudes thead th:nth-child(1),
+table.cases-solicitudes thead th:nth-child(2),
+table.cases-solicitudes thead th:nth-child(3) {
   background-color: var(--table-th-bg) !important;
   background-image: var(--table-th-gradient) !important;
   color: var(--table-th-color) !important;
@@ -1668,15 +1668,15 @@ table.cases th:nth-child(3),
 table.cases td:nth-child(1),
 table.cases td:nth-child(2),
 table.cases td:nth-child(3),
-table.cases-list th:nth-child(1),
-table.cases-list th:nth-child(2),
-table.cases-list th:nth-child(3),
-table.cases-list td:nth-child(1),
-table.cases-list td:nth-child(2),
-table.cases-list td:nth-child(3),
-table.cases-list thead th:nth-child(1),
-table.cases-list thead th:nth-child(2),
-table.cases-list thead th:nth-child(3),
+table.cases-solicitudes th:nth-child(1),
+table.cases-solicitudes th:nth-child(2),
+table.cases-solicitudes th:nth-child(3),
+table.cases-solicitudes td:nth-child(1),
+table.cases-solicitudes td:nth-child(2),
+table.cases-solicitudes td:nth-child(3),
+table.cases-solicitudes thead th:nth-child(1),
+table.cases-solicitudes thead th:nth-child(2),
+table.cases-solicitudes thead th:nth-child(3),
 table.cases-index th:nth-child(1),
 table.cases-index th:nth-child(2),
 table.cases-index th:nth-child(3),
@@ -1686,30 +1686,30 @@ table.cases-index td:nth-child(3) {
   border-right: none !important;
   box-shadow: none !important;
 }
-table.cases-list tbody tr td:nth-child(1),
-table.cases-list tbody tr td:nth-child(2),
-table.cases-list tbody tr td:nth-child(3) { background-color: #ffffff !important; }
-table.cases-list tbody tr:hover td:nth-child(1),
-table.cases-list tbody tr:hover td:nth-child(2),
-table.cases-list tbody tr:hover td:nth-child(3) { background-color: var(--row-normal-hover) !important; }
-table.cases-list tbody tr.row-confirmed td:nth-child(1),
-table.cases-list tbody tr.row-confirmed td:nth-child(2),
-table.cases-list tbody tr.row-confirmed td:nth-child(3) { background-color: #eef0f4 !important; }
-table.cases-list tbody tr.row-confirmed:hover td:nth-child(1),
-table.cases-list tbody tr.row-confirmed:hover td:nth-child(2),
-table.cases-list tbody tr.row-confirmed:hover td:nth-child(3) { background-color: #e4e7ed !important; }
-table.cases-list tbody tr.row-confirmed:has(select.badge-confirmed) td:nth-child(1),
-table.cases-list tbody tr.row-confirmed:has(select.badge-confirmed) td:nth-child(2),
-table.cases-list tbody tr.row-confirmed:has(select.badge-confirmed) td:nth-child(3) { background-color: #e9f7ef !important; }
-table.cases-list tbody tr.row-confirmed:has(select.badge-confirmed):hover td:nth-child(1),
-table.cases-list tbody tr.row-confirmed:has(select.badge-confirmed):hover td:nth-child(2),
-table.cases-list tbody tr.row-confirmed:has(select.badge-confirmed):hover td:nth-child(3) { background-color: #dcf2e5 !important; }
-table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(1),
-table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(2),
-table.cases-list tbody tr:has(input.marked-checkbox:checked) td:nth-child(3) { background-color: #fff3d6 !important; }
-table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(1),
-table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(2),
-table.cases-list tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(3) { background-color: #ffebc0 !important; }
+table.cases-solicitudes tbody tr td:nth-child(1),
+table.cases-solicitudes tbody tr td:nth-child(2),
+table.cases-solicitudes tbody tr td:nth-child(3) { background-color: #ffffff !important; }
+table.cases-solicitudes tbody tr:hover td:nth-child(1),
+table.cases-solicitudes tbody tr:hover td:nth-child(2),
+table.cases-solicitudes tbody tr:hover td:nth-child(3) { background-color: var(--row-normal-hover) !important; }
+table.cases-solicitudes tbody tr.row-confirmed td:nth-child(1),
+table.cases-solicitudes tbody tr.row-confirmed td:nth-child(2),
+table.cases-solicitudes tbody tr.row-confirmed td:nth-child(3) { background-color: #eef0f4 !important; }
+table.cases-solicitudes tbody tr.row-confirmed:hover td:nth-child(1),
+table.cases-solicitudes tbody tr.row-confirmed:hover td:nth-child(2),
+table.cases-solicitudes tbody tr.row-confirmed:hover td:nth-child(3) { background-color: #e4e7ed !important; }
+table.cases-solicitudes tbody tr.row-confirmed:has(select.badge-confirmed) td:nth-child(1),
+table.cases-solicitudes tbody tr.row-confirmed:has(select.badge-confirmed) td:nth-child(2),
+table.cases-solicitudes tbody tr.row-confirmed:has(select.badge-confirmed) td:nth-child(3) { background-color: #e9f7ef !important; }
+table.cases-solicitudes tbody tr.row-confirmed:has(select.badge-confirmed):hover td:nth-child(1),
+table.cases-solicitudes tbody tr.row-confirmed:has(select.badge-confirmed):hover td:nth-child(2),
+table.cases-solicitudes tbody tr.row-confirmed:has(select.badge-confirmed):hover td:nth-child(3) { background-color: #dcf2e5 !important; }
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(1),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(2),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(3) { background-color: #fff3d6 !important; }
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(1),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(2),
+table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(3) { background-color: #ffebc0 !important; }
 
 /* Edición en línea y píldora de estado */
 .input-inline { border-color: var(--borde); }
@@ -1718,8 +1718,8 @@ table.cases-list .input-inline:focus {
   border-color: var(--accent) !important;
   box-shadow: 0 0 0 3px var(--ring) !important;
 }
-table.cases-list th:nth-child(2),
-table.cases-list td:nth-child(2) {
+table.cases-solicitudes th:nth-child(2),
+table.cases-solicitudes td:nth-child(2) {
   width: 1%;
   min-width: 0;
   white-space: nowrap;
@@ -2391,7 +2391,7 @@ header.top .head-lico svg { width: 34px; height: 34px; }
   body, body.cases-page { background: #fff !important; height: auto !important; overflow: visible !important; }
   .card.table-card, .table-wrap { max-height: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; }
   table.cases th, table.cases-list th { box-shadow: none !important; background: #f3f6f4 !important; color: #000 !important; }
-  table.cases-list thead th:nth-child(1),
-  table.cases-list thead th:nth-child(2),
-  table.cases-list thead th:nth-child(3) { background-color: #f3f6f4 !important; color: #000 !important; }
+  table.cases-solicitudes thead th:nth-child(1),
+  table.cases-solicitudes thead th:nth-child(2),
+  table.cases-solicitudes thead th:nth-child(3) { background-color: #f3f6f4 !important; color: #000 !important; }
 }

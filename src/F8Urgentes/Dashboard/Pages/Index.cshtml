@@ -287,7 +287,7 @@
 </div>
 
 <div class="card table-card">
-    <table class="cases cases-list">
+    <table class="cases cases-list cases-solicitudes">
         <thead>
             <tr>
                 <th>Marcar</th>
@@ -741,14 +741,14 @@
         }
 
         function autoFitNameInputs() {
-            var inputs = document.querySelectorAll('table.cases-list td.name-cell input.input-inline');
+            var inputs = document.querySelectorAll('table.cases-solicitudes td.name-cell input.input-inline');
             inputs.forEach(autoFitNameInput);
             updateStickyOffsets();
             if (typeof window.__f8RestoreScroll === 'function') window.__f8RestoreScroll();
         }
 
         function updateStickyOffsets() {
-            var table = document.querySelector('table.cases-list');
+            var table = document.querySelector('table.cases-solicitudes');
             if (!table) return;
             var ths = table.querySelectorAll('thead th');
             if (ths.length < 3) return;
@@ -768,14 +768,14 @@
                 document.head.appendChild(styleEl);
             }
             styleEl.textContent =
-                'table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { left: 0px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
-                'table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { left: ' + left2 + 'px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
-                'table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { left: ' + left3 + 'px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
-                'table.cases-list thead th:nth-child(1), table.cases-list thead th:nth-child(2), table.cases-list thead th:nth-child(3) { z-index: 25 !important; background-color: var(--table-th-bg, #3f1422) !important; background-image: var(--table-th-gradient, linear-gradient(180deg, #35101c 0%, #591d31 100%)) !important; color: var(--table-th-color, #fff5e4) !important; }';
+                'table.cases-solicitudes th:nth-child(1), table.cases-solicitudes td:nth-child(1) { left: 0px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
+                'table.cases-solicitudes th:nth-child(2), table.cases-solicitudes td:nth-child(2) { left: ' + left2 + 'px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
+                'table.cases-solicitudes th:nth-child(3), table.cases-solicitudes td:nth-child(3) { left: ' + left3 + 'px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
+                'table.cases-solicitudes thead th:nth-child(1), table.cases-solicitudes thead th:nth-child(2), table.cases-solicitudes thead th:nth-child(3) { z-index: 25 !important; background-color: var(--table-th-bg, #3f1422) !important; background-image: var(--table-th-gradient, linear-gradient(180deg, #35101c 0%, #591d31 100%)) !important; color: var(--table-th-color, #fff5e4) !important; }';
         }
 
         document.addEventListener('input', function (event) {
-            if (event.target && event.target.matches('table.cases-list td.name-cell input.input-inline')) {
+            if (event.target && event.target.matches('table.cases-solicitudes td.name-cell input.input-inline')) {
                 autoFitNameInput(event.target);
                 updateStickyOffsets();
             }

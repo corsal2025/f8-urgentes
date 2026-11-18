@@ -18,8 +18,7 @@
   var PAGINAS = {
     '/index':            { url: '/Index',                   seccion: 'Solicitudes' },
     '/carpetasextra':    { url: '/CarpetasExtra',           seccion: 'Carpetas Extra' },
-    '/estadisticas':     { url: '/Estadisticas',            seccion: 'Estadísticas' },
-    '/impresionmensual': { url: '/ImpresionMensual',        seccion: 'Impresión mensual' }
+    '/estadisticas':     { url: '/Estadisticas',            seccion: 'Estadísticas' }
   };
 
   // pagina: clave de PAGINAS. target / fallbackTarget: selectores (el fallback se usa si el target no existe,
@@ -31,14 +30,14 @@
       target: '#btn-guia-global',
       titulo: 'Hola, soy Lico: tu guía',
       icono: '👋',
-      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
+      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b>, <b>Carpetas Extra</b> y <b>Estadísticas</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
     },
     {
       pagina: '/index',
       target: '.app-nav',
       titulo: 'Las secciones del sistema',
       icono: '🧭',
-      descripcion: 'Navega entre <b>Solicitudes</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>. La sección activa queda subrayada en ámbar.'
+      descripcion: 'Navega entre <b>Solicitudes</b>, <b>Carpetas Extra</b> y <b>Estadísticas</b>. La sección activa queda subrayada en ámbar.'
     },
     {
       pagina: '/index',
@@ -163,7 +162,7 @@
       fallbackTarget: 'main',
       titulo: 'Registrar una carpeta extra',
       icono: '✍️',
-      descripcion: '<b>Nombre completo</b> y <b>RUT</b> son obligatorios (el RUT debe tener dígito verificador válido). Agrega Código F8, Estado y Estado actual si los tienes; si un estado no se reconoce, el caso queda en <b>Requiere revisión</b>. Pulsa <b>+ Guardar Carpeta Extra</b>.'
+      descripcion: '<b>Nombre completo</b> y <b>RUT</b> son obligatorios (el RUT debe tener dígito verificador válido). Pulsa <b>+ Guardar Carpeta Extra</b>.'
     },
     {
       pagina: '/carpetasextra',
@@ -171,7 +170,7 @@
       fallbackTarget: 'main .table-card',
       titulo: 'Listado de carpetas extra',
       icono: '📋',
-      descripcion: '<b>Caja</b> envía la carpeta a la cola de Caja (pide confirmación y sale de esta lista). El basurero la elimina, previa confirmación. Una fila rosada indica que requiere revisión.'
+      descripcion: 'Muestra <b>Nombre contribuyente</b> y <b>RUT</b> de cada carpeta extra registrada. El basurero la elimina, previa confirmación.'
     },
 
     // ---------- ESTADÍSTICAS ----------
@@ -223,42 +222,8 @@
       icono: '🧩',
       descripcion: 'Carga por <b>sector oficina</b> (subidas y pendientes) y reparto de los casos por sector oficina; más abajo, por estado, estado actual, sector de archivo y origen del registro.'
     },
-
-    // ---------- IMPRESIÓN MENSUAL ----------
     {
-      pagina: '/impresionmensual', pose: 'saluda',
-      target: 'main .nav-group form',
-      fallbackTarget: 'main',
-      titulo: 'Mes de trabajo',
-      icono: '🗓️',
-      descripcion: 'Por defecto se abre el <b>mes anterior</b>. Elige otro mes y pulsa <b>Ver mes</b> para armar su listado.'
-    },
-    {
-      pagina: '/impresionmensual',
-      target: '.print-report',
-      fallbackTarget: 'main',
-      titulo: 'Listado del mes',
-      icono: '🧾',
-      descripcion: 'Casos <b>SUBIDA A CONASET</b> cuya fecha de subida cae en el mes elegido, ordenados por fecha de subida. Incluye folio, fecha de generación, total y firma de quien solicita.'
-    },
-    {
-      pagina: '/impresionmensual',
-      target: 'main .nav-group button[onclick*="print"]',
-      fallbackTarget: '.print-report',
-      titulo: 'Imprimir / Guardar como PDF',
-      icono: '🖨️',
-      descripcion: 'Imprime el listado; a su lado eliges el <b>tamaño de hoja</b> (A4 o Letter). Al cerrar la impresión, el mes queda registrado como impreso automáticamente.'
-    },
-    {
-      pagina: '/impresionmensual', pose: 'alerta',
-      target: '#mark-printed-form',
-      fallbackTarget: '.print-report',
-      titulo: 'Vaciar listado',
-      icono: '🧹',
-      descripcion: 'Pide confirmación y registra el listado del mes como <b>impreso</b>.'
-    },
-    {
-      pagina: '/impresionmensual', pose: 'celebra',
+      pagina: '/estadisticas', pose: 'celebra',
       target: '#btn-guia-global',
       titulo: '¡Terminaste el recorrido!',
       icono: '🎉',
