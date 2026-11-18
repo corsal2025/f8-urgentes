@@ -29,17 +29,9 @@ public static class MatrizSyncService
     // The real workbook uses "NO EXISTE CARPETA" — "NO HAY CARPETA" is kept as a second accepted
     // spelling since operators across sheets/months aren't perfectly consistent in wording.
     private static readonly string[] EstadosSinCarpeta = ["NO EXISTE CARPETA", "NO HAY CARPETA"];
-    private const string EstadoSubidaConF8 = "SUBIDA CON F8";
     private const int MaxRetries = 4;
     private const int MaxConsecutiveEmptyRows = 50;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromSeconds(2);
-
-    // Salida (write-back to the Excel matriz) is disabled by request — the office wants to do
-    // that step by hand for now, until the matching/row-relocation logic is more battle-tested.
-    // Entrada (reading NO EXISTE CARPETA cases into the dashboard) keeps running as normal.
-    // Cases marked "Subir" still queue up (PendienteEscrituraExcel stays true) so nothing is
-    // lost — flip this back to true whenever salida should resume.
-    private static readonly bool SalidaEnabled = false;
 
     public static MatrizSyncResult Sync(string? workbookPath, IUrgentRequestRepository repository)
     {
@@ -51,10 +43,6 @@ public static class MatrizSyncService
         }
 
         RunEntrada(workbookPath, repository, result);
-        if (SalidaEnabled)
-        {
-            RunSalida(workbookPath, repository, result);
-        }
         return result;
     }
 
@@ -207,193 +195,6 @@ public static class MatrizSyncService
         }
     }
 
-    // Salida: only opens the workbook for writing (isEditable: true) when there is at least one
-    // pending row. Retries on lock instead of giving up — the office keeps this file open in
-    // Excel/Drive often — and takes a backup copy before saving.
-    private static void RunSalida(string workbookPath, IUrgentRequestRepository repository, MatrizSyncResult result)
-    {
-        var allPending = repository.GetPendingEscrituraExcel();
-        var pending = allPending.Where(r => r.SourceSheet is not null && r.SourceRowNumber is not null).ToList();
-
-        foreach (var orphan in allPending.Where(r => r.SourceSheet is null || r.SourceRowNumber is null))
-        {
-            result.Alerts.Add($"Caso '{orphan.NombreCompleto}' (RUT {orphan.Rut}) no vino de la matriz — no se puede ubicar fila para actualizar el Excel.");
-        }
-
-        if (pending.Count == 0)
-        {
-            return;
-        }
-
-        // Backup must happen before the file is opened for writing below — File.Copy on a
-        // source that our own process already holds open for edit fails with IOException on
-        // Windows (the open handle, not just external locks, blocks the copy).
-        try
-        {
-            BackupBeforeSave(workbookPath);
-        }
-        catch (IOException)
-        {
-            result.ExcelLocked = true;
-            result.Alerts.Add("No se pudo respaldar el Excel antes de escribir (archivo bloqueado) — no se realizo ningun cambio.");
-            return;
-        }
-
-        SpreadsheetDocument? document = null;
-        for (var attempt = 1; attempt <= MaxRetries && document is null; attempt++)
-        {
-            try
-            {
-                // AutoSave is on by default — SpreadsheetDocument would persist any in-memory
-                // mutation to disk on Dispose() even if Save() is never called explicitly
-                // (confirmed: an earlier bug here backed up AFTER opening the doc, threw, and
-                // the exception unwind still wrote the half-finished edit via autosave). Turning
-                // it off means disk is only ever touched by our own explicit Save() call below.
-                document = SpreadsheetDocument.Open(workbookPath, isEditable: true, new OpenSettings { AutoSave = false });
-            }
-            catch (IOException) when (attempt < MaxRetries)
-            {
-                Thread.Sleep(RetryDelay);
-            }
-            catch (IOException)
-            {
-                result.ExcelLocked = true;
-                return;
-            }
-        }
-
-        if (document is null)
-        {
-            result.ExcelLocked = true;
-            return;
-        }
-
-        using (document)
-        {
-            var workbookPart = document.WorkbookPart!;
-            var sharedStrings = ReadSharedStrings(workbookPart);
-            var columnsBySheet = new Dictionary<string, MatrizColumns>();
-            var writtenIds = new List<long>();
-
-            foreach (var request in pending)
-            {
-                var sheet = workbookPart.Workbook.Sheets!.Elements<Sheet>()
-                    .FirstOrDefault(s => string.Equals(s.Name!.Value, request.SourceSheet, StringComparison.OrdinalIgnoreCase));
-                if (sheet is null)
-                {
-                    result.Alerts.Add($"Hoja '{request.SourceSheet}' ya no existe en el Excel — RUT {request.Rut} no actualizado.");
-                    continue;
-                }
-
-                var worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id!.Value!);
-                var sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
-                if (sheetData is null)
-                {
-                    continue;
-                }
-
-                if (!columnsBySheet.TryGetValue(sheet.Name!.Value!, out var columns))
-                {
-                    var mapped = MapColumns(sheetData, sharedStrings);
-                    if (mapped is null)
-                    {
-                        result.Alerts.Add($"No se reconocieron las columnas de '{sheet.Name!.Value}' — RUT {request.Rut} no actualizado.");
-                        continue;
-                    }
-                    columns = mapped;
-                    columnsBySheet[sheet.Name!.Value!] = columns;
-                }
-
-                // Compare through Rut.TryParse on both sides, not raw string equality — some
-                // cases were stored before the leading-zero canonical form existed (their
-                // request.Rut is still e.g. "9629999-0" instead of "09629999-0"), which would
-                // otherwise never match the Excel's own (correctly padded) cell.
-                var requestRutCanonical = Rut.TryParse(request.Rut, out var parsedRequestRut) ? parsedRequestRut.ToString() : request.Rut;
-
-                var rowNumber = request.SourceRowNumber!.Value;
-                var row = sheetData.Elements<Row>().FirstOrDefault(r => r.RowIndex!.Value == (uint)rowNumber);
-
-                var currentRutRaw = row is null ? "" : GetCellText(row, columns.Rut, sharedStrings)?.Trim() ?? "";
-                var rowMatchesRut = Rut.TryParse(currentRutRaw, out var rowRut) && rowRut.ToString() == requestRutCanonical;
-
-                if (!rowMatchesRut)
-                {
-                    // The stored row number was captured at import time — rows shift whenever
-                    // someone inserts/deletes rows in the live shared spreadsheet since then.
-                    // Before giving up, re-locate the case by scanning the whole sheet for its
-                    // RUT rather than trusting a now-possibly-stale row number.
-                    var relocated = sheetData.Elements<Row>().FirstOrDefault(r =>
-                        Rut.TryParse(GetCellText(r, columns.Rut, sharedStrings), out var candidateRut) &&
-                        candidateRut.ToString() == requestRutCanonical);
-
-                    if (relocated is null)
-                    {
-                        result.Alerts.Add($"No se encontro el RUT {request.Rut} en '{sheet.Name!.Value}' (fila {rowNumber} ahora tiene otro caso) — revisar manualmente.");
-                        continue;
-                    }
-
-                    result.Alerts.Add($"RUT {request.Rut} se movio de la fila {rowNumber} a la fila {relocated.RowIndex!.Value} en '{sheet.Name!.Value}' — actualizado igual, se detecto y siguio el cambio.");
-                    row = relocated;
-                }
-
-                SetCellText(row!, columns.EstadoCarpeta, EstadoSubidaConF8);
-                if (columns.FechaSubioCarpeta != 0)
-                {
-                    var fecha = (request.FechaDeSubida ?? DateOnly.FromDateTime(DateTime.Today)).ToString("dd/MM/yyyy");
-                    SetCellText(row!, columns.FechaSubioCarpeta, fecha);
-                }
-
-                writtenIds.Add(request.Id);
-                result.RowsWrittenBack++;
-            }
-
-            if (writtenIds.Count == 0)
-            {
-                return;
-            }
-
-            var saved = false;
-            for (var attempt = 1; attempt <= MaxRetries && !saved; attempt++)
-            {
-                try
-                {
-                    foreach (var worksheetPart in workbookPart.GetPartsOfType<WorksheetPart>())
-                    {
-                        worksheetPart.Worksheet.Save();
-                    }
-                    document.Save();
-                    saved = true;
-                }
-                catch (IOException) when (attempt < MaxRetries)
-                {
-                    Thread.Sleep(RetryDelay);
-                }
-            }
-
-            if (saved)
-            {
-                foreach (var id in writtenIds)
-                {
-                    repository.SetPendienteEscrituraExcel(id, false);
-                }
-            }
-            else
-            {
-                result.ExcelLocked = true;
-                result.RowsWrittenBack = 0;
-                result.Alerts.Add("No se pudo guardar el Excel (archivo bloqueado) — los casos quedan pendientes, se reintentara en la proxima sincronizacion.");
-            }
-        }
-    }
-
-    private static void BackupBeforeSave(string workbookPath)
-    {
-        var backupDir = Path.Combine(Path.GetDirectoryName(workbookPath)!, "backups");
-        Directory.CreateDirectory(backupDir);
-        var backupName = $"{Path.GetFileNameWithoutExtension(workbookPath)}_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(workbookPath)}";
-        File.Copy(workbookPath, Path.Combine(backupDir, backupName), overwrite: false);
-    }
-
     private static string? SectorFor(string sheetName)
     {
         var normalized = NormalizeHeader(sheetName);
@@ -503,33 +304,6 @@ public static class MatrizSyncService
         }
 
         return cell.CellValue?.InnerText;
-    }
-
-    private static void SetCellText(Row row, int columnIndex, string value)
-    {
-        var columnLetter = ColumnLetterFromIndex(columnIndex);
-        var cellReference = $"{columnLetter}{row.RowIndex!.Value}";
-        var cell = row.Elements<Cell>().FirstOrDefault(c => c.CellReference!.Value == cellReference);
-
-        if (cell is null)
-        {
-            cell = new Cell { CellReference = cellReference };
-            var following = row.Elements<Cell>()
-                .FirstOrDefault(c => ColumnIndexFromReference(c.CellReference!.Value!) > columnIndex);
-            if (following is not null)
-            {
-                row.InsertBefore(cell, following);
-            }
-            else
-            {
-                row.AppendChild(cell);
-            }
-        }
-
-        cell.RemoveAllChildren<CellValue>();
-        cell.RemoveAllChildren<InlineString>();
-        cell.DataType = new EnumValue<CellValues>(CellValues.InlineString);
-        cell.AppendChild(new InlineString(new Text(value)));
     }
 
     private static string ColumnPartOf(string cellReference) => new(cellReference.TakeWhile(char.IsLetter).ToArray());

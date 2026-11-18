@@ -80,13 +80,6 @@
                     <td class="text-cell">@(request.EstadoActual ?? "PENDIENTE")</td>
                     <td class="action-cell">
                         <div class="action-group">
-                            <form method="post" asp-page-handler="SendToCaja" onsubmit="return confirm('¿Enviar a Caja? El caso pasará a la cola de Caja y desaparecerá de esta lista.');">
-                                <input type="hidden" name="id" value="@request.Id" />
-                                <button class="btn-folder btn-folder-box" type="submit" title="Enviar a Caja">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"></path><path d="M1 3h22v5H1z"></path><line x1="10" y1="12" x2="14" y2="12"></line></svg>
-                                    <span>Caja</span>
-                                </button>
-                            </form>
                             <form method="post" asp-page-handler="Delete" onsubmit="return confirm('¿Eliminar esta carpeta extra?');">
                                 <input type="hidden" name="id" value="@request.Id" />
                                 <button class="btn-danger" type="submit" title="Eliminar">

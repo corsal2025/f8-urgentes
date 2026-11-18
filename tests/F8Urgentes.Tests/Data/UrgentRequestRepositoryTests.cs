@@ -304,17 +304,15 @@ public sealed class UrgentRequestRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void SetMarked_True_SetsMarkedAtAndClearsSectorPdfGeneratedAt()
+    public void SetMarked_True_SetsMarkedAt()
     {
         var id = _repository.Insert(SampleRequest());
-        _repository.SetSectorPdfGenerated(id, DateTimeOffset.UtcNow);
 
         _repository.SetMarked(id, true);
 
         var request = _repository.FindById(id)!;
         Assert.True(request.Marked);
         Assert.NotNull(request.MarkedAt);
-        Assert.Null(request.SectorPdfGeneratedAt);
     }
 
     [Fact]
@@ -328,57 +326,5 @@ public sealed class UrgentRequestRepositoryTests : IDisposable
         var request = _repository.FindById(id)!;
         Assert.False(request.Marked);
         Assert.Null(request.MarkedAt);
-    }
-
-    [Fact]
-    public void SetPendienteCarpeta_RoundTrips()
-    {
-        var id = _repository.Insert(SampleRequest());
-
-        _repository.SetPendienteCarpeta(id, true);
-        Assert.True(_repository.FindById(id)!.PendienteCarpeta);
-
-        _repository.SetPendienteCarpeta(id, false);
-        Assert.False(_repository.FindById(id)!.PendienteCarpeta);
-    }
-
-    [Fact]
-    public void SetMarked_True_ClearsPendienteCarpeta()
-    {
-        var id = _repository.Insert(SampleRequest());
-        _repository.SetPendienteCarpeta(id, true);
-
-        _repository.SetMarked(id, true);
-
-        var request = _repository.FindById(id)!;
-        Assert.True(request.Marked);
-        Assert.False(request.PendienteCarpeta);
-    }
-
-    [Fact]
-    public void SetPendienteCarpeta_True_ClearsMarked()
-    {
-        var id = _repository.Insert(SampleRequest());
-        _repository.SetMarked(id, true);
-
-        _repository.SetPendienteCarpeta(id, true);
-
-        var request = _repository.FindById(id)!;
-        Assert.True(request.PendienteCarpeta);
-        Assert.False(request.Marked);
-        Assert.Null(request.MarkedAt);
-    }
-
-    [Fact]
-    public void SetSectorPdfGenerated_SetsTimestamp()
-    {
-        var id = _repository.Insert(SampleRequest());
-        var now = DateTimeOffset.UtcNow;
-
-        _repository.SetSectorPdfGenerated(id, now);
-
-        var request = _repository.FindById(id)!;
-        Assert.NotNull(request.SectorPdfGeneratedAt);
-        Assert.Equal(now.ToString("O"), request.SectorPdfGeneratedAt!.Value.ToString("O"));
     }
 }

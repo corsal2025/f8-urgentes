@@ -386,27 +386,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.ExecuteNonQuery();
     }
 
-    public void SetPendienteCarpeta(long id, bool pendienteCarpeta)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = pendienteCarpeta
-            ? "UPDATE UrgentRequest SET PendienteCarpeta = 1, Marked = 0, MarkedAt = NULL WHERE Id = $id"
-            : "UPDATE UrgentRequest SET PendienteCarpeta = 0 WHERE Id = $id";
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
-    }
-
-    public void SetSectorPdfGenerated(long id, DateTimeOffset generatedAt)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE UrgentRequest SET SectorPdfGeneratedAt = $at WHERE Id = $id";
-        command.Parameters.AddWithValue("$at", generatedAt.ToString("O"));
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
-    }
-
     public void SetImpresoMensual(long id, DateTimeOffset? generatedAt)
     {
         using var connection = Open();
@@ -425,30 +404,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.Parameters.AddWithValue("$rut", rut);
         using var reader = command.ExecuteReader();
         return reader.Read() ? Map(reader) : null;
-    }
-
-    public void SetPendienteEscrituraExcel(long id, bool pendiente)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE UrgentRequest SET PendienteEscrituraExcel = $pendiente WHERE Id = $id";
-        command.Parameters.AddWithValue("$pendiente", pendiente ? 1 : 0);
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
-    }
-
-    public IReadOnlyList<UrgentRequest> GetPendingEscrituraExcel()
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM UrgentRequest WHERE PendienteEscrituraExcel = 1 ORDER BY Id";
-        using var reader = command.ExecuteReader();
-        var results = new List<UrgentRequest>();
-        while (reader.Read())
-        {
-            results.Add(Map(reader));
-        }
-        return results;
     }
 
     private SqliteConnection Open()
@@ -547,135 +502,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         command.ExecuteNonQuery();
     }
 
-    public void SendToCaja(long id, DateTimeOffset transferredAt)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE UrgentRequest SET CajaTransferredAt = $at WHERE Id = $id AND CajaBoxId IS NULL";
-        command.Parameters.AddWithValue("$at", transferredAt.ToString("O"));
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
-    }
-
-    public void UndoCajaQueue(long id)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE UrgentRequest SET CajaTransferredAt = NULL WHERE Id = $id AND CajaBoxId IS NULL";
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
-    }
-
-    public IReadOnlyList<UrgentRequest> GetCajaQueue()
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT * FROM UrgentRequest
-            WHERE CajaTransferredAt IS NOT NULL AND CajaBoxId IS NULL
-            ORDER BY CajaTransferredAt, Id
-            """;
-        using var reader = command.ExecuteReader();
-        var results = new List<UrgentRequest>();
-        while (reader.Read())
-        {
-            results.Add(Map(reader));
-        }
-        return results;
-    }
-
-    public Box CloseBox(string code, DateTimeOffset closedAt)
-    {
-        using var connection = Open();
-        using var transaction = connection.BeginTransaction();
-
-        long boxId;
-        int number;
-        var manualCode = string.IsNullOrWhiteSpace(code) ? null : code.Trim();
-
-        using (var insertCommand = connection.CreateCommand())
-        {
-            insertCommand.Transaction = transaction;
-            insertCommand.CommandText = """
-                INSERT INTO Box (Number, Code, ClosedAt)
-                VALUES ((SELECT COALESCE(MAX(Number), 0) + 1 FROM Box), $code, $closedAt);
-                SELECT last_insert_rowid();
-                """;
-            insertCommand.Parameters.AddWithValue("$code", (object?)manualCode ?? string.Empty);
-            insertCommand.Parameters.AddWithValue("$closedAt", closedAt.ToString("O"));
-            boxId = (long)insertCommand.ExecuteScalar()!;
-        }
-
-        using (var numberCommand = connection.CreateCommand())
-        {
-            numberCommand.Transaction = transaction;
-            numberCommand.CommandText = "SELECT Number, Code FROM Box WHERE Id = $id";
-            numberCommand.Parameters.AddWithValue("$id", boxId);
-            using var r = numberCommand.ExecuteReader();
-            r.Read();
-            number = r.GetInt32(0);
-            var storedCode = r.GetString(1);
-            if (string.IsNullOrWhiteSpace(storedCode))
-            {
-                manualCode = $"A{number}-PUC";
-                using var updateCodeCmd = connection.CreateCommand();
-                updateCodeCmd.Transaction = transaction;
-                updateCodeCmd.CommandText = "UPDATE Box SET Code = $code WHERE Id = $id";
-                updateCodeCmd.Parameters.AddWithValue("$code", manualCode);
-                updateCodeCmd.Parameters.AddWithValue("$id", boxId);
-                updateCodeCmd.ExecuteNonQuery();
-            }
-            else
-            {
-                manualCode = storedCode;
-            }
-        }
-
-        using (var assignCommand = connection.CreateCommand())
-        {
-            assignCommand.Transaction = transaction;
-            assignCommand.CommandText = "UPDATE UrgentRequest SET CajaBoxId = $boxId WHERE CajaTransferredAt IS NOT NULL AND CajaBoxId IS NULL";
-            assignCommand.Parameters.AddWithValue("$boxId", boxId);
-            assignCommand.ExecuteNonQuery();
-        }
-
-        transaction.Commit();
-        return new Box { Id = boxId, Number = number, Code = manualCode!, ClosedAt = closedAt };
-    }
-
-    public void ReopenBox(long boxId)
-    {
-        using var connection = Open();
-        using var transaction = connection.BeginTransaction();
-
-        using (var unpackCommand = connection.CreateCommand())
-        {
-            unpackCommand.Transaction = transaction;
-            unpackCommand.CommandText = "UPDATE UrgentRequest SET CajaBoxId = NULL WHERE CajaBoxId = $boxId";
-            unpackCommand.Parameters.AddWithValue("$boxId", boxId);
-            unpackCommand.ExecuteNonQuery();
-        }
-
-        using (var deleteCommand = connection.CreateCommand())
-        {
-            deleteCommand.Transaction = transaction;
-            deleteCommand.CommandText = "DELETE FROM Box WHERE Id = $boxId";
-            deleteCommand.Parameters.AddWithValue("$boxId", boxId);
-            deleteCommand.ExecuteNonQuery();
-        }
-
-        transaction.Commit();
-    }
-
-    public void RemoveCaseFromClosedBox(long id)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE UrgentRequest SET CajaTransferredAt = NULL, CajaBoxId = NULL WHERE Id = $id";
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
-    }
-
     public IReadOnlyList<Box> GetBoxes()
     {
         using var connection = Open();
@@ -686,35 +512,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         while (reader.Read())
         {
             results.Add(MapBox(reader));
-        }
-        return results;
-    }
-
-    public Box? FindBoxById(long id)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM Box WHERE Id = $id LIMIT 1";
-        command.Parameters.AddWithValue("$id", id);
-        using var reader = command.ExecuteReader();
-        return reader.Read() ? MapBox(reader) : null;
-    }
-
-    public IReadOnlyList<UrgentRequest> GetCasesByBoxId(long boxId)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = """
-            SELECT * FROM UrgentRequest
-            WHERE CajaBoxId = $boxId
-            ORDER BY CajaTransferredAt, Id
-            """;
-        command.Parameters.AddWithValue("$boxId", boxId);
-        using var reader = command.ExecuteReader();
-        var results = new List<UrgentRequest>();
-        while (reader.Read())
-        {
-            results.Add(Map(reader));
         }
         return results;
     }

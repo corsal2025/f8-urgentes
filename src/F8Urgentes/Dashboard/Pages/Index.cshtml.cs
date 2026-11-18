@@ -17,119 +17,23 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
 
     public IReadOnlyList<UrgentRequest> Requests { get; private set; } = [];
     public IReadOnlyList<string> DuplicateRuts { get; private set; } = [];
-    public string? Month { get; private set; }
-    public string? Estado { get; private set; }
-    public string? EstadoActual { get; private set; }
     public bool? Flagged { get; private set; }
     public string? Search { get; private set; }
     public string? Tab { get; private set; }
-    public string? Sort { get; private set; }
-    public DateOnly? FechaDesde { get; private set; }
-    public DateOnly? FechaHasta { get; private set; }
-    public string? Rango { get; private set; }
     public int FlaggedCount { get; private set; }
-    public int ExtraCasesCount { get; private set; }
-    public int PenultimasCount { get; private set; }
     public int SinAgregarCount { get; private set; }
 
-    // Shown during the first 10 days of the month as a nudge to run the previous month's
-    // monthly print batch before it's forgotten — only fires if unprinted completed cases
-    // from that month actually exist.
-    public bool ShowMonthlyPrintReminder { get; private set; }
-    public string PreviousMonthKey { get; private set; } = string.Empty;
-
     public void OnGet(
-        string? month,
-        string? estado,
-        string? estadoActual,
         bool? flagged,
         string? search,
-        string? tab = null,
-        string? sort = null,
-        string? fechaDesde = null,
-        string? fechaHasta = null,
-        string? rango = null)
+        string? tab = null)
     {
-        Month = month;
-        Estado = estado;
-        EstadoActual = estadoActual;
         Flagged = flagged;
         Search = search;
         Tab = tab;
-        Sort = sort;
-        Rango = rango;
 
-        DateOnly? parsedDesde = null;
-        if (!string.IsNullOrWhiteSpace(fechaDesde))
-        {
-            if (DateOnly.TryParse(fechaDesde, out var d))
-            {
-                parsedDesde = d;
-            }
-            else if (fechaDesde.Length == 7 && DateOnly.TryParse($"{fechaDesde}-01", out var ym))
-            {
-                parsedDesde = ym;
-            }
-        }
-
-        DateOnly? parsedHasta = null;
-        if (!string.IsNullOrWhiteSpace(fechaHasta))
-        {
-            if (DateOnly.TryParse(fechaHasta, out var h))
-            {
-                parsedHasta = h;
-            }
-            else if (fechaHasta.Length == 7 && DateOnly.TryParse($"{fechaHasta}-01", out var ym))
-            {
-                parsedHasta = new DateOnly(ym.Year, ym.Month, DateTime.DaysInMonth(ym.Year, ym.Month));
-            }
-        }
-
-        var today = DateOnly.FromDateTime(DateTime.Today);
-
-        if (parsedDesde is null && parsedHasta is null && !string.IsNullOrWhiteSpace(rango))
-        {
-            switch (rango.Trim().ToLowerInvariant())
-            {
-                case "este-mes":
-                    parsedDesde = new DateOnly(today.Year, today.Month, 1);
-                    parsedHasta = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
-                    break;
-                case "mes-anterior":
-                    var prev = today.AddMonths(-1);
-                    parsedDesde = new DateOnly(prev.Year, prev.Month, 1);
-                    parsedHasta = new DateOnly(prev.Year, prev.Month, DateTime.DaysInMonth(prev.Year, prev.Month));
-                    break;
-                case "ultimos-3-meses":
-                    var threeMonthsAgo = today.AddMonths(-2);
-                    parsedDesde = new DateOnly(threeMonthsAgo.Year, threeMonthsAgo.Month, 1);
-                    parsedHasta = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
-                    break;
-                case "ultimos-6-meses":
-                    var sixMonthsAgo = today.AddMonths(-5);
-                    parsedDesde = new DateOnly(sixMonthsAgo.Year, sixMonthsAgo.Month, 1);
-                    parsedHasta = new DateOnly(today.Year, today.Month, DateTime.DaysInMonth(today.Year, today.Month));
-                    break;
-                case "ano-actual":
-                    parsedDesde = new DateOnly(today.Year, 1, 1);
-                    parsedHasta = new DateOnly(today.Year, 12, 31);
-                    break;
-            }
-        }
-
-        if (parsedDesde is not null && parsedHasta is not null && parsedDesde > parsedHasta)
-        {
-            (parsedDesde, parsedHasta) = (parsedHasta, parsedDesde);
-        }
-
-        FechaDesde = parsedDesde;
-        FechaHasta = parsedHasta;
-
-        // Caja cases (queued or boxed) live on the /Caja screen, not here — they still count in
-        // Estadisticas (still real cases) but must not appear in the day-to-day Casos list.
-        // Sin-carpeta cases are the opposite: they stay here (grayed via row-confirmed) since
-        // point 2 of the Caja module keeps them visible and reversible from Index itself.
-        var allMatching = repository.Query(new UrgentRequestFilter(month, estado, estadoActual, flagged, FechaDesde, FechaHasta), search)
+        // Sin-carpeta cases stay here (grayed via row-confirmed) and are reversible from Index itself.
+        var allMatching = repository.Query(new UrgentRequestFilter(Flagged: flagged), search)
             .Where(r => r.CajaTransferredAt is null)
             .ToList();
 
@@ -138,38 +42,20 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
             "Pendientes" => allMatching.Where(r => r.EstadoActual != EstadoActualSubida).ToList(),
             "Subidas" => allMatching.Where(r => r.EstadoActual == EstadoActualSubida).ToList(),
             "Certificados" => allMatching.Where(r => r.EstadoActual == EstadoActualCertificado).ToList(),
-            "Penultimas" => allMatching.Where(r => r.FechaPenultimaCarpeta is not null).ToList(),
             "SinAgregar" => allMatching.Where(r => r.Origin == "SinAgregar").ToList(),
             _ => allMatching,
         };
 
-        // "Ordenar por fecha penúltima carpeta" lets the operator walk a specific month's physical
-        // folders in one pass (pick them all, mark Pendiente carpeta) instead of hunting them across
-        // the default status-grouped order. Explicit opt-in via ?sort=...; nulls (no folder date yet)
-        // always sort last regardless of direction, since there's nothing to walk there.
-        Requests = sort switch
-        {
-            "penultima-asc" => filtered
-                .OrderBy(r => r.FechaPenultimaCarpeta is null)
-                .ThenBy(r => r.FechaPenultimaCarpeta)
-                .ThenBy(r => r.Id)
-                .ToList(),
-            "penultima-desc" => filtered
-                .OrderBy(r => r.FechaPenultimaCarpeta is null)
-                .ThenByDescending(r => r.FechaPenultimaCarpeta)
-                .ThenBy(r => r.Id)
-                .ToList(),
-            // Completed cases (SUBIDA A CONASET) drop to the bottom, everything still in progress
-            // stays on top in the order it arrived — so newly loaded/pending cases are always the
-            // first thing the operator sees instead of mixed in among finished ones. Within the
-            // completed group, sort by FechaDeSubida so the monthly print workflow can walk them
-            // in the order they were closed out.
-            _ => filtered
-                .OrderBy(r => r.EstadoActual == EstadoActualSubida ? 1 : 0)
-                .ThenBy(r => r.EstadoActual == EstadoActualSubida ? r.FechaDeSubida : null)
-                .ThenBy(r => r.Id)
-                .ToList(),
-        };
+        // Completed cases (SUBIDA A CONASET) drop to the bottom, everything still in progress
+        // stays on top in the order it arrived — so newly loaded/pending cases are always the
+        // first thing the operator sees instead of mixed in among finished ones. Within the
+        // completed group, sort by FechaDeSubida so the monthly print workflow can walk them
+        // in the order they were closed out.
+        Requests = filtered
+            .OrderBy(r => r.EstadoActual == EstadoActualSubida ? 1 : 0)
+            .ThenBy(r => r.EstadoActual == EstadoActualSubida ? r.FechaDeSubida : null)
+            .ThenBy(r => r.Id)
+            .ToList();
 
         var all = repository.GetAll();
 
@@ -181,26 +67,16 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
             .ToList();
 
         FlaggedCount = repository.GetFlagged().Count;
-        ExtraCasesCount = all.Count(r => r.Origin == "Extra");
-        PenultimasCount = allMatching.Count(r => r.FechaPenultimaCarpeta is not null);
         SinAgregarCount = allMatching.Count(r => r.Origin == "SinAgregar");
-
-        PreviousMonthKey = ImpresionMensualModel.PreviousMonthKey(today);
-        ShowMonthlyPrintReminder = ShouldRemindMonthlyPrint(all, today);
     }
 
     public string BuildUrl(
         string? newTab = null,
-        string? newSort = null,
-        bool? newFlagged = null,
-        string? newRango = null,
-        bool clearDates = false)
+        bool? newFlagged = null)
     {
         var targetTab = newTab ?? Tab ?? "Todos";
-        var targetSort = newSort ?? Sort;
         var targetFlagged = newFlagged ?? Flagged;
         var targetSearch = Search;
-        var targetRango = newRango ?? Rango;
 
         var query = new List<string>();
         if (!string.IsNullOrEmpty(targetTab) && targetTab != "Todos")
@@ -215,47 +91,8 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         {
             query.Add($"search={Uri.EscapeDataString(targetSearch)}");
         }
-        if (!string.IsNullOrEmpty(targetSort))
-        {
-            query.Add($"sort={Uri.EscapeDataString(targetSort)}");
-        }
-        if (!clearDates)
-        {
-            if (!string.IsNullOrEmpty(targetRango))
-            {
-                query.Add($"rango={Uri.EscapeDataString(targetRango)}");
-            }
-            else
-            {
-                if (FechaDesde is not null)
-                {
-                    query.Add($"fechaDesde={FechaDesde.Value:yyyy-MM-dd}");
-                }
-                if (FechaHasta is not null)
-                {
-                    query.Add($"fechaHasta={FechaHasta.Value:yyyy-MM-dd}");
-                }
-            }
-        }
 
         return "/Index" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
-    }
-
-    // The banner and the actual print batch (ImpresionMensualModel.BelongsToMonthlyBatch) must
-    // agree on which cases count — otherwise a case that the batch excludes (e.g. no penultimate-
-    // folder date) can never get ImpresoMensualAt set by "marcar impreso", so the reminder never
-    // clears no matter how many times the list is printed.
-    public static bool ShouldRemindMonthlyPrint(IEnumerable<UrgentRequest> all, DateOnly today)
-    {
-        if (today.Day > 10)
-        {
-            return false;
-        }
-
-        var previousMonth = ImpresionMensualModel.PreviousMonthKey(today);
-        return all.Any(r =>
-            r.ImpresoMensualAt is null &&
-            ImpresionMensualModel.BelongsToMonthlyBatch(r, previousMonth));
     }
 
     public IActionResult OnPostSetEstadoActual(long id, string estadoActual)
@@ -331,10 +168,6 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
             {
                 repository.SetMarked(id, false);
             }
-            if (request.PendienteCarpeta)
-            {
-                repository.SetPendienteCarpeta(id, false);
-            }
         }
 
         if (Request.Headers.XRequestedWith == "XMLHttpRequest")
@@ -377,22 +210,6 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
             : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, matrizPath));
     }
 
-    // Width is computed once per render from the stored value's own length (not the live
-    // input, which would grow with every keystroke and reflow the whole table while typing).
-    // Falls back to the placeholder's length when empty, so blank cells still show the hint.
-    public static int InputWidthCh(string? value, string placeholder, int min = 6, int max = 26)
-    {
-        // A blank cell only needs to hint at the format, not fit the whole placeholder — that
-        // would make every empty column as wide as its longest instruction text. Filled cells
-        // size to their real value so nothing typed in is ever clipped.
-        var length = string.IsNullOrEmpty(value) ? Math.Min(placeholder.Length, min) : value.Length;
-        // 1ch = width of the font's "0" glyph, but this table's text is bold + uppercase, whose
-        // average letter is noticeably wider than a digit — a 1:1 char-to-ch mapping visibly
-        // clips real names (confirmed: "LUIS RODRIGO VASQUEZ SALAZAR", 29 chars, still clipped
-        // at 30ch). A 1.5x multiplier plus buffer covers that gap.
-        return Math.Clamp((int)Math.Ceiling(length * 1.5) + 2, min, max);
-    }
-
     public static string EstadoRowClass(string? estado) => estado switch
     {
         "SUBIR CON F8" => "estado-row-f8",
@@ -413,106 +230,6 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         _ => "badge-review",
     };
 
-    public static string DeadlineChipText(DateOnly? fechaPeticion) => DeadlineChipText(DateOnly.FromDateTime(DateTime.Today), fechaPeticion);
-
-    public static string DeadlineChipText(DateOnly today, DateOnly? fechaPeticion)
-    {
-        if (fechaPeticion is null)
-        {
-            return "—";
-        }
-
-        var deadline = DeadlineCalculator.AddBusinessDays(fechaPeticion.Value, 15);
-        var remaining = DeadlineCalculator.BusinessDaysRemaining(today, deadline);
-        return remaining >= 0 ? $"+{remaining}" : $"{remaining}";
-    }
-
-    public static string DeadlineChipClass(DateOnly? fechaPeticion) => DeadlineChipClass(DateOnly.FromDateTime(DateTime.Today), fechaPeticion);
-
-    public static string DeadlineChipClass(DateOnly today, DateOnly? fechaPeticion)
-    {
-        if (fechaPeticion is null)
-        {
-            return "badge-review";
-        }
-
-        var deadline = DeadlineCalculator.AddBusinessDays(fechaPeticion.Value, 15);
-        var remaining = DeadlineCalculator.BusinessDaysRemaining(today, deadline);
-        return remaining >= 0 ? "badge-ok" : "badge-review";
-    }
-
-    public IActionResult OnPostSetFechaPenultimaCarpeta(long id, string? fecha)
-    {
-        var request = repository.FindById(id);
-        if (request is null)
-        {
-            return new JsonResult(new { message = "Solicitud no encontrada." }) { StatusCode = StatusCodes.Status404NotFound };
-        }
-
-        // Accept the native date input's ISO value and legacy manually entered date formats.
-        if (SpanishDateFormatter.TryParseSlashMonthDate(fecha, out var slashMonthForm))
-        {
-            request.FechaPenultimaCarpeta = slashMonthForm;
-            repository.Update(request);
-        }
-        else if (SpanishDateFormatter.TryParseLongDate(fecha, out var longForm))
-        {
-            request.FechaPenultimaCarpeta = longForm;
-            repository.Update(request);
-        }
-        else if (DateOnly.TryParseExact(
-            fecha?.Trim(),
-            "yyyy-MM-dd",
-            System.Globalization.CultureInfo.InvariantCulture,
-            System.Globalization.DateTimeStyles.None,
-            out var isoDate))
-        {
-            request.FechaPenultimaCarpeta = isoDate;
-            repository.Update(request);
-        }
-        else if (DateOnly.TryParseExact(
-            fecha?.Trim(),
-            ["dd/MM/yyyy", "d/M/yyyy", "d/MM/yyyy", "dd/M/yyyy"],
-            null,
-            System.Globalization.DateTimeStyles.None,
-            out var typed))
-        {
-            request.FechaPenultimaCarpeta = typed;
-            repository.Update(request);
-        }
-        else
-        {
-            var result = FolderDate.Parse(fecha);
-            if (result.Outcome is FolderDateOutcome.Ok or FolderDateOutcome.SinCarpeta)
-            {
-                request.FechaPenultimaCarpeta = result.Value;
-                repository.Update(request);
-            }
-            else
-            {
-                // Every other branch above failed too — the text genuinely doesn't parse as a
-                // date. Silently returning 200 here (the old behavior) told the operator the save
-                // worked when nothing was written, which is how rows end up stuck showing the
-                // placeholder instead of the date that was typed in.
-                return new JsonResult(new { message = $"Fecha no reconocida: \"{fecha}\". Usa formato 15/marzo/2024, 15 de marzo de 2024, dd/MM/yyyy o S/C." }) { StatusCode = StatusCodes.Status400BadRequest };
-            }
-        }
-
-        // Return an ISO value so the native date input can update immediately after autosave.
-        // A null date is returned as an empty value, matching a cleared native date input.
-        var display = request.FechaPenultimaCarpeta?.ToString("yyyy-MM-dd") ?? "";
-
-        // If the browser ever submits this natively (JS didn't attach — old cached script, JS
-        // disabled, a row added without rewiring), fall back to a real page instead of dumping
-        // raw JSON as the whole document, same guard OnPostSetEstadoActual/OnPostMarkUploaded use.
-        if (Request.Headers.XRequestedWith != "XMLHttpRequest")
-        {
-            return RedirectToPage();
-        }
-
-        return new JsonResult(new { fecha = display, sector = request.Sector?.ToString() });
-    }
-
     public IActionResult OnPostSetCodigoF8(long id, string? codigoF8)
     {
         var request = repository.FindById(id);
@@ -527,48 +244,18 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
     public IActionResult OnPostToggleMarked(long id, string? markedValue)
     {
         repository.SetMarked(id, markedValue == "on");
-        return ToggleMarkedResult(id);
-    }
-
-    public IActionResult OnPostTogglePendienteCarpeta(long id, string? pendienteCarpetaValue)
-    {
-        repository.SetPendienteCarpeta(id, pendienteCarpetaValue == "on");
-        return ToggleMarkedResult(id);
-    }
-
-    // Marked and PendienteCarpeta clear each other at the repository level (SetMarked/
-    // SetPendienteCarpeta). The client checks the other box's state optimistically on click, but
-    // hands back the real values here so it can correct itself if that guess was ever wrong.
-    private IActionResult ToggleMarkedResult(long id)
-    {
         if (Request.Headers.XRequestedWith == "XMLHttpRequest")
         {
             var request = repository.FindById(id);
-            return new JsonResult(new { marked = request?.Marked ?? false, pendienteCarpeta = request?.PendienteCarpeta ?? false });
+            return new JsonResult(new { marked = request?.Marked ?? false });
         }
 
-        return RedirectToPage();
-    }
-
-    /// <summary>"Sin carpeta" action (Caja module point 2): closes the case but keeps it visible in
-    /// Casos, grayed like a confirmed row. Reversible with OnPostRevertSinCarpeta.</summary>
-    public IActionResult OnPostSetSinCarpeta(long id)
-    {
-        repository.SetSinCarpeta(id, true);
         return RedirectToPage();
     }
 
     public IActionResult OnPostRevertSinCarpeta(long id)
     {
         repository.SetSinCarpeta(id, false);
-        return RedirectToPage();
-    }
-
-    /// <summary>"Caja" action (Caja module point 3): sends the case to the Caja open queue —
-    /// it disappears from Casos until removed from the queue or from a closed box.</summary>
-    public IActionResult OnPostSendToCaja(long id)
-    {
-        repository.SendToCaja(id, DateTimeOffset.UtcNow);
         return RedirectToPage();
     }
 

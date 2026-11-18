@@ -7,13 +7,6 @@
     var clearSearchQuery = new List<string>();
     if (!string.IsNullOrEmpty(currentTab) && currentTab != "Todos") clearSearchQuery.Add($"tab={Uri.EscapeDataString(currentTab)}");
     if (Model.Flagged == true) clearSearchQuery.Add("flagged=true");
-    if (!string.IsNullOrEmpty(Model.Sort)) clearSearchQuery.Add($"sort={Uri.EscapeDataString(Model.Sort)}");
-    if (!string.IsNullOrEmpty(Model.Rango)) clearSearchQuery.Add($"rango={Uri.EscapeDataString(Model.Rango)}");
-    else
-    {
-        if (Model.FechaDesde is not null) clearSearchQuery.Add($"fechaDesde={Model.FechaDesde.Value:yyyy-MM-dd}");
-        if (Model.FechaHasta is not null) clearSearchQuery.Add($"fechaHasta={Model.FechaHasta.Value:yyyy-MM-dd}");
-    }
     var clearToolbarSearchHref = "/Index" + (clearSearchQuery.Count > 0 ? "?" + string.Join("&", clearSearchQuery) : "");
 }
 
@@ -236,10 +229,6 @@
             <form method="get" action="/Index" class="toolbar-search-form" role="search">
                 @if (!string.IsNullOrEmpty(currentTab) && currentTab != "Todos") { <input type="hidden" name="tab" value="@currentTab" /> }
                 @if (Model.Flagged == true) { <input type="hidden" name="flagged" value="true" /> }
-                @if (!string.IsNullOrEmpty(Model.Sort)) { <input type="hidden" name="sort" value="@Model.Sort" /> }
-                @if (!string.IsNullOrEmpty(Model.Rango)) { <input type="hidden" name="rango" value="@Model.Rango" /> }
-                @if (Model.FechaDesde is not null && string.IsNullOrEmpty(Model.Rango)) { <input type="hidden" name="fechaDesde" value="@Model.FechaDesde.Value.ToString("yyyy-MM-dd")" /> }
-                @if (Model.FechaHasta is not null && string.IsNullOrEmpty(Model.Rango)) { <input type="hidden" name="fechaHasta" value="@Model.FechaHasta.Value.ToString("yyyy-MM-dd")" /> }
                 <div class="toolbar-search-wrap">
                     <svg class="toolbar-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="text" name="search" id="toolbarSearchInput" value="@Model.Search" placeholder="Buscar por RUT o nombre..." autocomplete="off" aria-label="Buscar por RUT o nombre" />
@@ -533,42 +522,20 @@
         });
     }
 
-    // Marcar (amarillo) y Pendiente carpeta (morado) son mutuamente excluyentes. El color de fila
-    // es puro CSS (:has(.marked-checkbox:checked)), reacciona solo con el checked nativo — lo único
-    // que hace falta acá es desmarcar la otra casilla al tocar una, para que el CSS reaccione al
-    // toque en vez de esperar el reload; el servidor ya lo garantiza igual (SetMarked/
-    // SetPendienteCarpeta se limpian entre sí), esto solo evita que la casilla vieja se vea marcada
-    // hasta que vuelva la respuesta.
     try {
-        function wireExclusiveCheckbox(checkbox, siblingSelector) {
+        document.querySelectorAll('input.marked-checkbox').forEach(function (checkbox) {
             checkbox.addEventListener('change', function () {
                 var row = checkbox.closest('tr');
-                var sibling = row ? row.querySelector(siblingSelector) : null;
-                if (checkbox.checked && sibling) {
-                    sibling.checked = false;
-                }
-
                 if (checkbox.form) {
                     submitToggle(checkbox.form, function (data, ok) {
                         if (!ok || !data || !row) return;
-                        var markedBox = row.querySelector('input.marked-checkbox');
-                        var pendienteBox = row.querySelector('input.pendiente-checkbox');
-                        if (markedBox) markedBox.checked = !!data.marked;
-                        if (pendienteBox) pendienteBox.checked = !!data.pendienteCarpeta;
+                        checkbox.checked = !!data.marked;
                     });
                 }
             });
-        }
-
-        document.querySelectorAll('input.marked-checkbox').forEach(function (checkbox) {
-            wireExclusiveCheckbox(checkbox, 'input.pendiente-checkbox');
-        });
-
-        document.querySelectorAll('input.pendiente-checkbox').forEach(function (checkbox) {
-            wireExclusiveCheckbox(checkbox, 'input.marked-checkbox');
         });
     } catch (err) {
-        console.error('Marcar/Pendiente Carpeta wiring failed', err);
+        console.error('Marcar wiring failed', err);
     }
 
     try {

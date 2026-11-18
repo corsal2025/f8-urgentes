@@ -17,7 +17,6 @@
   // Ruta (en minúsculas) -> URL a la que navega la guía y nombre de la sección.
   var PAGINAS = {
     '/index':            { url: '/Index',                   seccion: 'Solicitudes' },
-    '/edit':             { url: '/Edit',                    seccion: 'Nueva solicitud' },
     '/carpetasextra':    { url: '/CarpetasExtra',           seccion: 'Carpetas Extra' },
     '/estadisticas':     { url: '/Estadisticas',            seccion: 'Estadísticas' },
     '/impresionmensual': { url: '/ImpresionMensual',        seccion: 'Impresión mensual' }
@@ -32,14 +31,14 @@
       target: '#btn-guia-global',
       titulo: 'Hola, soy Lico: tu guía',
       icono: '👋',
-      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b>, <b>Nueva solicitud</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
+      descripcion: 'Este botón abre la guía en cualquier pantalla, empezando por los pasos de la página donde estás. Recorre <b>Solicitudes</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>; al pasar a otra pantalla, la guía continúa allá. Usa <b>Siguiente / Anterior</b> o las flechas del teclado; <b>Esc</b> la cierra.'
     },
     {
       pagina: '/index',
       target: '.app-nav',
       titulo: 'Las secciones del sistema',
       icono: '🧭',
-      descripcion: 'Navega entre <b>Solicitudes</b>, <b>Nueva solicitud</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>. La sección activa queda subrayada en ámbar.'
+      descripcion: 'Navega entre <b>Solicitudes</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>. La sección activa queda subrayada en ámbar.'
     },
     {
       pagina: '/index',
@@ -147,40 +146,6 @@
       titulo: 'Colores de las filas',
       icono: '🎨',
       descripcion: '<b>Amarillo</b>: marcado para imprimir. <b>Gris</b>: subida a CONASET o sin carpeta. <b>Rosado</b>: requiere revisión. <b>Rojo</b>: estado DENEGADA.'
-    },
-
-    // ---------- NUEVA SOLICITUD ----------
-    {
-      pagina: '/edit', pose: 'saluda',
-      target: 'main .card',
-      fallbackTarget: 'main',
-      titulo: 'Nueva solicitud',
-      icono: '📝',
-      descripcion: 'Formulario para ingresar un caso a mano: <b>Nombre completo</b>, <b>RUT</b>, <b>Fecha petición</b>, <b>Estado</b>, <b>Estado actual</b>, <b>Fecha de subida</b> y <b>Código F8</b>. Nombre completo y RUT son obligatorios.'
-    },
-    {
-      pagina: '/edit',
-      target: '#Input_Rut',
-      fallbackTarget: 'main .card',
-      titulo: 'RUT validado',
-      icono: '🪪',
-      descripcion: 'El RUT se ordena con puntos y guion mientras escribes. Al guardar se revisa el <b>dígito verificador</b>: si no corresponde, el formulario avisa «RUT inválido» y no guarda.'
-    },
-    {
-      pagina: '/edit',
-      target: '#Input_Estado',
-      fallbackTarget: 'main .card',
-      titulo: 'Estado y Estado actual',
-      icono: '🏷️',
-      descripcion: 'Ambas listas ofrecen solo los estados conocidos del sistema. Puedes dejarlas en «-- seleccione --» si aún no corresponde.'
-    },
-    {
-      pagina: '/edit',
-      target: 'main form button[type="submit"]',
-      fallbackTarget: 'main .card',
-      titulo: 'Guardar',
-      icono: '💾',
-      descripcion: 'Guarda la solicitud y vuelve a <b>Solicitudes</b>, donde ya aparece en la lista.'
     },
 
     // ---------- CARPETAS EXTRA ----------

@@ -56,33 +56,9 @@ public sealed class IndexPageModelTests : IDisposable
         Insert(rut: "7654321-K");
         var model = CreateModel();
 
-        model.OnGet(null, null, null, null, null);
+        model.OnGet(null, null);
 
         Assert.Equal(2, model.Requests.Count);
-    }
-
-    [Fact]
-    public void OnGet_MonthFilter_ReturnsOnlyMatching()
-    {
-        Insert(fecha: new DateOnly(2024, 6, 1));
-        Insert(fecha: new DateOnly(2024, 7, 1), rut: "7654321-K");
-        var model = CreateModel();
-
-        model.OnGet("2024-06", null, null, null, null);
-
-        Assert.Single(model.Requests);
-    }
-
-    [Fact]
-    public void OnGet_EstadoFilter_ReturnsOnlyMatching()
-    {
-        Insert(estado: "PRIMERA LICENCIA");
-        Insert(estado: "CAMBIO DE DOMICILIO", rut: "7654321-K");
-        var model = CreateModel();
-
-        model.OnGet(null, "PRIMERA LICENCIA", null, null, null);
-
-        Assert.Single(model.Requests);
     }
 
     [Fact]
@@ -92,7 +68,7 @@ public sealed class IndexPageModelTests : IDisposable
         Insert(rut: "7654321-K");
         var model = CreateModel();
 
-        model.OnGet(null, null, null, true, null);
+        model.OnGet(true, null);
 
         Assert.Single(model.Requests);
         Assert.True(model.Requests[0].NeedsReview);
@@ -105,48 +81,10 @@ public sealed class IndexPageModelTests : IDisposable
         Insert(rut: "7654321-K");
         var model = CreateModel();
 
-        model.OnGet(null, null, null, null, "juan");
+        model.OnGet(null, "juan");
 
         Assert.Equal(2, model.Requests.Count);
     }
-
-    [Fact]
-    public void OnGet_SortPenultimaAsc_OrdersByFechaPenultimaCarpetaWithNullsLast()
-    {
-        var noFolderId = InsertWithPenultimaCarpeta(null, "11111111-1");
-        var laterId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 20), "22222222-2");
-        var earlierId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 5), "33333333-3");
-        var model = CreateModel();
-
-        model.OnGet(null, null, null, null, null, sort: "penultima-asc");
-
-        Assert.Equal([earlierId, laterId, noFolderId], model.Requests.Select(r => r.Id));
-    }
-
-    [Fact]
-    public void OnGet_SortPenultimaDesc_OrdersByFechaPenultimaCarpetaDescendingWithNullsLast()
-    {
-        var noFolderId = InsertWithPenultimaCarpeta(null, "11111111-1");
-        var laterId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 20), "22222222-2");
-        var earlierId = InsertWithPenultimaCarpeta(new DateOnly(2024, 6, 5), "33333333-3");
-        var model = CreateModel();
-
-        model.OnGet(null, null, null, null, null, sort: "penultima-desc");
-
-        Assert.Equal([laterId, earlierId, noFolderId], model.Requests.Select(r => r.Id));
-    }
-
-    private long InsertWithPenultimaCarpeta(DateOnly? fechaPenultimaCarpeta, string rut) =>
-        _repository.Insert(new UrgentRequest
-        {
-            Estado = "PRIMERA LICENCIA",
-            FechaPeticion = new DateOnly(2024, 6, 1),
-            FechaPenultimaCarpeta = fechaPenultimaCarpeta,
-            NombreCompleto = "Juan Perez",
-            Rut = rut,
-            Origin = "Web",
-            CreatedAt = DateTimeOffset.UtcNow,
-        });
 
     [Fact]
     public void OnPostSetEstadoActual_PersistsChangeAndRedirects()
@@ -200,7 +138,7 @@ public sealed class IndexPageModelTests : IDisposable
         _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
         var model = CreateModel();
 
-        model.OnGet(null, null, null, null, null, "Pendientes");
+        model.OnGet(null, null, "Pendientes");
 
         Assert.Single(model.Requests);
         Assert.Equal(pendingId, model.Requests[0].Id);
@@ -214,7 +152,7 @@ public sealed class IndexPageModelTests : IDisposable
         _repository.Update(new UrgentRequest { Id = uploadedId, EstadoActual = "SUBIDA A CONASET", Rut = "7654321-K", NombreCompleto = "Juan Perez", Origin = "Web" });
         var model = CreateModel();
 
-        model.OnGet(null, null, null, null, null, "Subidas");
+        model.OnGet(null, null, "Subidas");
 
         Assert.Single(model.Requests);
         Assert.Equal(uploadedId, model.Requests[0].Id);
@@ -311,180 +249,16 @@ public sealed class IndexPageModelTests : IDisposable
     }
 
     [Fact]
-    public void DeadlineChipText_ShowsPositiveAndNegativeBusinessDays()
-    {
-        Assert.Equal("+15", IndexModel.DeadlineChipText(new DateOnly(2024, 6, 3), new DateOnly(2024, 6, 3)));
-        Assert.Equal("-1", IndexModel.DeadlineChipText(new DateOnly(2024, 6, 25), new DateOnly(2024, 6, 3)));
-    }
-
-    [Fact]
-    public void DeadlineChipClass_UsesGreenForTimeLeftAndRedWhenOverdue()
-    {
-        Assert.Equal("badge-ok", IndexModel.DeadlineChipClass(new DateOnly(2024, 6, 3), new DateOnly(2024, 6, 3)));
-        Assert.Equal("badge-review", IndexModel.DeadlineChipClass(new DateOnly(2024, 6, 25), new DateOnly(2024, 6, 3)));
-    }
-
-    [Fact]
-    public void OnPostSetFechaPenultimaCarpeta_ParsesDate()
-    {
-        var id = Insert();
-        var model = CreateModel();
-
-        model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
-
-        Assert.Equal(new DateOnly(2024, 3, 15), _repository.FindById(id)!.FechaPenultimaCarpeta);
-    }
-
-    [Fact]
-    public void OnPostSetFechaPenultimaCarpeta_ParsesNativeDateInputValue()
-    {
-        var id = Insert();
-        var model = CreateModel();
-        model.PageContext.HttpContext.Request.Headers["X-Requested-With"] = "XMLHttpRequest";
-
-        var result = model.OnPostSetFechaPenultimaCarpeta(id, "2024-03-15");
-
-        var json = Assert.IsType<Microsoft.AspNetCore.Mvc.JsonResult>(result);
-        Assert.Equal("2024-03-15", json.Value!.GetType().GetProperty("fecha")!.GetValue(json.Value));
-        Assert.Equal(new DateOnly(2024, 3, 15), _repository.FindById(id)!.FechaPenultimaCarpeta);
-    }
-
-    [Fact]
-    public void OnPostSetFechaPenultimaCarpeta_SinCarpeta_ClearsDate()
-    {
-        var id = Insert();
-        var model = CreateModel();
-        model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
-
-        model.OnPostSetFechaPenultimaCarpeta(id, "S/C");
-
-        Assert.Null(_repository.FindById(id)!.FechaPenultimaCarpeta);
-    }
-
-    [Fact]
-    public void OnPostSetFechaPenultimaCarpeta_Unparseable_LeavesDateUnchanged()
-    {
-        var id = Insert();
-        var model = CreateModel();
-        model.OnPostSetFechaPenultimaCarpeta(id, "15/03/2024");
-
-        model.OnPostSetFechaPenultimaCarpeta(id, "no es una fecha");
-
-        Assert.Equal(new DateOnly(2024, 3, 15), _repository.FindById(id)!.FechaPenultimaCarpeta);
-    }
-
-    private static UrgentRequest CompletedCase(DateOnly fechaDeSubida, DateOnly? fechaPenultimaCarpeta, DateTimeOffset? impresoMensualAt = null) => new()
-    {
-        EstadoActual = "SUBIDA A CONASET",
-        FechaDeSubida = fechaDeSubida,
-        FechaPenultimaCarpeta = fechaPenultimaCarpeta,
-        ImpresoMensualAt = impresoMensualAt,
-        Origin = "Web",
-    };
-
-    [Fact]
-    public void ShouldRemindMonthlyPrint_ExcludesCompletedCasesWithoutPenultimateFolder()
-    {
-        var today = new DateOnly(2026, 9, 5);
-        var noFolder = CompletedCase(new DateOnly(2026, 8, 20), fechaPenultimaCarpeta: null);
-
-        Assert.False(IndexModel.ShouldRemindMonthlyPrint([noFolder], today));
-    }
-
-    [Fact]
-    public void ShouldRemindMonthlyPrint_TrueWhenUnprintedCaseWithFolderExists()
-    {
-        var today = new DateOnly(2026, 9, 5);
-        var pending = CompletedCase(new DateOnly(2026, 8, 20), new DateOnly(2026, 7, 1));
-
-        Assert.True(IndexModel.ShouldRemindMonthlyPrint([pending], today));
-    }
-
-    [Fact]
-    public void ShouldRemindMonthlyPrint_FalseAfterBatchMarkedPrinted()
-    {
-        var today = new DateOnly(2026, 9, 5);
-        var printed = CompletedCase(new DateOnly(2026, 8, 20), new DateOnly(2026, 7, 1), DateTimeOffset.UtcNow);
-
-        Assert.False(IndexModel.ShouldRemindMonthlyPrint([printed], today));
-    }
-
-    [Fact]
-    public void ShouldRemindMonthlyPrint_FalseAfterDay10()
-    {
-        var afterWindow = new DateOnly(2026, 9, 15);
-        var pending = CompletedCase(new DateOnly(2026, 8, 20), new DateOnly(2026, 7, 1));
-
-        Assert.False(IndexModel.ShouldRemindMonthlyPrint([pending], afterWindow));
-    }
-
-    [Fact]
-    public void MonthlyReminder_ClearsAfterMarkingBatchPrinted_EvenWhenSomeCasesLackPenultimateFolder()
-    {
-        // In the batch: prev-month completed case WITH a penultimate-folder date.
-        _repository.Insert(new UrgentRequest
-        {
-            EstadoActual = "SUBIDA A CONASET",
-            FechaDeSubida = new DateOnly(2026, 8, 10),
-            FechaPenultimaCarpeta = new DateOnly(2026, 7, 1),
-            Rut = "15949558-2",
-            NombreCompleto = "Con carpeta",
-            Origin = "Web",
-            CreatedAt = DateTimeOffset.UtcNow,
-        });
-        // Excluded from the batch: prev-month completed case with NO penultimate-folder date —
-        // "marcar impreso" never touches it, so it must not keep the banner alive.
-        _repository.Insert(new UrgentRequest
-        {
-            EstadoActual = "SUBIDA A CONASET",
-            FechaDeSubida = new DateOnly(2026, 8, 11),
-            FechaPenultimaCarpeta = null,
-            Rut = "7654321-K",
-            NombreCompleto = "Sin carpeta",
-            Origin = "Web",
-            CreatedAt = DateTimeOffset.UtcNow,
-        });
-
-        new ImpresionMensualModel(_repository).OnPostMarkPrinted("2026-08");
-
-        Assert.False(IndexModel.ShouldRemindMonthlyPrint(_repository.GetAll(), new DateOnly(2026, 9, 5)));
-    }
-
-    [Fact]
-    public void OnGet_ExcludesCasesSentToCaja()
-    {
-        var keptId = Insert(rut: "11111111-1");
-        var cajaId = Insert(rut: "22222222-2");
-        _repository.SendToCaja(cajaId, DateTimeOffset.UtcNow);
-        var model = CreateModel();
-
-        model.OnGet(null, null, null, null, null);
-
-        Assert.Equal([keptId], model.Requests.Select(r => r.Id));
-    }
-
-    [Fact]
     public void OnGet_StillShowsSinCarpetaCases()
     {
         var id = Insert(rut: "11111111-1");
         _repository.SetSinCarpeta(id, true);
         var model = CreateModel();
 
-        model.OnGet(null, null, null, null, null);
+        model.OnGet(null, null);
 
         Assert.Single(model.Requests);
         Assert.True(model.Requests[0].SinCarpeta);
-    }
-
-    [Fact]
-    public void OnPostSetSinCarpeta_MarksCase()
-    {
-        var id = Insert();
-        var model = CreateModel();
-
-        model.OnPostSetSinCarpeta(id);
-
-        Assert.True(_repository.FindById(id)!.SinCarpeta);
     }
 
     [Fact]
@@ -500,69 +274,18 @@ public sealed class IndexPageModelTests : IDisposable
     }
 
     [Fact]
-    public void OnPostSendToCaja_SendsCaseToQueueAndRemovesFromIndex()
-    {
-        var id = Insert();
-        var model = CreateModel();
-
-        model.OnPostSendToCaja(id);
-
-        Assert.NotNull(_repository.FindById(id)!.CajaTransferredAt);
-        model.OnGet(null, null, null, null, null);
-        Assert.Empty(model.Requests);
-    }
-
-    [Fact]
-    public void OnGet_WithDateRange_FiltersRequestsProperly()
-    {
-        Insert(fecha: new DateOnly(2024, 4, 15), rut: "11111111-1");
-        Insert(fecha: new DateOnly(2024, 5, 20), rut: "22222222-2");
-        Insert(fecha: new DateOnly(2024, 6, 10), rut: "33333333-3");
-
-        var model = CreateModel();
-        model.OnGet(null, null, null, null, null, fechaDesde: "2024-05-01", fechaHasta: "2024-05-31");
-
-        Assert.Single(model.Requests);
-        Assert.Equal("22222222-2", model.Requests[0].Rut);
-        Assert.Equal(new DateOnly(2024, 5, 1), model.FechaDesde);
-        Assert.Equal(new DateOnly(2024, 5, 31), model.FechaHasta);
-    }
-
-    [Fact]
-    public void OnGet_WithPresetRango_ComputesDatesAndFilters()
-    {
-        var today = DateOnly.FromDateTime(DateTime.Today);
-        var prevMonth = today.AddMonths(-1);
-
-        Insert(fecha: new DateOnly(today.Year, today.Month, 1), rut: "11111111-1");
-        Insert(fecha: new DateOnly(prevMonth.Year, prevMonth.Month, 15), rut: "22222222-2");
-
-        var model = CreateModel();
-        model.OnGet(null, null, null, null, null, rango: "mes-anterior");
-
-        Assert.Equal("mes-anterior", model.Rango);
-        Assert.NotNull(model.FechaDesde);
-        Assert.NotNull(model.FechaHasta);
-        Assert.Equal(new DateOnly(prevMonth.Year, prevMonth.Month, 1), model.FechaDesde);
-        Assert.Single(model.Requests);
-        Assert.Equal("22222222-2", model.Requests[0].Rut);
-    }
-
-    [Fact]
     public void BuildUrl_PreservesActiveFilters()
     {
         var model = CreateModel();
-        model.OnGet(null, null, null, null, search: "Perez", tab: "Pendientes", fechaDesde: "2024-01-01", fechaHasta: "2024-03-31");
+        model.OnGet(true, search: "Perez", tab: "Pendientes");
 
         var urlNewTab = model.BuildUrl(newTab: "Subidas");
         Assert.Contains("tab=Subidas", urlNewTab);
         Assert.Contains("search=Perez", urlNewTab);
-        Assert.Contains("fechaDesde=2024-01-01", urlNewTab);
-        Assert.Contains("fechaHasta=2024-03-31", urlNewTab);
+        Assert.Contains("flagged=true", urlNewTab);
 
-        var urlClearDates = model.BuildUrl(clearDates: true);
-        Assert.DoesNotContain("fechaDesde", urlClearDates);
-        Assert.DoesNotContain("fechaHasta", urlClearDates);
-        Assert.Contains("search=Perez", urlClearDates);
+        var urlClearFlagged = model.BuildUrl(newFlagged: false);
+        Assert.DoesNotContain("flagged=true", urlClearFlagged);
+        Assert.Contains("search=Perez", urlClearFlagged);
     }
 }

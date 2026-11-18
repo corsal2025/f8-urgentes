@@ -86,15 +86,6 @@ public sealed class CarpetasExtraModel(IUrgentRequestRepository repository) : Pa
         return Page();
     }
 
-    /// <summary>Envía el caso a la cola de Caja (mismo flujo que en Index).</summary>
-    public IActionResult OnPostSendToCaja(long id)
-    {
-        repository.SendToCaja(id, DateTimeOffset.UtcNow);
-        ModelState.AddModelError(string.Empty, "Caso enviado a la cola de Caja.");
-        LoadList();
-        return Page();
-    }
-
     private void LoadList()
     {
         // Mismo criterio que Index: un caso enviado a Caja deja de listarse aquí y pasa a

@@ -113,31 +113,6 @@ public sealed class EstadisticasPageModelTests : IDisposable
     }
 
     [Fact]
-    public void Load_ClassifiesFoldersBySinCarpetaQueueAndBox()
-    {
-        Insert(new DateOnly(2026, 9, 1)); // sin clasificar
-        Insert(null);                     // sin clasificar, no penultimate date — still counted
-        var all = _repository.GetAll();
-        _repository.SetSinCarpeta(all[0].Id, true);
-        Insert(new DateOnly(2026, 9, 1));
-        Insert(new DateOnly(2026, 9, 1));
-        var ids = _repository.GetAll().Where(r => !r.SinCarpeta).Select(r => r.Id).Take(2).ToList();
-        _repository.SendToCaja(ids[0], DateTimeOffset.UtcNow);
-        _repository.CloseBox("A1-PUC", DateTimeOffset.UtcNow);
-        _repository.SendToCaja(ids[1], DateTimeOffset.UtcNow);
-
-        var model = Load();
-
-        var c = model.ClasificacionCarpetas.ToDictionary(x => x.Label, x => x.Count);
-        Assert.Equal(1, c["En caja cerrada"]);
-        Assert.Equal(1, c["En cola de caja"]);
-        Assert.Equal(1, c["Sin carpeta"]);
-        Assert.Equal(1, c["Sin clasificar"]);
-        Assert.Equal(1, model.CajasCerradas);
-        Assert.Equal(("A1-PUC", 1), model.CarpetasPorCaja.Single());
-    }
-
-    [Fact]
     public void Load_ComputesLegalDeadlineComplianceByUploadMonth()
     {
         Insert(new DateOnly(2026, 9, 1), new DateOnly(2026, 9, 3));  // on time
