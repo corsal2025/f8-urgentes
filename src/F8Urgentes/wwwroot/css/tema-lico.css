@@ -498,13 +498,13 @@ body.cases-page main {
 .table-wrap {
   flex: 0 0 auto;
   min-height: 0;
-  max-height: 75vh;
+  max-height: none;
   min-width: 0;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
   overflow-x: auto;
-  overflow-y: auto;
+  overflow-y: visible;
   overflow-anchor: none;
   border-radius: 14px;
   border: 1px solid var(--borde);
