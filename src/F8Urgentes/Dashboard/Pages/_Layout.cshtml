@@ -27,33 +27,34 @@
             </a>
 
             <nav class="app-nav" aria-label="Secciones">
-                <a href="/Index" class="nav-solicitudes @(currentPage == "/Index" || currentPage == null ? "active" : "")">
+                <a href="/Index" class="nav-link nav-solicitudes @(currentPage == "/Index" || currentPage == null ? "active" : "")">
                     <span class="nav-icon" aria-hidden="true">📋</span>
                     <span>Solicitudes</span>
                 </a>
-                <a href="/Edit" class="nav-nueva @(currentPage == "/Edit" ? "active" : "")">
+                <a href="/Edit" class="nav-link nav-nueva @(currentPage == "/Edit" ? "active" : "")">
                     <span class="nav-icon" aria-hidden="true">➕</span>
                     <span>Nueva solicitud</span>
                 </a>
-                <a href="/CarpetasExtra" class="nav-extra @(currentPage == "/CarpetasExtra" ? "active" : "")">
+                <a href="/CarpetasExtra" class="nav-link nav-extra @(currentPage == "/CarpetasExtra" ? "active" : "")">
                     <span class="nav-icon" aria-hidden="true">📁</span>
                     <span>Carpetas Extra</span>
+                </a>
+                <a href="/Estadisticas" class="nav-link nav-estadisticas @(currentPage == "/Estadisticas" ? "active" : "")">
+                    <span class="nav-icon" aria-hidden="true">📊</span>
+                    <span>Estadísticas</span>
+                </a>
+                <a href="/ImpresionMensual" class="nav-link nav-impresion @(currentPage == "/ImpresionMensual" ? "active" : "")">
+                    <span class="nav-icon" aria-hidden="true">🖨️</span>
+                    <span>Impresión mensual</span>
                 </a>
             </nav>
 
             <div class="top-right">
-                <form method="post" asp-page="/Index" asp-page-handler="Sincronizar" class="header-sync-form">
-                    <button class="tool-btn tool-sync header-sync-btn" type="submit" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
-                        <span class="sync-dot" aria-hidden="true"></span>
-                        <span>Sincronizar</span>
-                    </button>
-                </form>
-
                 <button id="btn-guia-global" class="btn-guia-accion" type="button" title="Guía paso a paso de esta pantalla y del sistema" aria-label="Guía con Lico: guía paso a paso"><span class="lico-mini" aria-hidden="true"><img src="~/img/lico/lico-licencia-3d.webp" alt="" class="lico-mini-img" /></span><span class="btn-guia-txt">Guía con Lico</span></button>
 
-                <button id="lico-onoff" class="icono-btn" type="button" aria-pressed="true" title="Lico animado: activado (clic para pausar movimiento)" aria-label="Lico animado: activado (clic para pausar movimiento)"><span class="lico-onoff-ico" aria-hidden="true">&#9786;</span><span class="lico-onoff-txt">Pausar movimiento</span></button>
+                <button id="lico-onoff" class="icono-btn" type="button" aria-pressed="true" title="Lico animado: activado (clic para pausar movimiento)" aria-label="Lico animado: activado (clic para pausar movimiento)"><span class="lico-onoff-txt">Pausar movimiento</span></button>
 
-                <div class="header-search" role="search">
+                <div class="header-search" role="search" hidden>
                     <form method="get" action="/Index" class="header-search-form">
                         @{
                             var qTab = Context.Request.Query["tab"].ToString();
@@ -92,11 +93,6 @@
                         </div>
                     </form>
                 </div>
-
-                <span class="head-lico-wrap">
-                    <button id="head-lico" class="head-lico" type="button" aria-label="Lico tiene un consejo: pulsa para escucharlo" title="Lico tiene un consejo para ti"><span data-lico="saluda" aria-hidden="true"></span></button>
-                    <div id="head-lico-burbuja" class="head-lico-burbuja" role="status" aria-live="polite" hidden></div>
-                </span>
 
                 @if (User.Identity?.IsAuthenticated == true)
                 {

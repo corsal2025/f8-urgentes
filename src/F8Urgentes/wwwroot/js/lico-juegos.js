@@ -232,8 +232,8 @@
     b.classList.toggle('lico-off', !encendido);
     document.documentElement.classList.toggle('lico-quieto', !encendido);
     var txt = b.querySelector('.lico-onoff-txt');
-    if (txt) txt.textContent = encendido ? 'Pausar movimiento' : 'Reanudar movimiento';
-    b.title = encendido ? 'Lico animado: activado (clic para pausar movimiento)' : 'Lico animado: pausado (clic para reanudar movimiento)';
+    if (txt) txt.textContent = encendido ? 'Pausar movimiento' : 'Activar movimiento';
+    b.title = encendido ? 'Lico animado: activado (clic para pausar movimiento)' : 'Lico animado: pausado (clic para activar movimiento)';
     b.setAttribute('aria-label', b.title);
   }
   function activar(v) {

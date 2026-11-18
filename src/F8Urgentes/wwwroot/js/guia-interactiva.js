@@ -39,29 +39,31 @@
       target: '.app-nav',
       titulo: 'Las secciones del sistema',
       icono: '🧭',
-      descripcion: '<b>Solicitudes</b>: el listado diario de casos. <b>Nueva solicitud</b>: formulario para ingresar un caso. <b>Carpetas Extra</b>: carpetas fuera del flujo de la matriz. La sección abierta se subraya en azul.'
+      descripcion: 'Navega entre <b>Solicitudes</b>, <b>Nueva solicitud</b>, <b>Carpetas Extra</b>, <b>Estadísticas</b> e <b>Impresión mensual</b>. La sección activa queda subrayada en ámbar.'
     },
     {
       pagina: '/index',
-      target: '.header-search',
+      target: '.toolbar-search-form',
+      fallbackTarget: '#toolbarSearchInput',
       titulo: 'Buscador',
       icono: '🔍',
-      descripcion: 'Busca en Solicitudes desde cualquier pantalla: escribe el <b>RUT completo</b> (con o sin puntos y guion) o <b>parte del nombre</b> y pulsa <b>Enter</b>. La <b>✕</b> quita la búsqueda y vuelve al listado completo.'
+      descripcion: 'Escribe el <b>RUT completo</b> (con o sin puntos y guion) o <b>parte del nombre</b> y pulsa <b>Buscar</b> o <b>Enter</b>. La <b>✕</b> quita la búsqueda y vuelve al listado completo.'
     },
     {
       pagina: '/index',
-      target: '.header-sync-btn',
-      titulo: 'Sincronizar con la matriz',
+      target: '.hero-sync-btn',
+      fallbackTarget: '.lico-hero',
+      titulo: 'Cargar desde Excel (Matriz)',
       icono: '🔄',
-      descripcion: 'Lee la <b>matriz de distribución de carpetas</b> e importa a Solicitudes los casos marcados <b>«NO EXISTE CARPETA»</b> (o «NO HAY CARPETA») que aún no estén cargados. Al terminar, un aviso verde sobre la tabla resume cuántos casos se importaron y si hay alertas para revisar.'
+      descripcion: 'Lee la <b>matriz de distribución de carpetas</b> e importa a Solicitudes los casos marcados <b>«NO EXISTE CARPETA»</b> (o «NO HAY CARPETA») que aún no estén cargados. Al terminar, un aviso sobre la tabla resume cuántos casos se importaron.'
     },
     {
       pagina: '/index',
-      target: '#head-lico',
+      target: '#btn-lico-saludo',
       fallbackTarget: '#lico-onoff',
-      titulo: 'Consejos de Lico',
+      titulo: 'El rincón de Lico',
       icono: '💡',
-      descripcion: 'Pulsa mi carita y te doy un <b>consejo</b> de la pantalla donde estás (y hago alguna gracia). Si pasas un rato sin tocar nada, hago una travesura; cualquier movimiento me espanta. El botón <b>☺</b> de al lado apaga mis animaciones y travesuras; la guía sigue disponible igual.'
+      descripcion: 'Toca a <b>Lico</b> para saludarlo, cambia la <b>lámpara</b> o abre la <b>carpeta</b> de pendientes. El botón <b>Pausar movimiento</b> de arriba apaga sus animaciones; la guía sigue disponible igual.'
     },
 
     // ---------- SOLICITUDES: filtros y accesos ----------
@@ -70,14 +72,7 @@
       target: '.filter-tabs-group',
       titulo: 'Pestañas de filtro',
       icono: '🗂️',
-      descripcion: '<b>Todos</b>; <b>Pendientes</b> (aún no subidos a CONASET); <b>Subidas</b> (SUBIDA A CONASET); <b>Solicitud de certificado</b> (estado CREAR CERTIFICADO); <b>Sin agregar</b> (ingresados con el botón «Solicitudes sin agregar») y <b>Requiere revisión</b> (casos con datos por revisar). El número de la pestaña es cuántos casos tiene.'
-    },
-    {
-      pagina: '/index',
-      target: '.tools-group',
-      titulo: 'Accesos rápidos',
-      icono: '⚡',
-      descripcion: '<b>Estadísticas</b> muestra indicadores y gráficos. <b>Impresión mensual</b> arma el listado de carpetas subidas en el mes.'
+      descripcion: '<b>Todos</b>; <b>Pendientes</b> (aún no subidos a CONASET); <b>Subidas</b> (SUBIDA A CONASET); <b>Solicitud de certificado</b> (estado CREAR CERTIFICADO); <b>Sin agregar</b> (ingresados con el botón «Solicitudes sin agregar») y <b>Requiere revisión</b> (casos con datos por revisar).'
     },
     {
       pagina: '/index', pose: 'alerta',
@@ -85,7 +80,7 @@
       fallbackTarget: '.dashboard-controls',
       titulo: 'Avisos',
       icono: '⚠️',
-      descripcion: 'Aquí, sobre la tabla, aparecen los avisos: el resultado de <b>Sincronizar</b>, mensajes de certificados y, en rojo, los <b>RUT duplicados</b> (más de un caso con el mismo RUT).'
+      descripcion: 'Aquí, sobre la tabla, aparecen los avisos de sincronización desde Excel y, en rojo, los <b>RUT duplicados</b> (más de un caso con el mismo RUT).'
     },
     {
       pagina: '/index',
@@ -93,7 +88,7 @@
       fallbackTarget: '.controls-row-actions',
       titulo: 'Solicitudes sin agregar',
       icono: '➕',
-      descripcion: 'Abre un formulario para ingresar <b>uno o varios casos</b> de una vez: <b>Nombre completo</b> y <b>RUT</b> (obligatorios). «+ Agregar otro» suma filas. Quedan con fecha de citación de hoy y en la pestaña <b>Sin agregar</b>. A la izquierda verás cuántos casos muestra la lista.'
+      descripcion: 'Abre un formulario para ingresar <b>uno o varios casos</b> de una vez: <b>Nombre completo</b> y <b>RUT</b> (obligatorios). «+ Agregar otro» suma filas. A la derecha ves cuántos casos hay en vista.'
     },
 
     // ---------- SOLICITUDES: tabla ----------
@@ -103,7 +98,7 @@
       fallbackTarget: 'table.cases-list',
       titulo: 'Columnas de la tabla',
       icono: '📋',
-      descripcion: '<b>Nombre</b> y <b>RUT</b> quedan fijos a la izquierda al desplazar la tabla. Luego vienen <b>Marcar</b>, <b>Sector oficina</b> (de la matriz), <b>Estado actual</b>, <b>Código F8</b>, <b>Fecha subida F8</b> y las acciones. Los casos ya subidos van al final.'
+      descripcion: '<b>Marcar</b>, <b>Nombre</b> y <b>RUT</b> quedan fijos a la izquierda al desplazar la tabla. Luego vienen <b>Sector oficina</b>, <b>Código F8</b>, <b>Fecha subida F8</b>, <b>Estado actual</b> y <b>Acción</b>. Los casos ya subidos van al final.'
     },
     {
       pagina: '/index',

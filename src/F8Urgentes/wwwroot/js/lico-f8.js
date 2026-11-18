@@ -203,9 +203,12 @@
     if (carpetaBtn) {
       carpetaBtn.addEventListener('click', function () {
         animarEscena('lico-abre-carpeta');
-        var tabla = document.querySelector('.card.table-card');
-        if (tabla && tabla.scrollIntoView) {
-          tabla.scrollIntoView({ behavior: movimientoPausado() ? 'auto' : 'smooth', block: 'start' });
+        var countEl = document.getElementById('heroLicoCount');
+        var count = countEl ? (parseInt(countEl.textContent, 10) || 0) : 0;
+        decirHero(count === 0 ? '¡Al día! No hay solicitudes pendientes en vista.' : 'Tu mesa muestra ' + count + (count === 1 ? ' solicitud pendiente.' : ' solicitudes pendientes.'));
+        var mesa = document.getElementById('mi-mesa') || document.querySelector('.card.table-card');
+        if (mesa && mesa.scrollIntoView) {
+          mesa.scrollIntoView({ behavior: movimientoPausado() ? 'auto' : 'smooth', block: 'start' });
         }
       });
     }

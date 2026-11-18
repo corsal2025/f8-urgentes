@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Solicitudes";
     var currentTab = Model.Tab ?? "Todos";
+    var pendientesCount = Model.Requests.Count(r => string.IsNullOrWhiteSpace(r.EstadoActual) || r.EstadoActual.Equals("PENDIENTE", StringComparison.OrdinalIgnoreCase));
     var clearSearchQuery = new List<string>();
     if (!string.IsNullOrEmpty(currentTab) && currentTab != "Todos") clearSearchQuery.Add($"tab={Uri.EscapeDataString(currentTab)}");
     if (Model.Flagged == true) clearSearchQuery.Add("flagged=true");
@@ -143,6 +144,15 @@
         </span>
         <h1 id="hero-title">Cada solicitud,<br /><em>un F8 bajo control.</em></h1>
         <p class="hero-description">Gestiona, sincroniza y resguarda.<br />Tus solicitudes urgentes F8 y carpetas, en un solo lugar.</p>
+        <div class="hero-actions">
+            <form method="post" asp-page="/Index" asp-page-handler="Sincronizar">
+                <button type="submit" class="btn btn-primary hero-sync-btn" title="Trae casos 'NO HAY CARPETA' de la matriz y actualiza los ya subidos">
+                    <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0-4 4m4-4 4 4M4 15v5h16v-5"/></svg>
+                    <span>Cargar desde Excel</span>
+                </button>
+            </form>
+            <a href="#mi-mesa" class="hero-mesa-link">Ir a mi mesa <span aria-hidden="true">↗</span></a>
+        </div>
         <span class="hero-footnote">CON LICO, CADA EXPEDIENTE TIENE SU LUGAR.</span>
     </div>
 
@@ -160,16 +170,24 @@
             <span class="lico-lampara-dibujo" aria-hidden="true"><span class="lico-lampara-base"></span><span class="lico-lampara-brazo"></span><span class="lico-lampara-foco"></span></span>
             <span class="lico-objeto-etiqueta" data-lico-luz-etiqueta>Luz encendida</span>
         </button>
-        <button type="button" class="lico-objeto lico-carpeta" data-lico-accion="carpetas" aria-label="Ir a la tabla de solicitudes">
+        <button type="button" class="lico-objeto lico-carpeta" data-lico-accion="pendientes" aria-label="Ver solicitudes en la mesa">
             <span class="lico-carpeta-dibujo" aria-hidden="true"><span class="lico-carpeta-hoja"></span><span class="lico-carpeta-tapa"></span><span class="lico-carpeta-sello">L</span></span>
-            <span class="lico-objeto-etiqueta">En vista <b id="heroLicoCount">@Model.Requests.Count</b></span>
+            <span class="lico-objeto-etiqueta">Pendientes <b id="heroLicoCount">@pendientesCount</b></span>
         </button>
         <div class="studio-bubble lico-speech" id="licoSpeech">
-            <p id="lico-studio-message" aria-live="polite">Soy Lico. Hay @Model.Requests.Count solicitud(es) en vista listas para gestionar.</p>
+            <p id="lico-studio-message" aria-live="polite">@(pendientesCount > 0 ? $"Tienes {pendientesCount} solicitud(es) pendientes en vista. Vamos paso a paso." : "¡Todo al día! Tus solicitudes en vista están gestionadas.")</p>
         </div>
         <span class="li-scene-caption lico-hint" id="lico-espacio-ayuda">TOCA A LICO · ABRE SU CARPETA · CAMBIA LA LUZ</span>
     </div>
 </section>
+
+<div class="studio-inbox-title" id="mi-mesa">
+    <div>
+        <span class="studio-kicker">GESTIÓN DIARIA</span>
+        <h2>Tu mesa de solicitudes</h2>
+    </div>
+    <span id="studio-filter-label">@(currentTab == "Todos" ? "Todas las solicitudes" : currentTab)</span>
+</div>
 
 <div class="dashboard-controls">
     <div class="controls-row-main status-tabs-bar">
@@ -191,17 +209,6 @@
                 {
                     <span class="badge tab-count-badge tab-count-alert">@Model.FlaggedCount</span>
                 }
-            </a>
-        </div>
-
-        <div class="tools-group">
-            <a href="/Estadisticas" class="tool-btn tool-link-soft tool-stats" title="Estadísticas">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                Estadísticas
-            </a>
-            <a href="/ImpresionMensual" class="tool-btn tool-link-soft tool-print" title="Impresión mensual">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                Impresión mensual
             </a>
         </div>
     </div>
@@ -666,11 +673,15 @@
             var table = document.querySelector('table.cases-list');
             if (!table) return;
             var ths = table.querySelectorAll('thead th');
-            if (ths.length < 2) return;
+            if (ths.length < 3) return;
 
-            var wNombre = Math.round(ths[0].getBoundingClientRect().width);
+            var w1 = Math.round(ths[0].getBoundingClientRect().width);
+            var w2 = Math.round(ths[1].getBoundingClientRect().width);
+            var left2 = w1;
+            var left3 = w1 + w2;
 
-            table.style.setProperty('--sticky-rut', wNombre + 'px');
+            table.style.setProperty('--sticky-col2', left2 + 'px');
+            table.style.setProperty('--sticky-col3', left3 + 'px');
 
             var styleEl = document.getElementById('sticky-offsets-style');
             if (!styleEl) {
@@ -679,9 +690,10 @@
                 document.head.appendChild(styleEl);
             }
             styleEl.textContent =
-                'table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { left: 0px !important; position: sticky !important; z-index: 6 !important; }\n' +
-                'table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { left: ' + wNombre + 'px !important; position: sticky !important; z-index: 6 !important; }\n' +
-                'table.cases-list thead th:nth-child(1), table.cases-list thead th:nth-child(2) { z-index: 25 !important; background-color: var(--color-th-bg, #f8fafc) !important; }';
+                'table.cases-list th:nth-child(1), table.cases-list td:nth-child(1) { left: 0px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
+                'table.cases-list th:nth-child(2), table.cases-list td:nth-child(2) { left: ' + left2 + 'px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
+                'table.cases-list th:nth-child(3), table.cases-list td:nth-child(3) { left: ' + left3 + 'px !important; position: sticky !important; z-index: 6 !important; border-right: none !important; box-shadow: none !important; }\n' +
+                'table.cases-list thead th:nth-child(1), table.cases-list thead th:nth-child(2), table.cases-list thead th:nth-child(3) { z-index: 25 !important; background-color: var(--color-th-bg, #f3e8eb) !important; }';
         }
         window.addEventListener('DOMContentLoaded', updateStickyOffsets);
         window.addEventListener('load', updateStickyOffsets);
