@@ -675,10 +675,10 @@
             var ths = table.querySelectorAll('thead th');
             if (ths.length < 3) return;
 
-            var w1 = Math.round(ths[0].getBoundingClientRect().width);
-            var w2 = Math.round(ths[1].getBoundingClientRect().width);
-            var left2 = w1;
-            var left3 = w1 + w2;
+            var w1 = ths[0].getBoundingClientRect().width;
+            var w2 = ths[1].getBoundingClientRect().width;
+            var left2 = w1.toFixed(2);
+            var left3 = (w1 + w2).toFixed(2);
 
             table.style.setProperty('--sticky-col2', left2 + 'px');
             table.style.setProperty('--sticky-col3', left3 + 'px');

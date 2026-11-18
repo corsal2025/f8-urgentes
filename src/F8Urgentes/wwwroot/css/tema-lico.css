@@ -170,7 +170,7 @@ header.top::after {
 }
 
 .top-inner {
-  width: calc(100% - 48px);
+  width: calc(100% - 32px);
   max-width: 1480px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -179,21 +179,21 @@ header.top::after {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
   align-items: center;
 }
 
 .marca {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex: none;
   color: #fff8e8;
   text-decoration: none;
 }
 .marca:hover { text-decoration: none; }
 .marca .brand-logo {
-  height: 50px;
+  height: 46px;
   width: auto;
   display: block;
   background: #fff;
@@ -204,10 +204,10 @@ header.top::after {
   transition: transform .2s ease;
 }
 .marca:hover .brand-logo { transform: scale(1.03); }
-.marca-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.marca-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .marca-titulo {
   font-family: var(--serif);
-  font-size: clamp(1.28rem, 1.55vw, 1.65rem);
+  font-size: clamp(1.22rem, 1.4vw, 1.5rem);
   font-weight: 400;
   letter-spacing: -0.03em;
   color: #fff5e4;
@@ -215,9 +215,9 @@ header.top::after {
   white-space: nowrap;
 }
 .marca-org {
-  font-size: 9px;
+  font-size: 8.5px;
   font-weight: 600;
-  letter-spacing: .12em;
+  letter-spacing: .09em;
   text-transform: uppercase;
   color: #e6d2d8;
   line-height: 1.15;
@@ -268,7 +268,7 @@ header.top::after {
 .header-search-clear:hover { background: rgba(255, 255, 255, .2); color: #fff; }
 
 /* Lado derecho: botones limpios estilo Petición de Cambio de Domicilio */
-.top-right { flex: none; display: flex; align-items: center; gap: 9px; flex-wrap: nowrap; }
+.top-right { flex: none; display: flex; align-items: center; gap: 7px; flex-wrap: nowrap; }
 .header-sync-form { display: flex; align-items: center; margin: 0; }
 
 header.top .header-sync-btn,
@@ -278,9 +278,9 @@ header.top .header-sync-btn,
 .btn-guia-accion {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  min-height: 38px;
-  height: 38px;
+  gap: 6px;
+  min-height: 36px;
+  height: 36px;
   box-sizing: border-box;
   background: rgba(255, 255, 255, .05);
   color: #f4f0e8;
@@ -298,20 +298,21 @@ header.top .header-sync-btn,
 header.top .header-sync-btn,
 .btn-logout,
 .icono-btn {
-  padding: 0 11px;
+  padding: 0 10px;
   cursor: pointer;
 }
 
 .btn-guia-accion {
-  padding: 0 11px 0 7px;
+  padding: 0 10px 0 6px;
   cursor: pointer;
-  font-size: 12.5px;
+  font-size: 12px;
 }
 
 .user-pill {
-  padding: 0 9px 0 5px;
+  padding: 0 6px 0 5px;
   font-size: 12px;
 }
+.user-pill .user-name { display: none; }
 
 header.top .header-sync-btn .sync-dot {
   width: 7px;
@@ -361,26 +362,29 @@ nav.app-nav {
   display: flex;
   align-items: stretch;
   justify-content: flex-start;
-  gap: 6px;
+  gap: 2px;
   flex: 1 1 auto;
   flex-wrap: nowrap;
   min-width: 0;
-  margin-left: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
+nav.app-nav::-webkit-scrollbar { display: none; }
 nav.app-nav a {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   min-height: 90px;
-  padding: 0 12px;
+  padding: 0 9px;
   background: transparent;
   color: #e5d2d7;
   border: 0;
   border-radius: 0;
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
+  flex: none;
   text-decoration: none;
   transition: color .14s ease, background-color .14s ease;
 }
@@ -397,8 +401,8 @@ nav.app-nav a.active::after {
   content: '';
   position: absolute;
   bottom: 13px;
-  left: 12px;
-  right: 12px;
+  left: 9px;
+  right: 9px;
   height: 3px;
   border-radius: 2px;
   background: var(--amber);
