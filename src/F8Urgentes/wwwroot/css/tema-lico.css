@@ -29,10 +29,10 @@
   --tinta-2: #5c434a;
   --tinta-3: #7a6067;
 
-  --topbar-bg: #4a1c29;
-  --topbar-gradient: linear-gradient(110deg, #3c1420 0%, #572131 55%, #6e2c3f 100%);
-  --hero-bg: radial-gradient(ellipse at 82% 28%, rgba(239, 182, 92, 0.24), transparent 40%), linear-gradient(118deg, #3c1420, #572131 57%, #6e2c3f);
-  --hero-border: #6e2c3f;
+  --topbar-bg: #270c15;
+  --topbar-gradient: linear-gradient(110deg, #270c15 0%, #4d192a 55%, #8b2e4c 100%);
+  --hero-bg: radial-gradient(ellipse at 85% 25%, rgba(239, 182, 92, 0.28), transparent 44%), radial-gradient(ellipse at 72% 85%, rgba(168, 52, 88, 0.34), transparent 50%), linear-gradient(118deg, #240a13 0%, #4b1829 52%, #8e2f4e 100%);
+  --hero-border: #6e243c;
 
   --amber: #efb65c;
   --amber-hover: #f7c77e;
@@ -41,8 +41,9 @@
   --accent-hover: #4a1c29;
   --accent-soft: #f6eaed;
 
-  --table-th-bg: #f3e8eb;
-  --table-th-color: #4a1c29;
+  --table-th-bg: #3f1422;
+  --table-th-gradient: linear-gradient(180deg, #35101c 0%, #591d31 100%);
+  --table-th-color: #fff5e4;
   --row-normal: #ffffff;
   --row-normal-hover: #faf3f5;
 
@@ -1604,12 +1605,13 @@ button.btn-sync:hover { background: var(--accent-soft); }
 /* Tarjetas */
 .card { border-color: var(--borde); border-radius: var(--r); box-shadow: var(--sh); background: var(--papel); }
 
-/* ---------- Tablas aireadas sin bordes verticales: encabezado Burdeo Mate ---------- */
+/* ---------- Tablas aireadas sin bordes verticales: encabezado Burdeo Degradé ---------- */
 table.cases th,
 table.cases-list th,
 table.cases-list thead th,
 table.cases-index th {
   background: var(--table-th-bg);
+  background-image: var(--table-th-gradient);
   color: var(--table-th-color);
   font-size: 11px;
   font-weight: 700;
@@ -1617,7 +1619,7 @@ table.cases-index th {
   border-top: none;
   border-left: none;
   border-right: none;
-  border-bottom: 1px solid var(--borde);
+  border-bottom: 1px solid #6e243c;
   box-shadow: none;
   padding: 12px 14px;
 }
@@ -1625,7 +1627,8 @@ table.cases-list thead th:nth-child(1),
 table.cases-list thead th:nth-child(2),
 table.cases-list thead th:nth-child(3) {
   background-color: var(--table-th-bg) !important;
-  color: var(--table-th-color);
+  background-image: var(--table-th-gradient) !important;
+  color: var(--table-th-color) !important;
 }
 table.cases-list th.th-wrap { border-right: none; }
 .th-sort-link { color: inherit; text-decoration: underline dotted rgba(110, 44, 63, .45); text-underline-offset: 3px; }
