@@ -253,9 +253,33 @@ public sealed class IndexModel(IUrgentRequestRepository repository, F8Options? o
         return RedirectToPage();
     }
 
-    public IActionResult OnPostRevertSinCarpeta(long id)
+    public IActionResult OnPostSetFechaPenultimaCarpeta(long id, string? fecha)
     {
-        repository.SetSinCarpeta(id, false);
+        var request = repository.FindById(id);
+        if (request is not null)
+        {
+            var trimmed = fecha?.Trim();
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                request.FechaPenultimaCarpeta = null;
+                repository.Update(request);
+            }
+            else if (DateOnly.TryParseExact(trimmed, ["yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy", "d/MM/yyyy", "dd/M/yyyy"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsedDate))
+            {
+                request.FechaPenultimaCarpeta = parsedDate;
+                repository.Update(request);
+            }
+            else
+            {
+                return new JsonResult(new { message = $"Fecha no reconocida: \"{fecha}\"." }) { StatusCode = StatusCodes.Status400BadRequest };
+            }
+        }
+
+        if (Request.Headers.XRequestedWith == "XMLHttpRequest")
+        {
+            return new JsonResult(new { fecha = request?.FechaPenultimaCarpeta?.ToString("yyyy-MM-dd") ?? "" });
+        }
+
         return RedirectToPage();
     }
 

@@ -26,12 +26,7 @@ public interface IUrgentRequestRepository
     IReadOnlyList<UrgentRequest> GetFlagged();
     void ClearFlags(long requestId);
 
-    bool HasCompletedImport(string sourceFile);
-    void RecordImportRun(string sourceFile, int rowsImported, int rowsFlagged);
-    void DeleteImportedRows();
-
     void SetMarked(long id, bool marked);
-    void SetImpresoMensual(long id, DateTimeOffset? generatedAt);
 
     UrgentRequest? FindByRut(string rut);
 
@@ -39,9 +34,6 @@ public interface IUrgentRequestRepository
     Usuario? FindUserByUsername(string username);
     void InsertUser(Usuario usuario);
     void UpdateUserPassword(long id, string passwordHash);
-
-    // Caja module
-    void SetSinCarpeta(long id, bool sinCarpeta);
 
     /// <summary>Every closed box, most recently closed first.</summary>
     IReadOnlyList<Box> GetBoxes();

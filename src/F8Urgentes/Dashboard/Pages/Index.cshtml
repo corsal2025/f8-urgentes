@@ -310,6 +310,7 @@
                 <th>RUT</th>
                 <th class="th-wrap">Sector<br />oficina</th>
                 <th class="th-wrap">Código<br />F8</th>
+                <th class="th-wrap">Fecha penúltima<br />carpeta</th>
                 <th class="th-wrap">Fecha subida<br />F8</th>
                 <th class="th-wrap">Estado<br />actual</th>
                 <th>Acción</th>
@@ -342,6 +343,12 @@
                             <input type="hidden" name="id" value="@request.Id" />
                         </form>
                     </td>
+                    <td class="text-cell">
+                        <input class="input-inline autosave fecha-penultima-input" type="date" form="fechapenultima-@request.Id" name="fecha" value="@(request.FechaPenultimaCarpeta?.ToString("yyyy-MM-dd") ?? "")" aria-label="Fecha penúltima carpeta" />
+                        <form id="fechapenultima-@request.Id" method="post" asp-page-handler="SetFechaPenultimaCarpeta">
+                            <input type="hidden" name="id" value="@request.Id" />
+                        </form>
+                    </td>
                     <td class="text-cell fecha-subida-cell">@(request.FechaDeSubida?.ToString("dd/MM/yyyy") ?? "—")</td>
                     <td class="text-cell">
                         @{
@@ -371,13 +378,6 @@
                                         </svg>
                                         <span>Subir</span>
                                     </button>
-                                </form>
-                            }
-                            @if (request.SinCarpeta)
-                            {
-                                <form method="post" asp-page-handler="RevertSinCarpeta">
-                                    <input type="hidden" name="id" value="@request.Id" />
-                                    <button class="btn-folder btn-folder-revert" type="submit" title="Revertir Sin carpeta"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg><span>Revertir</span></button>
                                 </form>
                             }
                             <form method="post" asp-page-handler="DeleteCase" onsubmit="return confirm('¿Eliminar esta solicitud?');">

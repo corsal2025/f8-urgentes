@@ -12,13 +12,7 @@ public static class SpanishDateFormatter
         "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
     ];
 
-    public static string LongDate(DateOnly? date) =>
-        date is { } d ? $"{d.Day} de {Meses[d.Month - 1]} de {d.Year}" : "S/C";
-
-    public static string SlashMonthDate(DateOnly? date) =>
-        date is { } d ? $"{d.Day:00}/{Meses[d.Month - 1]}/{d.Year}" : "S/C";
-
-    /// <summary>Parses "15 de mayo de 2024" (the format LongDate produces) back into a date.</summary>
+    /// <summary>Parses "15 de mayo de 2024" back into a date.</summary>
     public static bool TryParseLongDate(string? text, out DateOnly date)
     {
         date = default;

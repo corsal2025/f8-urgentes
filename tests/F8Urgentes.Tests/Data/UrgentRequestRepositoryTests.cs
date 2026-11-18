@@ -280,30 +280,6 @@ public sealed class UrgentRequestRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void HasCompletedImport_FalseBeforeAnyRun_TrueAfterRecordImportRun()
-    {
-        Assert.False(_repository.HasCompletedImport("URGENTES DIARIOS.xlsx"));
-
-        _repository.RecordImportRun("URGENTES DIARIOS.xlsx", 100, 5);
-
-        Assert.True(_repository.HasCompletedImport("URGENTES DIARIOS.xlsx"));
-        Assert.False(_repository.HasCompletedImport("otro.xlsx"));
-    }
-
-    [Fact]
-    public void DeleteImportedRows_RemovesOnlyImportOriginRows()
-    {
-        _repository.Insert(SampleRequest("15949558-2", "Import"));
-        _repository.Insert(SampleRequest("7654321-K", "Web"));
-
-        _repository.DeleteImportedRows();
-
-        var remaining = _repository.GetAll();
-        Assert.Single(remaining);
-        Assert.Equal("Web", remaining[0].Origin);
-    }
-
-    [Fact]
     public void SetMarked_True_SetsMarkedAt()
     {
         var id = _repository.Insert(SampleRequest());

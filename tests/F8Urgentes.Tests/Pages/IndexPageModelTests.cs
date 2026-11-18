@@ -252,25 +252,20 @@ public sealed class IndexPageModelTests : IDisposable
     public void OnGet_StillShowsSinCarpetaCases()
     {
         var id = Insert(rut: "11111111-1");
-        _repository.SetSinCarpeta(id, true);
+        using (var conn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={_dbPath};Pooling=False"))
+        {
+            conn.Open();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE UrgentRequest SET SinCarpeta = 1 WHERE Id = $id";
+            cmd.Parameters.AddWithValue("$id", id);
+            cmd.ExecuteNonQuery();
+        }
         var model = CreateModel();
 
         model.OnGet(null, null);
 
         Assert.Single(model.Requests);
         Assert.True(model.Requests[0].SinCarpeta);
-    }
-
-    [Fact]
-    public void OnPostRevertSinCarpeta_UnmarksCase()
-    {
-        var id = Insert();
-        _repository.SetSinCarpeta(id, true);
-        var model = CreateModel();
-
-        model.OnPostRevertSinCarpeta(id);
-
-        Assert.False(_repository.FindById(id)!.SinCarpeta);
     }
 
     [Fact]

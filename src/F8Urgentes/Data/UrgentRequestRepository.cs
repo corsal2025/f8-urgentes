@@ -335,38 +335,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         transaction.Commit();
     }
 
-    public bool HasCompletedImport(string sourceFile)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "SELECT 1 FROM ImportRun WHERE SourceFile = $sourceFile LIMIT 1";
-        command.Parameters.AddWithValue("$sourceFile", sourceFile);
-        return command.ExecuteScalar() is not null;
-    }
-
-    public void RecordImportRun(string sourceFile, int rowsImported, int rowsFlagged)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = """
-            INSERT INTO ImportRun (SourceFile, CompletedAt, RowsImported, RowsFlagged)
-            VALUES ($sourceFile, $completedAt, $rowsImported, $rowsFlagged)
-            """;
-        command.Parameters.AddWithValue("$sourceFile", sourceFile);
-        command.Parameters.AddWithValue("$completedAt", DateTimeOffset.UtcNow.ToString("O"));
-        command.Parameters.AddWithValue("$rowsImported", rowsImported);
-        command.Parameters.AddWithValue("$rowsFlagged", rowsFlagged);
-        command.ExecuteNonQuery();
-    }
-
-    public void DeleteImportedRows()
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM UrgentRequest WHERE Origin = 'Import'";
-        command.ExecuteNonQuery();
-    }
-
     public void SetMarked(long id, bool marked)
     {
         using var connection = Open();
@@ -382,16 +350,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
         {
             command.Parameters.AddWithValue("$at", DateTimeOffset.UtcNow.ToString("O"));
         }
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
-    }
-
-    public void SetImpresoMensual(long id, DateTimeOffset? generatedAt)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE UrgentRequest SET ImpresoMensualAt = $at WHERE Id = $id";
-        command.Parameters.AddWithValue("$at", (object?)generatedAt?.ToString("O") ?? DBNull.Value);
         command.Parameters.AddWithValue("$id", id);
         command.ExecuteNonQuery();
     }
@@ -490,16 +448,6 @@ public sealed class UrgentRequestRepository(string connectionString) : IUrgentRe
             Code = code,
             ClosedAt = DateTimeOffset.Parse(reader.GetString(reader.GetOrdinal("ClosedAt"))),
         };
-    }
-
-    public void SetSinCarpeta(long id, bool sinCarpeta)
-    {
-        using var connection = Open();
-        using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE UrgentRequest SET SinCarpeta = $v WHERE Id = $id";
-        command.Parameters.AddWithValue("$v", sinCarpeta ? 1 : 0);
-        command.Parameters.AddWithValue("$id", id);
-        command.ExecuteNonQuery();
     }
 
     public IReadOnlyList<Box> GetBoxes()

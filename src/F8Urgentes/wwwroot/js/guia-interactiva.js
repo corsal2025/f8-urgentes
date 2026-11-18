@@ -95,7 +95,7 @@
       fallbackTarget: 'table.cases-list',
       titulo: 'Columnas de la tabla',
       icono: '📋',
-      descripcion: '<b>Marcar</b>, <b>Nombre</b> y <b>RUT</b> quedan fijos a la izquierda al desplazar la tabla. Luego vienen <b>Sector oficina</b>, <b>Código F8</b>, <b>Fecha subida F8</b>, <b>Estado actual</b> y <b>Acción</b>. Los casos ya subidos van al final.'
+      descripcion: '<b>Marcar</b>, <b>Nombre</b> y <b>RUT</b> quedan fijos a la izquierda al desplazar la tabla. Luego vienen <b>Sector oficina</b>, <b>Código F8</b>, <b>Fecha penúltima carpeta</b>, <b>Fecha subida F8</b>, <b>Estado actual</b> y <b>Acción</b>. Los casos ya subidos van al final.'
     },
     {
       pagina: '/index',
@@ -116,7 +116,7 @@
     {
       pagina: '/index',
       target: 'table.cases-list tbody .estado-actual-select',
-      fallbackTarget: 'table.cases-list thead th:nth-child(7)',
+      fallbackTarget: 'table.cases-list thead th:nth-child(8)',
       titulo: 'Estado actual',
       icono: '🏷️',
       descripcion: 'Muestra el estado del caso y permite cambiarlo a <b>CREAR CERTIFICADO</b> cuando no se encuentra la carpeta. Si el caso está <b>SUBIDA A CONASET</b>, el selector queda bloqueado.'

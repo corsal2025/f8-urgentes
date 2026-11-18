@@ -499,135 +499,14 @@ table.cases td {
 table.cases tbody tr:nth-child(even) { background: #fafbfc; }
 table.cases tbody tr:hover { background: #f0f6fb; }
 
-table.cases-index {
-    table-layout: fixed;
-    font-size: 0.8rem;
-    width: 100%;
-    min-width: 0;
-}
-
-/* Zebra striping is computed server-side into an explicit class instead of relying on
-   :nth-child, since row visibility/order has changed before under a fixed layout — keeping
-   this explicit avoids depending on layout details that are unrelated to the striping itself. */
-table.cases-index tbody tr:nth-child(even) {
-    background: transparent;
-}
-
-table.cases-index tbody tr.row-alt {
-    background: #fafbfc;
-}
-
-table.cases-index th {
-    padding: 6px 6px;
-    font-size: 0.66rem;
-    line-height: 1.2;
-}
-
-table.cases-index td {
-    padding: 5px 6px;
-}
-
-table.cases-index th,
-table.cases-index td {
-    text-align: center;
-}
-
-/* Fixed layout needs explicit widths, otherwise all 11 columns split the row evenly and the
-   checkbox columns (which need very little space) starve Nombre/Acción of the room they need. */
-table.cases-index th:nth-child(1), table.cases-index td:nth-child(1) { width: 5%; }
-table.cases-index th:nth-child(2), table.cases-index td:nth-child(2) { width: 6%; }
-table.cases-index th:nth-child(3), table.cases-index td:nth-child(3) { width: 22%; }
-table.cases-index th:nth-child(4), table.cases-index td:nth-child(4) { width: 8%; }
-table.cases-index th:nth-child(5), table.cases-index td:nth-child(5) { width: 8%; }
-table.cases-index th:nth-child(6), table.cases-index td:nth-child(6) { width: 7%; }
-table.cases-index th:nth-child(7), table.cases-index td:nth-child(7) { width: 9%; }
-table.cases-index th:nth-child(8), table.cases-index td:nth-child(8) { width: 6%; }
-table.cases-index th:nth-child(9), table.cases-index td:nth-child(9) { width: 8%; }
-table.cases-index th:nth-child(10), table.cases-index td:nth-child(10) { width: 8%; }
-table.cases-index th:nth-child(11), table.cases-index td:nth-child(11) { width: 13%; }
-
-
-table.cases-index .badge {
-    padding: 2px 8px;
-    font-size: 0.7rem;
-    white-space: nowrap;
-}
-
-table.cases-index button.btn-primary {
-    padding: 4px 10px;
-    font-size: 0.76rem;
-    white-space: nowrap;
-}
-
-table.cases-index td:last-child {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-table.cases-index td:last-child {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-table.cases-index td:last-child form {
-    margin: 0;
-}
-
-table.cases-index .input-inline {
-    padding: 3px 4px;
-    font-size: 0.74rem;
-}
-
-table.cases-index td.name-cell {
-    text-align: center;
-}
-
-/* width:100% here fills whatever extra room the column has (so short names don't leave a
-   visible gap); the per-row inline `min-width: Nch` (see Index.cshtml) is what actually forces
-   the column itself to grow — table-layout:auto respects an input's min-width when sizing its
-   column even under width:100%, unlike the HTML `size` attribute, which browsers ignore for
-   column sizing once a CSS width is set. */
-table.cases-index td.name-cell .name-input {
-    width: 100%;
-    box-sizing: border-box;
-    font-size: 0.66rem;
-    padding-left: 3px;
-    padding-right: 3px;
-}
-
-table.cases-index td.rut-cell .rut-input {
-    width: 100%;
-    min-width: 9ch;
-    box-sizing: border-box;
-    text-align: center;
-}
-
-table.cases-index td.text-cell,
-table.cases-index td.rut-cell {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-table.cases-index .marked-checkbox,
-table.cases-list .marked-checkbox,
-table.cases-list .pendiente-checkbox {
+table.cases-list .marked-checkbox {
     width: 16px;
     height: 16px;
     cursor: pointer;
 }
 
-/* Pendiente Carpeta uses a different check color than Marcar/nav selection (which use the
-   app's blue accent) so the two states read as distinct at a glance, not just by position. */
-table.cases-list .pendiente-checkbox {
-    accent-color: #c9782f;
-}
-
-/* Row color on the cases-list table comes only from the Estado dropdown (below) — Marcar and
-   Pendiente Carpeta are plain checkboxes here with no row tint of their own. */
+/* Row color on the cases-list table comes only from the Estado dropdown (below) — Marcar
+   is a plain checkbox here with no row tint of its own. */
 table.cases-list tbody tr.estado-row-f8 { background: #f0fdf4; }
 table.cases-list tbody tr.estado-row-f8:hover { background: #dcfce7; }
 table.cases-list tbody tr.estado-row-licencia { background: #fefce8; }
@@ -643,11 +522,9 @@ table.cases-list tbody tr.estado-row-pendiente:hover { background: #f1f5f9; }
 table.cases-list tbody tr.estado-row-denegada { background: #fef2f2 !important; }
 table.cases-list tbody tr.estado-row-denegada:hover { background: #fee2e2 !important; }
 
-/* Marcar (amarillo) / Pendiente carpeta (morado) — reacciona al checked nativo, no a una clase */
+/* Marcar (amarillo) — reacciona al checked nativo, no a una clase */
 table.cases-list tbody tr:has(input.marked-checkbox:checked) { background: #fef08a !important; }
 table.cases-list tbody tr:has(input.marked-checkbox:checked):hover { background: #fde047 !important; }
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked) { background: #ddd6fe !important; }
-table.cases-list tbody tr:has(input.pendiente-checkbox:checked):hover { background: #c4b5fd !important; }
 
 table.cases-list td:has(select.estado-actual-select) {
     display: flex;
@@ -661,80 +538,22 @@ table.cases-list td:has(select.estado-actual-select) select.estado-actual-select
     flex: none;
 }
 
-table.cases-list td:has(select.estado-actual-select) .pendiente-alert {
-    position: static;
-    margin-left: 0;
-}
-
-.pendiente-alert {
-    flex: none;
-    color: var(--color-review);
-    font-weight: 700;
-    font-size: 0.9rem;
-    margin-left: 4px;
-    cursor: help;
-    animation: review-alert-blink 1.2s ease-in-out infinite;
-}
-
-table.cases-index tbody tr:has(.marked-checkbox:checked) {
-    background: #dcfce7;
-}
-
-table.cases-index tbody tr:has(.marked-checkbox:checked):hover {
-    background: #bbf7d0;
-}
-
-/* Confirmed status — plomo, no azul/violeta, para no confundirse con Pendiente carpeta (morado) */
-table.cases-index tbody tr.row-confirmed,
+/* Confirmed status — plomo */
 table.cases-list tbody tr.row-confirmed {
     background: #e5e7eb !important;
 }
 
-table.cases-index tbody tr.row-confirmed:hover,
 table.cases-list tbody tr.row-confirmed:hover {
     background: #d1d5db !important;
 }
 
 /* Needs-review status */
-table.cases-index tbody tr.row-needs-review,
 table.cases-list tbody tr.row-needs-review {
     background: #fff1f2 !important;
 }
 
-table.cases-index tbody tr.row-needs-review:hover,
 table.cases-list tbody tr.row-needs-review:hover {
     background: #ffe4e6 !important;
-}
-
-/* Groups the alert symbol and the name input on one row — without this, the input's own
-   width:100% makes it wrap onto its own line below the alert instead of sitting beside it. */
-table.cases-index td.name-cell .name-with-alert {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
-@keyframes review-alert-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-}
-
-.review-alert {
-    flex: none;
-    color: var(--color-review);
-    font-weight: 700;
-    font-size: 0.95rem;
-    cursor: help;
-    animation: review-alert-blink 1.2s ease-in-out infinite;
-}
-
-table.cases-index td.review-cell {
-    text-align: left;
-}
-
-table.cases-index td.text-cell {
-    white-space: nowrap;
-    text-align: center;
 }
 
 .fecha-form {
@@ -765,42 +584,6 @@ table.cases-index td.text-cell {
 .badge-ok { background: var(--color-confirmed-bg); color: var(--color-confirmed); }
 
 .message-error { background: var(--color-review-bg); border-color: var(--color-review); color: var(--color-review); }
-
-.quick-add-card {
-    padding: 0 20px;
-    margin-bottom: 20px;
-    border-top: 3px solid var(--color-accent);
-}
-
-.quick-add-card summary {
-    padding: 8px 0;
-    font-weight: 600;
-    font-size: 0.76rem;
-    color: var(--color-text);
-    cursor: pointer;
-    list-style: none;
-}
-
-.quick-add-card summary::-webkit-details-marker {
-    display: none;
-}
-
-.quick-add-card summary::before {
-    content: "▶";
-    display: inline-block;
-    margin-right: 8px;
-    font-size: 0.7rem;
-    color: var(--color-text-muted);
-    transition: transform 0.15s ease;
-}
-
-.quick-add-card[open] summary::before {
-    transform: rotate(90deg);
-}
-
-.quick-add-card[open] {
-    padding-bottom: 18px;
-}
 
 .quick-add-row {
     display: flex;
@@ -841,35 +624,7 @@ a.btn-outline {
 button.btn-outline:hover,
 a.btn-outline:hover { background: var(--color-bg); }
 
-/* Caja box-detail toolbar: uniform height/size for link + buttons */
-.caja-toolbar a.btn-outline,
-.caja-toolbar button.btn-outline,
-.caja-toolbar button.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    height: 34px;
-    padding: 0 14px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    line-height: 1;
-    text-decoration: none;
-    box-sizing: border-box;
-}
-.caja-toolbar button.btn-warning {
-    color: #b45309;
-    border-color: #fcd34d;
-}
-.caja-toolbar button.btn-warning:hover { background: #fffbeb; }
-
-button.btn-sync {
-    color: #7a3fc9;
-    border-color: #7a3fc9;
-}
-button.btn-sync:hover { background: #f2eaff; }
-
-/* cases-list is the Index page's own column scheme (8 columns) — distinct from cases-index
-   (11 columns, used by a checkbox-driven review grid) so widths never fight each other. */
+/* cases-list is the Index page's own column scheme (8 columns). */
 table.cases-list {
     table-layout: auto;
     font-size: 0.76rem;
@@ -934,7 +689,7 @@ table.cases-list td.rut-cell input.input-inline {
 table.cases-solicitudes th:nth-child(1), table.cases-solicitudes td:nth-child(1) { width: 72px; min-width: 72px; max-width: 72px; text-align: center; } /* Marcar */
 table.cases-solicitudes th:nth-child(2), table.cases-solicitudes td:nth-child(2) { width: 1%; min-width: 0; white-space: nowrap; } /* Nombre */
 table.cases-solicitudes th:nth-child(3), table.cases-solicitudes td:nth-child(3) { width: 1%; min-width: 118px; white-space: nowrap; }  /* RUT */
-table.cases-solicitudes th:nth-child(8), table.cases-solicitudes td:nth-child(8) { min-width: 110px; white-space: nowrap; text-align: center; } /* Acción */
+table.cases-solicitudes th:last-child, table.cases-solicitudes td:last-child { min-width: 110px; white-space: nowrap; text-align: center; } /* Acción */
 
 table.cases-list th.th-wrap {
     white-space: normal;
@@ -1036,9 +791,6 @@ table.cases-solicitudes tbody tr.row-needs-review td:nth-child(3) { background-c
 table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(1),
 table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(2),
 table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked) td:nth-child(3) { background-color: #fef08a !important; }
-table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(1),
-table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(2),
-table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked) td:nth-child(3) { background-color: #ddd6fe !important; }
 
 table.cases-solicitudes tbody tr:hover td:nth-child(1),
 table.cases-solicitudes tbody tr:hover td:nth-child(2),
@@ -1064,9 +816,6 @@ table.cases-solicitudes tbody tr.estado-row-pendiente:hover td:nth-child(3) { ba
 table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(1),
 table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(2),
 table.cases-solicitudes tbody tr:has(input.marked-checkbox:checked):hover td:nth-child(3) { background-color: #fde047 !important; }
-table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(1),
-table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(2),
-table.cases-solicitudes tbody tr:has(input.pendiente-checkbox:checked):hover td:nth-child(3) { background-color: #c4b5fd !important; }
 
 table.cases-list td > * {
     vertical-align: middle;
@@ -1142,34 +891,6 @@ table.cases-list td.action-cell button.btn-danger:hover {
     color: #ffffff;
     border-color: #ef4444;
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.25);
-}
-
-table.cases-list td.action-cell button.btn-sync {
-    width: 24px;
-    min-width: 24px;
-    max-width: 24px;
-    height: 24px;
-    min-height: 24px;
-    max-height: 24px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    box-sizing: border-box;
-    border-radius: var(--radius-sm);
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #b91c1c;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: all 0.15s ease;
-}
-
-table.cases-list td.action-cell button.btn-sync:hover {
-    background: #b91c1c;
-    color: #ffffff;
-    border-color: #b91c1c;
-    box-shadow: 0 2px 4px rgba(185, 28, 28, 0.25);
 }
 
 table.cases-list td.action-cell svg {
@@ -1529,49 +1250,6 @@ button.btn-outline-danger:hover { background: var(--color-review-bg); }
     font-weight: 600;
 }
 
-.pdf-chip {
-    padding: 5px 12px;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-decoration: none;
-    color: #fff;
-}
-
-main > .nav-group a.pdf-chip-archivo {
-    background: #6a4fb3;
-    border-color: #6a4fb3;
-    color: #fff;
-}
-main > .nav-group a.pdf-chip-archivo:hover {
-    background: #5a3f9f;
-    border-color: #5a3f9f;
-    color: #fff;
-}
-
-main > .nav-group a.pdf-chip-oficina43 {
-    background: #c9782f;
-    border-color: #c9782f;
-    color: #fff;
-}
-main > .nav-group a.pdf-chip-oficina43:hover {
-    background: #b5661f;
-    border-color: #b5661f;
-    color: #fff;
-}
-
-main > .nav-group a.pdf-chip-stats,
-main > .nav-group a.pdf-chip-stats.active {
-    background: #1f8a7a;
-    border-color: #1f8a7a;
-    color: #fff;
-}
-main > .nav-group a.pdf-chip-stats:hover {
-    background: #187167;
-    border-color: #187167;
-    color: #fff;
-}
-
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -1602,74 +1280,6 @@ main > .nav-group a.pdf-chip-stats:hover {
     font-size: 0.78rem;
     color: var(--color-text-muted);
     margin-top: 4px;
-}
-
-.donut-card {
-    padding: 16px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.donut-card h3 {
-    width: 100%;
-    margin: 0 0 4px;
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
-}
-
-.donut-chart {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.12);
-}
-
-.donut-hole {
-    width: 84px;
-    height: 84px;
-    border-radius: 50%;
-    background: var(--color-surface, #fff);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-size: 1.3rem;
-    box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.08);
-}
-
-.donut-legend {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    font-size: 0.82rem;
-}
-
-.donut-legend i {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 2px;
-    margin-right: 6px;
-}
-
-.line-card,
-.avg-days-card {
-    padding: 16px;
-    margin-bottom: 20px;
-}
-
-.line-card h3,
-.avg-days-card h3 {
-    margin: 0 0 10px;
-    font-size: 0.9rem;
-    color: var(--color-text-muted);
 }
 
 .line-chart {
@@ -1713,179 +1323,6 @@ main > .nav-group a.pdf-chip-stats:hover {
     color: var(--color-text-muted);
     font-size: 0.82rem;
     margin: 0;
-}
-
-.avg-days-value {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--color-primary);
-}
-
-.avg-days-hint {
-    font-size: 0.78rem;
-    color: var(--color-text-muted);
-    margin-top: 4px;
-}
-
-.stats-breakdowns {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 14px;
-}
-
-.breakdown-card {
-    padding: 14px 16px;
-}
-
-.breakdown-card h3 {
-    font-size: 0.9rem;
-    margin: 0 0 10px;
-    color: var(--color-text-muted);
-}
-
-.breakdown-row {
-    display: grid;
-    grid-template-columns: minmax(90px, 140px) 1fr 32px;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-    font-size: 0.78rem;
-}
-
-.breakdown-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.breakdown-bar-track {
-    background: var(--color-bg);
-    border-radius: 3px;
-    height: 10px;
-    overflow: hidden;
-}
-
-.breakdown-bar {
-    background: var(--color-accent);
-    height: 100%;
-}
-
-.breakdown-count {
-    text-align: right;
-    font-weight: 700;
-}
-
-/* Function bar shared by secondary pages (Dashboard/Pages/_ToolNav.cshtml). Each function
-   has its own tone; the active one is filled solid so "where am I" reads at a glance. */
-.tool-nav {
-    flex: 0 0 auto;
-    display: flex;
-    gap: 6px;
-    padding: 6px;
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
-    overflow-x: auto;
-    scrollbar-width: none;
-}
-
-.tool-nav-item {
-    --tn: #475569;
-    --tn-soft: #f1f5f9;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 7px 14px 7px 7px;
-    border-radius: var(--radius);
-    text-decoration: none;
-    color: var(--color-text);
-    white-space: nowrap;
-    border: 1px solid transparent;
-    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.tool-nav-item.tn-slate  { --tn: #475569; --tn-soft: #f1f5f9; }
-.tool-nav-item.tn-violet { --tn: #6d28d9; --tn-soft: #f3e8ff; }
-.tool-nav-item.tn-amber  { --tn: #c2410c; --tn-soft: #ffedd5; }
-.tool-nav-item.tn-teal   { --tn: #0f766e; --tn-soft: #ccfbf1; }
-.tool-nav-item.tn-sky    { --tn: #0369a1; --tn-soft: #e0f2fe; }
-.tool-nav-item.tn-green  { --tn: #15803d; --tn-soft: #dcfce7; }
-
-.tool-nav-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    display: grid;
-    place-items: center;
-    background: var(--tn-soft);
-    color: var(--tn);
-    flex-shrink: 0;
-    transition: background 0.15s ease, color 0.15s ease;
-}
-
-.tool-nav-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.15;
-}
-
-.tool-nav-label {
-    font-size: 0.82rem;
-    font-weight: 700;
-}
-
-.tool-nav-hint {
-    font-size: 0.68rem;
-    color: var(--color-text-muted);
-    font-weight: 500;
-}
-
-.tool-nav-item:hover {
-    background: var(--tn-soft);
-    border-color: color-mix(in srgb, var(--tn) 25%, transparent);
-    transform: translateY(-1px);
-}
-
-.tool-nav-item:focus-visible {
-    outline: 2px solid var(--tn);
-    outline-offset: 2px;
-}
-
-.tool-nav-item.is-active {
-    background: var(--tn);
-    border-color: var(--tn);
-    color: #fff;
-    box-shadow: 0 4px 12px -4px color-mix(in srgb, var(--tn) 60%, transparent);
-}
-
-.tool-nav-item.is-active .tool-nav-icon {
-    background: rgba(255, 255, 255, 0.18);
-    color: #fff;
-}
-
-.tool-nav-item.is-active .tool-nav-hint {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.tool-nav-item.tn-slate {
-    margin-right: 6px;
-    position: relative;
-}
-
-.tool-nav-item.tn-slate::after {
-    content: "";
-    position: absolute;
-    right: -7px;
-    top: 8px;
-    bottom: 8px;
-    width: 1px;
-    background: var(--color-border);
-}
-
-@media (max-width: 900px) {
-    .tool-nav-hint { display: none; }
-    .tool-nav-item { padding-right: 10px; }
 }
 
 /* Estadisticas charts (Dashboard/Charts/SvgCharts.cs) */
@@ -1943,10 +1380,6 @@ main > .nav-group a.pdf-chip-stats:hover {
     margin-bottom: 14px;
 }
 
-/* Caja module */
-.caja-section { margin-bottom: 24px; }
-.caja-section h2 { font-size: 0.95rem; font-weight: 700; color: var(--color-primary); margin: 0 0 10px; }
-.caja-empty { padding: 20px; text-align: center; color: var(--color-text-muted); font-size: 0.82rem; }
 table.boxes-history td:first-child, table.boxes-history th:first-child { width: 90px; }
 a.box-link { color: var(--color-accent); font-weight: 700; text-decoration: none; }
 a.box-link:hover { text-decoration: underline; }
@@ -1965,7 +1398,7 @@ a.box-link:hover { text-decoration: underline; }
 .doc-count { margin: 10px 2px 0; font-size: 0.75rem; color: var(--color-text-muted); }
 
 @media print {
-    header.app-header, .app-header, .tool-nav, .no-print { display: none !important; }
+    header.app-header, .app-header, .no-print { display: none !important; }
     body { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; }
     main { padding: 0 !important; margin: 0 !important; max-width: none !important; width: 100% !important; overflow: visible !important; }
     .card { border: none !important; box-shadow: none !important; background: transparent !important; padding: 0 !important; margin: 0 !important; }
@@ -2121,27 +1554,6 @@ a.box-link:hover { text-decoration: underline; }
 
 @media (max-width: 600px) {
     .chart-grid { grid-template-columns: 1fr; }
-}
-
-/* Printable F8 sector report (SectorF8.cshtml): hidden on screen (the operator uses the
-   management table below it, which has its own Quitar/Marcar buttons) and shown only when
-   printing/exporting to PDF via the browser's print dialog — the .no-print elements do the
-   opposite, so screen and print never show the same content twice. */
-.print-report {
-    display: none;
-}
-
-/* ImpresionMensual has no separate on-screen management table, so its report
-   is the only view — show it outside of @media print too, unlike SectorF8's
-   .print-report which stays hidden until printing (see comment above). */
-.print-report-visible {
-    display: block;
-    max-width: 900px;
-    margin: 0 auto;
-    background: #fff;
-    padding: 24px;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
 }
 
 .print-title {
@@ -2309,44 +1721,10 @@ a.box-link:hover { text-decoration: underline; }
         flex: none;
     }
 
-    .print-report {
-        display: block;
-    }
-
-    .print-report-visible {
-        max-width: none;
-        border: none;
-        padding: 0;
-    }
-
     .print-table-scroll {
         overflow: visible;
     }
 }
-
-/* Index Acción: penultimate-folder actions (Sin carpeta / Caja / Revertir) */
-.btn-folder {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 9px;
-    border-radius: var(--radius-sm);
-    font-size: 0.72rem;
-    font-weight: 700;
-    white-space: nowrap;
-    cursor: pointer;
-    border: 1px solid;
-    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
-}
-
-.btn-folder:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
-
-.btn-folder-none   { color: #475569; background: #f1f5f9; border-color: #cbd5e1; }
-.btn-folder-none:hover   { background: #475569; border-color: #475569; color: #fff; }
-.btn-folder-box    { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
-.btn-folder-box:hover    { background: #15803d; border-color: #15803d; color: #fff; }
-.btn-folder-revert { color: #b45309; background: #fffbeb; border-color: #fde68a; }
-.btn-folder-revert:hover { background: #b45309; border-color: #b45309; color: #fff; }
 
 button:disabled,
 button[disabled] {

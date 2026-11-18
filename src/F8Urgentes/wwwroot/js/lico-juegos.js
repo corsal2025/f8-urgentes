@@ -1,20 +1,12 @@
-/* Lico travieso y reactivo (F8 Urgentes).
- * Copia de public/lico-juegos.js de la Agenda de Prácticos (kit "Lico" del sistema Petición Cambio de
- * Domicilio). Solo cambian la clave de localStorage, la detección de cuadros de diálogo (<dialog open>)
- * y el id del buscador de la cabecera.
- *
+/* Lico travieso (F8 Urgentes).
  *  1) Travesuras por inactividad: tras IDLE_MS sin actividad, Lico hace una gracia a pie de pantalla
  *     ('toc' | 'pelota' | 'duerme' | 'domina'). Cualquier mouse/tecla/clic/scroll/toque la despide al instante.
- *  2) Gracias en la cabecera: al pulsar el Lico de #head-lico hace una gracia en su sitio
- *     (salta, gira, baila, toc, duerme, pelota, domina). El consejo de texto lo da lico-f8.js.
- *  3) Reacciones: LicoJuegos.reaccionar('celebra' | 'alerta') cambia unos segundos la pose del Lico de la cabecera
- *     (la llama lico-f8.js cuando la página trae un aviso de éxito o de error).
- *  4) Interruptor #lico-onoff: apaga/enciende todo lo animado. Se guarda en localStorage ('f8-lico').
+ *  2) Interruptor #lico-onoff: apaga/enciende todo lo animado. Se guarda en localStorage ('f8-lico').
  *
  * Es solo decorativo (pointer-events: none), no aparece con la guía abierta, un cuadro de diálogo abierto, un
  * campo de texto en edición, la pestaña oculta ni si el sistema pide reducir movimiento.
  *
- * Requiere window.Lico.svg(pose) (lico.js) y los estilos .lico-travieso / .hl-* de tema-lico.css.
+ * Requiere window.Lico.svg(pose) (lico.js) y los estilos .lico-travieso de tema-lico.css.
  * Tiempo de inactividad: window.LICO_IDLE_MS (ms) ANTES de cargar este archivo (por defecto 90 000).
  * Desactivar del todo: window.LICO_JUEGOS = false antes de cargarlo.
  * Prueba manual: LicoJuegos.jugar('toc' | 'pelota' | 'duerme' | 'domina')
@@ -158,72 +150,6 @@
     if (document.hidden) { if (jugando) terminar(true); } else { programar(); }
   });
 
-  // ---- Gracias del Lico de la cabecera (clic) ----
-  var GRACIAS = [
-    { cls: 'hl-salta',  ms: 1400 },
-    { cls: 'hl-gira',   ms: 1500 },
-    { cls: 'hl-baila',  ms: 2100 },
-    { cls: 'hl-toc',    ms: 2200 },
-    { cls: 'hl-duerme', ms: 3100 },
-    { cls: 'hl-pelota', ms: 2600 },
-    { cls: 'hl-domina', ms: 3100 }
-  ];
-  var ultimaGracia = -1;
-  var timerGracia = null;
-  var graciaActiva = false;
-
-  function graciaLico(boton) {
-    if (!animado()) return;
-    var i;
-    do { i = Math.floor(Math.random() * GRACIAS.length); } while (i === ultimaGracia);
-    ultimaGracia = i;
-    var g = GRACIAS[i];
-
-    if (!boton.querySelector('.hl-bola')) {
-      var bola = document.createElement('span');
-      bola.className = 'hl-bola';
-      bola.setAttribute('aria-hidden', 'true');
-      boton.appendChild(bola);
-    }
-    ponerSueno(boton);
-    clearTimeout(timerGracia);
-    GRACIAS.forEach(function (x) { boton.classList.remove(x.cls); });
-    void boton.offsetWidth;                    // reinicia la animación aunque se repita
-    boton.classList.add(g.cls);
-    graciaActiva = true;
-    timerGracia = setTimeout(function () {
-      boton.classList.remove(g.cls);
-      graciaActiva = false;
-    }, g.ms);
-  }
-
-  // Sin stopPropagation: el consejo de texto de app.js sigue funcionando.
-  document.addEventListener('click', function (e) {
-    var b = e.target && e.target.closest ? e.target.closest('.head-lico') : null;
-    if (b) graciaLico(b);
-  }, true);
-
-  // ---- Reacción contextual: la pose del Lico de la cabecera cambia unos segundos ----
-  var timerReac = null;
-  function reaccionar(pose) {
-    if (!animado() || graciaActiva || !window.Lico) return;
-    if (pose !== 'celebra' && pose !== 'alerta') return;
-    var btn = document.getElementById('head-lico');
-    var cont = btn && btn.querySelector('[data-lico]');
-    if (!cont) return;
-    cont.innerHTML = window.Lico.svg(pose);
-    if (pose === 'celebra') {
-      btn.classList.remove('hl-salta');
-      void btn.offsetWidth;
-      btn.classList.add('hl-salta');
-    }
-    clearTimeout(timerReac);
-    timerReac = setTimeout(function () {
-      cont.innerHTML = window.Lico.svg('saluda');
-      btn.classList.remove('hl-salta');
-    }, 2800);
-  }
-
   // ---- Interruptor ----
   function pintarInterruptor() {
     var b = document.getElementById('lico-onoff');
@@ -251,7 +177,6 @@
   window.LicoJuegos = {
     jugar: function (id) { clearTimeout(timerIdle); jugar(id, true); },
     terminar: function () { terminar(true); },
-    reaccionar: reaccionar,
     activo: function () { return encendido; },
     animado: animado,
     activar: activar
