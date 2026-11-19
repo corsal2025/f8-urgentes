@@ -527,10 +527,9 @@ table.cases-list tbody tr:has(input.marked-checkbox:checked) { background: #fef0
 table.cases-list tbody tr:has(input.marked-checkbox:checked):hover { background: #fde047 !important; }
 
 table.cases-list td:has(select.estado-actual-select) {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
+    display: table-cell;
+    vertical-align: middle;
+    text-align: center;
 }
 
 table.cases-list td:has(select.estado-actual-select) select.estado-actual-select {

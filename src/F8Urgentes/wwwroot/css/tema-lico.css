@@ -131,8 +131,14 @@
   --shadow-lg: 0 16px 48px rgba(74, 28, 41, .18);
 }
 
-body,
-body.cases-page {
+html:has(body.cases-page) {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: clip;
+}
+
+body {
   font-family: var(--sans);
   color: var(--tinta);
   background: var(--fondo);
@@ -142,6 +148,19 @@ body.cases-page {
   overflow-y: auto;
   overflow-x: hidden;
   overflow-anchor: none;
+}
+
+body.cases-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: clip;
 }
 
 ::selection { background: var(--ring); }
@@ -156,8 +175,10 @@ main h1, main h2, main h3 { font-family: var(--serif); color: var(--tinta); lett
 header.app-header.top,
 header.top {
   flex: 0 0 auto;
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
+  position: relative;
+  top: auto;
+  width: 100%;
   z-index: 50;
   background: var(--topbar-bg);
   background: var(--topbar-gradient);
@@ -479,19 +500,48 @@ nav.app-nav .nav-icon { flex: none; font-size: 14px; line-height: 1; }
   .marca .brand-logo { height: 36px; }
 }
 
-/* ---------- Área de trabajo y tabla con scroll natural + contenedor denso ---------- */
+/* ---------- Área de trabajo con scroll debajo del header y tabla sin scroll propio ---------- */
 body.cases-page main {
-  flex: 1 0 auto;
+  flex: 1 1 0;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
   min-height: 0;
+  min-width: 0;
   width: 100%;
-  max-width: 1520px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
   padding: 20px 24px 28px;
   gap: 14px;
   box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: auto;
+  overflow-anchor: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) var(--elev-2);
+}
+
+body.cases-page main::-webkit-scrollbar { width: 10px; height: 10px; }
+body.cases-page main::-webkit-scrollbar-track { background: var(--elev-2); border-radius: 6px; }
+body.cases-page main::-webkit-scrollbar-thumb { background-color: var(--line-strong); border-radius: 6px; border: 2px solid var(--elev-2); }
+body.cases-page main::-webkit-scrollbar-thumb:hover { background-color: var(--accent); }
+
+body.cases-page main > .lico-hero,
+body.cases-page main > .studio-inbox-title,
+body.cases-page main > .dashboard-controls,
+body.cases-page main > .row-legend,
+body.cases-page main > .stats-scroll {
+  width: 100%;
+  max-width: 1480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+body.cases-page main > .stats-scroll {
+  flex: 0 0 auto;
+  min-height: auto;
   overflow: visible;
+  padding-right: 0;
 }
 
 .card.table-card,
@@ -499,29 +549,18 @@ body.cases-page main {
   flex: 0 0 auto;
   min-height: 0;
   max-height: none;
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
+  min-width: min(100%, 1480px);
+  width: max-content;
+  max-width: none;
+  margin: 0 auto;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: visible;
+  overflow: visible;
   overflow-anchor: none;
   border-radius: 14px;
   border: 1px solid var(--borde);
   background: var(--papel);
   box-shadow: var(--sh);
-  scrollbar-width: thin;
-  scrollbar-color: var(--line-strong) var(--elev-2);
 }
-
-.card.table-card::-webkit-scrollbar,
-.table-wrap::-webkit-scrollbar { width: 10px; height: 10px; }
-.card.table-card::-webkit-scrollbar-track,
-.table-wrap::-webkit-scrollbar-track { background: var(--elev-2); border-radius: 6px; }
-.card.table-card::-webkit-scrollbar-thumb,
-.table-wrap::-webkit-scrollbar-thumb { background-color: var(--line-strong); border-radius: 6px; border: 2px solid var(--elev-2); }
-.card.table-card::-webkit-scrollbar-thumb:hover,
-.table-wrap::-webkit-scrollbar-thumb:hover { background-color: var(--accent); }
 
 /* =========================================================
    HERO BANNER BURDEO MATE CON LICO 3D
@@ -1602,6 +1641,34 @@ button.btn-outline-danger:hover { background: var(--error-bg); border-color: var
 .card { border-color: var(--borde); border-radius: var(--r); box-shadow: var(--sh); background: var(--papel); }
 
 /* ---------- Tablas aireadas sin bordes verticales: encabezado Burdeo Degradé ---------- */
+table.cases,
+table.cases th,
+table.cases td,
+table.cases input,
+table.cases textarea,
+table.cases select,
+table.cases option,
+table.cases button,
+table.cases a,
+table.cases span,
+table.cases .badge,
+table.cases-list,
+table.cases-list th,
+table.cases-list td,
+table.cases-list input,
+table.cases-list textarea,
+table.cases-list select,
+table.cases-list option,
+table.cases-list button,
+table.cases-list a,
+table.cases-list span,
+table.cases-list .badge {
+  text-transform: uppercase;
+}
+table.cases-list ::placeholder {
+  text-transform: uppercase;
+}
+
 table.cases th,
 table.cases-list th,
 table.cases-list thead th {
@@ -1616,8 +1683,13 @@ table.cases-list thead th {
   border-right: none;
   border-bottom: 1px solid #6e243c;
   box-shadow: none;
-  padding: 12px 14px;
+  padding: 10px 10px;
 }
+table.cases-solicitudes thead th:first-child { border-top-left-radius: 13px; }
+table.cases-solicitudes thead th:last-child { border-top-right-radius: 13px; }
+table.cases-solicitudes tbody tr:last-child td:first-child { border-bottom-left-radius: 13px; }
+table.cases-solicitudes tbody tr:last-child td:last-child { border-bottom-right-radius: 13px; }
+
 table.cases-solicitudes thead th:nth-child(1),
 table.cases-solicitudes thead th:nth-child(2),
 table.cases-solicitudes thead th:nth-child(3) {
@@ -1631,14 +1703,49 @@ table.cases-list th.th-wrap { border-right: none; }
 
 table.cases td,
 table.cases-list td {
-  padding: 12px 14px;
+  display: table-cell;
+  vertical-align: middle;
+  padding: 8px 10px;
   height: auto;
   border-left: none;
   border-right: none;
   border-bottom: 1px solid var(--borde-sutil);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500 !important;
   color: var(--tinta);
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 1.25;
+}
+table.cases-list td:has(select.estado-actual-select) {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+table.cases-list td form.toggle-form {
+  margin: 0;
+}
+table.cases-solicitudes th:nth-child(1),
+table.cases-solicitudes td:nth-child(1) {
+  width: 64px;
+  min-width: 64px;
+  max-width: 64px;
+  white-space: nowrap;
+}
+table.cases-solicitudes th:nth-child(3),
+table.cases-solicitudes td:nth-child(3) {
+  width: 1%;
+  min-width: 112px;
+  white-space: nowrap;
+}
+table.cases-solicitudes th:nth-child(4),
+table.cases-solicitudes td:nth-child(4) {
+  max-width: 140px;
+}
+table.cases-solicitudes td.fecha-subida-cell,
+table.cases-solicitudes th:last-child,
+table.cases-solicitudes td.action-cell {
+  white-space: nowrap;
 }
 table.cases tbody tr:nth-child(even) { background: var(--elev-2); }
 table.cases tbody tr:hover { background: var(--row-normal-hover); }
@@ -1707,24 +1814,37 @@ table.cases-list .input-inline:focus {
 }
 table.cases-solicitudes th:nth-child(2),
 table.cases-solicitudes td:nth-child(2) {
-  width: 1%;
-  min-width: 0;
-  white-space: nowrap;
+  width: 220px;
+  min-width: 180px;
+  max-width: 230px;
+  white-space: normal;
 }
 table.cases-list td.name-cell {
   padding: 6px 8px;
-  width: 1%;
-  white-space: nowrap;
+  width: 220px;
+  min-width: 180px;
+  max-width: 230px;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
-table.cases-list td.name-cell input.input-inline {
-  field-sizing: content;
-  width: auto;
-  min-width: 6ch;
-  max-width: none;
-  padding: 3px 6px;
-  font-size: 13px;
+table.cases-list td.name-cell input.input-inline,
+table.cases-list td.name-cell textarea.input-inline {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 12.5px;
   font-weight: 600 !important;
+  line-height: 1.25;
+  text-align: left !important;
   color: var(--tinta) !important;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  resize: none;
+  overflow: hidden;
+  display: block;
 }
 table.cases-list td.rut-cell input.input-inline { font-family: var(--mono); font-size: 12.5px; font-weight: 600 !important; color: var(--tinta-2) !important; }
 select.estado-actual-select {
@@ -2216,8 +2336,9 @@ body.login-shell::before {
 /* ---------- Impresión: sin decoración de la temática ---------- */
 @media print {
   .barra-nacion, header.top, .lico-hero, .lico-travieso, #lico-onoff, .lico-svg { display: none !important; }
-  body, body.cases-page { background: #fff !important; height: auto !important; overflow: visible !important; }
-  .card.table-card, .table-wrap { max-height: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; }
+  body, body.cases-page { background: #fff !important; height: auto !important; overflow: visible !important; display: block !important; }
+  body.cases-page main { display: block !important; height: auto !important; min-height: 0 !important; overflow: visible !important; flex: none !important; padding: 0 !important; }
+  .card.table-card, .table-wrap { width: 100% !important; min-width: 0 !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: none !important; }
   table.cases th, table.cases-list th { box-shadow: none !important; background: #f3f6f4 !important; color: #000 !important; }
   table.cases-solicitudes thead th:nth-child(1),
   table.cases-solicitudes thead th:nth-child(2),

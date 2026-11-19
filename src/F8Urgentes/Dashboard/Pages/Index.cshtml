@@ -327,7 +327,7 @@
                         </form>
                     </td>
                     <td class="name-cell">
-                        <input class="input-inline autosave" form="person-@request.Id" name="nombreCompleto" value="@request.NombreCompleto" placeholder="Nombre completo" />
+                        <textarea class="input-inline autosave name-input" form="person-@request.Id" name="nombreCompleto" rows="1" placeholder="Nombre completo">@request.NombreCompleto</textarea>
                     </td>
                     <td class="rut-cell">
                         @{ var rutDisplay = F8Urgentes.Domain.RutFormatter.WithDots(request.Rut); }
@@ -402,7 +402,14 @@
 <script>
     (function () {
         var scrollKey = 'f8-index-scroll';
+        var scrollHost = document.querySelector('body.cases-page main');
         var table = document.querySelector('.card.table-card');
+        if (scrollHost) {
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+            window.scrollTo(0, 0);
+        }
         var saved = sessionStorage.getItem(scrollKey);
         var restoredPos = null;
         var restoreActive = false;
@@ -412,9 +419,6 @@
             try {
                 restoredPos = JSON.parse(saved);
                 restoreActive = true;
-                if ('scrollRestoration' in history) {
-                    history.scrollRestoration = 'manual';
-                }
             } catch (err) { restoredPos = null; restoreActive = false; }
         }
 
@@ -427,9 +431,14 @@
 
         window.__f8RestoreScroll = function () {
             if (!restoreActive || !restoredPos) return;
-            window.scrollTo(0, restoredPos.y || 0);
+            if (scrollHost) {
+                scrollHost.scrollTop = restoredPos.y || 0;
+                scrollHost.scrollLeft = restoredPos.x || 0;
+            } else {
+                window.scrollTo(restoredPos.x || 0, restoredPos.y || 0);
+            }
             if (table) {
-                table.scrollLeft = restoredPos.x || 0;
+                table.scrollLeft = restoredPos.tx || 0;
                 table.scrollTop = restoredPos.ty || 0;
             }
         };
@@ -443,8 +452,9 @@
 
         function saveIndexScroll() {
             sessionStorage.setItem(scrollKey, JSON.stringify({
-                y: window.scrollY,
-                x: table ? table.scrollLeft : 0,
+                y: scrollHost ? scrollHost.scrollTop : window.scrollY,
+                x: scrollHost ? scrollHost.scrollLeft : window.scrollX,
+                tx: table ? table.scrollLeft : 0,
                 ty: table ? table.scrollTop : 0
             }));
         }
@@ -706,7 +716,7 @@
     // reuses the already-working save path instead of duplicating it.
     try {
         var autosaveWiredForms = new WeakSet();
-        document.querySelectorAll('input.autosave').forEach(function (input) {
+        document.querySelectorAll('input.autosave, textarea.autosave').forEach(function (input) {
             var form = input.form;
             if (!form) return;
 
@@ -720,6 +730,16 @@
                     input.blur();
                 }
             });
+
+            if (input.tagName === 'TEXTAREA') {
+                input.addEventListener('input', function () {
+                    if (/[\r\n]/.test(input.value)) {
+                        var pos = input.selectionStart;
+                        input.value = input.value.replace(/[\r\n]+/g, ' ');
+                        try { input.setSelectionRange(pos, pos); } catch (e) {}
+                    }
+                });
+            }
 
             if (!autosaveWiredForms.has(form)) {
                 autosaveWiredForms.add(form);
@@ -749,16 +769,22 @@
             var cs = window.getComputedStyle(input);
             nameMeasureEl.style.font = cs.font || (cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily);
             nameMeasureEl.style.letterSpacing = cs.letterSpacing;
+            nameMeasureEl.style.textTransform = cs.textTransform;
             nameMeasureEl.textContent = input.value || input.placeholder || '';
             return Math.ceil(nameMeasureEl.getBoundingClientRect().width + 14);
         }
 
         function autoFitNameInput(input) {
-            input.style.width = measureNameInputWidth(input) + 'px';
+            if (input.tagName === 'TEXTAREA') {
+                input.style.height = 'auto';
+                input.style.height = input.scrollHeight + 'px';
+            } else {
+                input.style.width = measureNameInputWidth(input) + 'px';
+            }
         }
 
         function autoFitNameInputs() {
-            var inputs = document.querySelectorAll('table.cases-solicitudes td.name-cell input.input-inline');
+            var inputs = document.querySelectorAll('table.cases-solicitudes td.name-cell .input-inline');
             inputs.forEach(autoFitNameInput);
             updateStickyOffsets();
             if (typeof window.__f8RestoreScroll === 'function') window.__f8RestoreScroll();
@@ -792,7 +818,7 @@
         }
 
         document.addEventListener('input', function (event) {
-            if (event.target && event.target.matches('table.cases-solicitudes td.name-cell input.input-inline')) {
+            if (event.target && event.target.matches('table.cases-solicitudes td.name-cell .input-inline')) {
                 autoFitNameInput(event.target);
                 updateStickyOffsets();
             }
@@ -800,7 +826,7 @@
 
         window.addEventListener('DOMContentLoaded', autoFitNameInputs);
         window.addEventListener('load', autoFitNameInputs);
-        window.addEventListener('resize', updateStickyOffsets);
+        window.addEventListener('resize', autoFitNameInputs);
         if (document.fonts) document.fonts.ready.then(autoFitNameInputs);
         setTimeout(autoFitNameInputs, 0);
         setTimeout(autoFitNameInputs, 80);
